@@ -91,7 +91,7 @@ def temiz_sayi_al(val, default=0.0):
 def format_periyod(val):
     try:
         f_val = float(val)
-        return str(int(f_val)) if f_val.is_integer() else f"{f_val:.1f}"
+        return str(int(f_val)) if f_val.is_integer() else f"{f_val:.2f}"
     except: return str(val)
 
 @st.cache_data(ttl=60)
@@ -186,11 +186,13 @@ if "sim_rows" not in st.session_state:
 if "arsiv_rows" not in st.session_state:
     st.session_state.arsiv_rows = []
 
+# Simülasyon State
 if "sim_per" not in st.session_state:
     st.session_state.sim_per = 1.0
 if "sim_sure" not in st.session_state:
     st.session_state.sim_sure = 7
 
+# Arşiv State
 if "ars_per" not in st.session_state:
     st.session_state.ars_per = 1.0
 if "ars_sure" not in st.session_state:
@@ -429,7 +431,7 @@ if st.session_state.active_tab == "simulasyon":
                     use_container_width=True
                 )
 
-        # SADECE ANLIK HESAPLAMA SEKMESİNDE HARİTA ALANI
+        # Harita Paneli
         st.markdown("---")
         st.markdown("### 🗺️ Canlı Looker Studio Harita Paneli")
         if looker_url:
@@ -449,8 +451,8 @@ elif st.session_state.active_tab == "arsiv":
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        # 1. Satır Girişleri
-        k1, k2, k3, k4, k5 = st.columns([1, 1.2, 1.5, 1.5, 1.2])
+        # 1. Satır: Yıl, Dönem, Marka, Kampanya, Mecra
+        k1, k2, k3, k4, k5 = st.columns([1.2, 1.3, 2, 2, 2])
         with k1:
             a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
         with k2:
@@ -466,8 +468,8 @@ elif st.session_state.active_tab == "arsiv":
             a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="ars_mecra")
             a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
 
-        # 2. Satır Girişleri (Periyod ve Gün Çift Yönlü Senkronize)
-        k6, k7, k8, k9, k10, k11 = st.columns([1.5, 2, 1, 1, 1, 1.2])
+        # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle
+        k6, k7, k8, k9, k10, k11 = st.columns([2, 2, 1, 1, 1, 1.2])
         with k6:
             a_il = st.selectbox("İl:", il_listesi, key="ars_il_select")
         with k7:
@@ -509,7 +511,7 @@ elif st.session_state.active_tab == "arsiv":
         with k10:
             a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet_input")
         with k11:
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
 
         a_periyod = st.session_state.ars_per
@@ -566,7 +568,7 @@ elif st.session_state.active_tab == "arsiv":
             maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
 
             ak1.metric("📊 Toplam Gösterim", f"{toplam_gos_a:,}")
-            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp_a:.2f}")
+            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
             ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 

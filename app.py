@@ -20,19 +20,16 @@ st.markdown("""
         color: #f8fafc;
     }
     
-    /* Buton Tasarımları */
     .stButton>button {
         border-radius: 6px;
         font-weight: 700;
         height: 42px;
     }
     
-    /* Form & Input Hizalamaları */
     div[data-baseweb="input"], div[data-baseweb="select"] {
         border-radius: 6px !important;
     }
     
-    /* Metrik Kartları */
     div[data-testid="stMetric"] {
         background-color: #111827;
         border: 1px solid #1f2937;
@@ -49,6 +46,42 @@ st.markdown("""
         font-size: 24px !important;
         font-weight: 700 !important;
         color: #f8fafc !important;
+    }
+
+    /* Tablo Hizalama ve Tasarımı */
+    .custom-table-container {
+        width: 100%;
+        overflow-x: auto;
+        margin-top: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        border: 1px solid #1f2937;
+        background-color: #0f172a;
+    }
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        font-size: 13px;
+    }
+    .custom-table th {
+        background-color: #1e293b;
+        color: #38bdf8;
+        padding: 12px 8px;
+        border-bottom: 1px solid #334155;
+        font-weight: 700;
+        white-space: nowrap;
+        text-align: center !important;
+    }
+    .custom-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #1e293b;
+        color: #f8fafc;
+        white-space: nowrap;
+        text-align: center !important;
+    }
+    .custom-table tr:hover {
+        background-color: rgba(56, 189, 248, 0.05);
     }
 
     .footer-text {
@@ -429,17 +462,48 @@ if st.session_state.active_tab == "simulasyon":
             kpi3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim}")
             kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
 
-            st.dataframe(df_sim.style.format({
-                "Toplam Gösterim": "{:,}",
-                "Erişim (Kişi)": "{:,}",
-                "İl Nüfusu": "{:,}",
-                "TR Nüfusu": "{:,}",
-                "TR Erişim %": "%{:.2f}",
-                "TR GRP": "{:.2f}",
-                "Frekans": "{:.1f}"
-            }), use_container_width=True)
+            # Kusursuz Hizalanmış HTML Tablo (İndekssiz & Tam Ortalanmış)
+            sim_table_html = """
+            <div class="custom-table-container">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Ünite</th>
+                            <th>İl</th>
+                            <th>Süre (Gün)</th>
+                            <th>Periyod</th>
+                            <th>Adet</th>
+                            <th>Toplam Gösterim</th>
+                            <th>Frekans</th>
+                            <th>Erişim (Kişi)</th>
+                            <th>İl Nüfusu</th>
+                            <th>TR Nüfusu</th>
+                            <th>TR Erişim %</th>
+                            <th>TR GRP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            """
+            for _, r in df_sim.iterrows():
+                sim_table_html += f"""
+                    <tr>
+                        <td>{r['Ünite']}</td>
+                        <td>{r['İl']}</td>
+                        <td>{r['Süre (Gün)']}</td>
+                        <td>{r['Periyod']}</td>
+                        <td>{r['Adet']:,}</td>
+                        <td>{r['Toplam Gösterim']:,}</td>
+                        <td>{r['Frekans']:.1f}</td>
+                        <td>{r['Erişim (Kişi)']:,}</td>
+                        <td>{r['İl Nüfusu']:,}</td>
+                        <td>{r['TR Nüfusu']:,}</td>
+                        <td>%{r['TR Erişim %']:.2f}</td>
+                        <td>{r['TR GRP']:.2f}</td>
+                    </tr>
+                """
+            sim_table_html += "</tbody></table></div>"
+            st.markdown(sim_table_html, unsafe_allow_html=True)
 
-            # Butonlar: Temizle, HTML Rapor ve Arşive Aktar
             col_s1, col_s2, col_s3 = st.columns([1, 1.2, 1.5])
             with col_s1:
                 if st.button("🧹 Planı Temizle", use_container_width=True):
@@ -633,18 +697,58 @@ elif st.session_state.active_tab == "arsiv":
             ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
-            st.dataframe(df_arsiv.style.format({
-                "Toplam Gösterim": "{:,}",
-                "Erişim (Kişi)": "{:,}",
-                "İl Nüfusu": "{:,}",
-                "TR Nüfusu": "{:,}",
-                "TR Erişim %": "%{:.2f}",
-                "TR GRP": "{:.2f}",
-                "Frekans": "{:.1f}",
-                "Adet": "{:,}"
-            }), use_container_width=True)
+            # Kusursuz Hizalanmış HTML Tablo (İndekssiz & Tam Ortalanmış)
+            arsiv_table_html = """
+            <div class="custom-table-container">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Yıl</th>
+                            <th>Dönem</th>
+                            <th>Marka</th>
+                            <th>Kampanya</th>
+                            <th>Mecra</th>
+                            <th>Ünite</th>
+                            <th>İl</th>
+                            <th>Süre (Gün)</th>
+                            <th>Periyod</th>
+                            <th>Adet</th>
+                            <th>Toplam Gösterim</th>
+                            <th>Frekans</th>
+                            <th>Erişim (Kişi)</th>
+                            <th>İl Nüfusu</th>
+                            <th>TR Nüfusu</th>
+                            <th>TR Erişim %</th>
+                            <th>TR GRP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            """
+            for _, r in df_arsiv.iterrows():
+                arsiv_table_html += f"""
+                    <tr>
+                        <td>{r['Yıl']}</td>
+                        <td>{r['Dönem (Ay)']}</td>
+                        <td>{r['Marka']}</td>
+                        <td>{r['Kampanya Adı']}</td>
+                        <td>{r['Mecra Adı']}</td>
+                        <td>{r['Ünite']}</td>
+                        <td>{r['İl']}</td>
+                        <td>{r['Süre (Gün)']}</td>
+                        <td>{r['Periyod']}</td>
+                        <td>{r['Adet']:,}</td>
+                        <td>{r['Toplam Gösterim']:,}</td>
+                        <td>{r['Frekans']:.1f}</td>
+                        <td>{r['Erişim (Kişi)']:,}</td>
+                        <td>{r['İl Nüfusu']:,}</td>
+                        <td>{r['TR Nüfusu']:,}</td>
+                        <td>%{r['TR Erişim %']:.2f}</td>
+                        <td>{r['TR GRP']:.2f}</td>
+                    </tr>
+                """
+            arsiv_table_html += "</tbody></table></div>"
+            st.markdown(arsiv_table_html, unsafe_allow_html=True)
 
-            # Alt İşlem Butonları: Son Satırı Sil, Seçili Satırı Sil, Arşivi Temizle, HTML Rapor
             col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
             with col_a1:
                 if st.button("↩️ Son Satırı Sil", use_container_width=True):
@@ -656,7 +760,7 @@ elif st.session_state.active_tab == "arsiv":
                     silinecek_idx = st.selectbox(
                         "Silinecek Satır No:",
                         range(len(st.session_state.arsiv_rows)),
-                        format_func=lambda i: f"Satır {i}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Ünite']} ({st.session_state.arsiv_rows[i]['İl']})"
+                        format_func=lambda i: f"Satır {i+1}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Ünite']} ({st.session_state.arsiv_rows[i]['İl']})"
                     )
                     if st.button("❌ Bu Satırı Sil", type="primary", use_container_width=True):
                         st.session_state.arsiv_rows.pop(silinecek_idx)

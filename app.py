@@ -2,12 +2,6 @@ import streamlit as st
 import pandas as pd
 import json
 
-# ==============================================================================
-# 🔗 VARSAYILAN CANLI BAĞLANTILAR
-# ==============================================================================
-DEFAULT_SHEETS_URL = "https://docs.google.com/spreadsheets/d/16nQ0t2B8GICn4G0WW_kDo2LrkWtWmLk4/edit?usp=sharing"
-DEFAULT_LOOKER_URL = ""
-
 # Sayfa Yapılandırması
 st.set_page_config(
     page_title="OOH Medya Planlama & Simülatör",
@@ -171,96 +165,36 @@ def temiz_sayi_al(val, default=0.0):
     try: return float(s)
     except: return default
 
-# Türkiye İlleri Listesi (Otomatik Kolon Tespiti İçin)
-TURK_ILLERI = {
-    "adana", "adıyaman", "afyonkarahisar", "ağrı", "amasya", "ankara", "antalya", "artvin", "aydın", 
-    "balıkesir", "bilecik", "bingöl", "bitlis", "bolu", "burdur", "bursa", "çanakkale", "çankırı", 
-    "çorum", "denizli", "diyarbakır", "edirne", "elazığ", "erzincan", "erzurum", "eskişehir", 
-    "gaziantep", "giresun", "gümüşhane", "hakkari", "hatay", "ısparta", "mersin", "istanbul", 
-    "i̇stanbul", "izmir", "i̇zmir", "kars", "kastamonu", "kayseri", "kırklareli", "kırşehir", 
-    "kocaeli", "konya", "kütahya", "malatya", "manisa", "kahramanmaraş", "mardin", "muğla", 
-    "muş", "nevşehir", "niğde", "ordu", "rize", "sakarya", "samsun", "siirt", "sinop", "sivas", 
-    "tekirdağ", "tokat", "trabzon", "tunceli", "şanlıurfa", "uşak", "van", "yozgat", "zonguldak", 
-    "aksaray", "bayburt", "karaman", "kırıkkale", "batman", "şırnak", "bartın", "ardahan", "ığdır", 
-    "yalova", "karabük", "kilis", "osmaniye", "düzce", "anadolu illeri", "türkiye", "genel"
-}
-
+# --- 3. DOĞRUDAN EXCEL MOTORU (OUTDOOR.xlsx) ---
 @st.cache_data(ttl=10)
-def veriyi_yukle(dosya_yolu_veya_url):
+def yerel_exceli_yukle():
     try:
-        if not dosya_yolu_veya_url or not str(dosya_yolu_veya_url).strip():
-            dosya_yolu_veya_url = "OUTDOOR.xlsx"
+        excel_path = "OUTDOOR.xlsx"
+        excel_obj = pd.ExcelFile(excel_path)
+        sheet = 'Günlük Gösterim Sayıları' if 'Günlük Gösterim Sayıları' in excel_obj.sheet_names else excel_obj.sheet_names[0]
+        df_raw = pd.read_excel(excel_path, sheet_name=sheet, header=None)
 
-        if "docs.google.com/spreadsheets" in str(dosya_yolu_veya_url):
-            url = str(dosya_yolu_veya_url).strip()
-            if "/edit" in url:
-                base = url.split("/edit")[0]
-                gid = ""
-                if "gid=" in url:
-                    gid = url.split("gid=")[1].split("&")[0].split("#")[0]
-                url = f"{base}/export?format=csv" + (f"&gid={gid}" if gid else "")
-            df_raw = pd.read_csv(url, header=None)
-        else:
-            excel_obj = pd.ExcelFile(dosya_yolu_veya_url)
-            sheet = 'Günlük Gösterim Sayıları' if 'Günlük Gösterim Sayıları' in excel_obj.sheet_names else excel_obj.sheet_names[0]
-            df_raw = pd.read_excel(dosya_yolu_veya_url, sheet_name=sheet, header=None)
-
-        # 1. Başlık Satırını ve Kolonları İçerik Taramasıyla Doğrula
-        il_col = -1
-        unite_col = -1
+        # Tablo başlık satırını bul (Genellikle 2. satır, indeks 1)
         start_row = 1
-
         for r in range(min(10, len(df_raw))):
-            row_items = [str(x).strip().lower() for x in df_raw.iloc[r].tolist()]
-            for idx, item in enumerate(row_items):
-                if item in ["il", "i̇l", "i̇ller", "iller"]:
-                    il_col = idx
-                elif "ünite" in item or "unite" in item:
-                    unite_col = idx
-            if il_col != -1 and unite_col != -1:
+            b_val = str(df_raw.iloc[r, 1]).strip().lower() if df_raw.shape[1] > 1 else ""
+            c_val = str(df_raw.iloc[r, 2]).strip().lower() if df_raw.shape[1] > 2 else ""
+            if "il" in b_val or "ünite" in c_val or "unite" in c_val:
                 start_row = r + 1
                 break
 
-        # Başlık bulunamazsa veri içeriğine göre otomatik tanı
-        if il_col == -1 or unite_col == -1:
-            best_il_match = 0
-            for c in range(min(5, df_raw.shape[1])):
-                col_vals = [str(x).strip().lower() for x in df_raw.iloc[1:25, c].dropna().tolist()]
-                match_count = sum(1 for v in col_vals if v in TURK_ILLERI)
-                if match_count > best_il_match:
-                    best_il_match = match_count
-                    il_col = c
-            
-            # Ünite kolonu İl olmayan en yakın metin kolonu olur
-            for c in range(min(5, df_raw.shape[1])):
-                if c != il_col:
-                    col_vals = [str(x).strip() for x in df_raw.iloc[1:25, c].dropna().tolist()]
-                    if any(len(v) > 2 for v in col_vals):
-                        unite_col = c
-                        break
-
-        # Güvenli İndeks Atamaları
-        if il_col == -1: il_col = 1
-        if unite_col == -1: unite_col = 2
-        
-        # Sayısal Kolonlar (İl ve Ünite'den sonraki 3, 4, 5, 6. kolonlar)
-        gost_col = max(il_col, unite_col) + 1
-        frek_col = gost_col + 1
-        net_col = frek_col + 1
-        endeks_col = net_col + 1
-
         rows_data = []
         for r in range(start_row, len(df_raw)):
-            il_val = str(df_raw.iloc[r, il_col]).strip() if df_raw.shape[1] > il_col else ""
-            unite_val = str(df_raw.iloc[r, unite_col]).strip() if df_raw.shape[1] > unite_col else ""
-            
+            il_val = str(df_raw.iloc[r, 1]).strip() if df_raw.shape[1] > 1 else ""
+            unite_val = str(df_raw.iloc[r, 2]).strip() if df_raw.shape[1] > 2 else ""
+
             if not il_val or il_val.lower() in ['nan', 'none', '', 'il', 'i̇l'] or not unite_val or unite_val.lower() in ['nan', 'none', '', 'ünite', 'unite']:
                 continue
 
-            gost_val = temiz_sayi_al(df_raw.iloc[r, gost_col] if df_raw.shape[1] > gost_col else 0, 0.0)
-            frek_val = temiz_sayi_al(df_raw.iloc[r, frek_col] if df_raw.shape[1] > frek_col else 1, 1.0)
-            net_val = temiz_sayi_al(df_raw.iloc[r, net_col] if df_raw.shape[1] > net_col else 100, 100.0)
-            endeks_raw = temiz_sayi_al(df_raw.iloc[r, endeks_col] if df_raw.shape[1] > endeks_col else 1, 1.0)
+            gost_val = temiz_sayi_al(df_raw.iloc[r, 3] if df_raw.shape[1] > 3 else 0, 0.0)
+            frek_val = temiz_sayi_al(df_raw.iloc[r, 4] if df_raw.shape[1] > 4 else 1, 1.0)
+            net_val = temiz_sayi_al(df_raw.iloc[r, 5] if df_raw.shape[1] > 5 else 100, 100.0)
+            endeks_raw = temiz_sayi_al(df_raw.iloc[r, 6] if df_raw.shape[1] > 6 else 1, 1.0)
             endeks_val = endeks_raw / 100.0 if endeks_raw > 1.5 else endeks_raw
 
             rows_data.append({
@@ -274,7 +208,7 @@ def veriyi_yukle(dosya_yolu_veya_url):
 
         df_gost = pd.DataFrame(rows_data)
 
-        # Nüfus & Süre Haritaları
+        # Standart Nüfus & Süre Sözlükleri
         nufus_dict = {
             "İstanbul": 15754053, "Ankara": 5910320, "İzmir": 4504185, 
             "Bursa": 3263011, "Antalya": 2777677, "Türkiye": 86920168
@@ -287,7 +221,8 @@ def veriyi_yukle(dosya_yolu_veya_url):
             "Üni Ekran": 7, "Üniversite Ekran": 7
         }
 
-        for c in range(df_raw.shape[1]):
+        # Excel'deki Nüfus ve Süre tablolarını dinamik oku
+        for c in range(5, df_raw.shape[1]):
             col_txt = " ".join([str(v) for v in df_raw.iloc[:, c].dropna().values])
             if "Nüfus" in col_txt:
                 for r in range(start_row - 1, len(df_raw)):
@@ -312,10 +247,12 @@ def veriyi_yukle(dosya_yolu_veya_url):
 
         return df_gost, nufus_dict, sure_dict, tr_nufus
     except Exception as e:
-        st.error(f"Veri yükleme hatası: {e}")
+        st.error(f"Excel Okuma Hatası (OUTDOOR.xlsx bulunamadı veya biçimi hatalı): {e}")
         return None, {}, {}, 86920168
 
-# --- 3. SESSION STATE ---
+df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = yerel_exceli_yukle()
+
+# --- 4. SESSION STATE ---
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "simulasyon"
 
@@ -335,7 +272,7 @@ if "ars_per" not in st.session_state:
 if "ars_sure" not in st.session_state:
     st.session_state.ars_sure = 7
 
-# --- 4. YAN PANEL (SIDEBAR) ---
+# --- 5. YAN PANEL (SIDEBAR) ---
 st.sidebar.markdown(f"**👤 Giriş Yapan:** `{st.session_state.username}`")
 if st.sidebar.button("🚪 Çıkış Yap"):
     st.session_state.logged_in = False
@@ -343,26 +280,18 @@ if st.sidebar.button("🚪 Çıkış Yap"):
     st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("⚙️ Veri & Harita Ayarları")
+st.sidebar.subheader("⚙️ Sistem Ayarları")
 
-veri_kaynagi = st.sidebar.radio("Veri Kaynağı:", ["Google Sheets (Canlı)", "Yerel Excel (OUTDOOR.xlsx)"], index=0)
-if veri_kaynagi == "Google Sheets (Canlı)":
-    sheet_url = st.sidebar.text_input("Google Sheets Linki:", value=DEFAULT_SHEETS_URL)
-    df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle(sheet_url)
-else:
-    df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle("OUTDOOR.xlsx")
-
-if st.sidebar.button("🔄 Veriyi Yeniden Yükle"):
+if st.sidebar.button("🔄 Excel Verisini Yenile", use_container_width=True):
     st.cache_data.clear()
     st.rerun()
 
 looker_url = st.sidebar.text_input(
-    "🗺️ Looker Studio Harita Embed Linki:",
-    value=DEFAULT_LOOKER_URL,
+    "🗺️ Looker Studio Harita Linki:",
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
-# --- 5. RAPOR OLUŞTURMA YARDIMCISI ---
+# --- 6. RAPOR OLUŞTURMA YARDIMCISI ---
 def generate_html_report(df_to_export, report_title, include_looker=False, is_arsiv=False):
     if is_arsiv:
         table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
@@ -420,7 +349,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 </body>
 </html>"""
 
-# --- 6. ÜST GEÇİŞ BUTONLARI ---
+# --- 7. ÜST GEÇİŞ BUTONLARI ---
 st.title("⚡ OOH MEDYA PLANLAMA & SİMÜLASYON MERKEZİ")
 
 col_btn1, col_btn2 = st.columns(2)
@@ -634,7 +563,7 @@ if st.session_state.active_tab == "simulasyon":
                 height=560
             )
         else:
-            st.info("💡 Haritayı görüntülemek için sol yan menüden **Looker Studio Harita Embed Linki**ni giriniz.")
+            st.info("💡 Haritayı görüntülemek için sol yan menüden **Looker Studio Harita Linki**ni giriniz.")
 
 # ==========================================
 # 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
@@ -792,7 +721,7 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
@@ -825,5 +754,5 @@ elif st.session_state.active_tab == "arsiv":
                     use_container_width=True
                 )
 
-# --- 7. DİPNOT (FOOTER) ---
+# --- 8. DİPNOT (FOOTER) ---
 st.markdown("<div class='footer-text'>📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>", unsafe_allow_html=True)

@@ -47,15 +47,15 @@ st.markdown("""
         color: #f8fafc !important;
     }
 
-    /* Giriş Kartı Düzenlemesi */
-    .login-container {
-        max-width: 420px;
-        margin: 80px auto 0 auto;
-        background-color: #111827;
-        border: 1px solid #1f2937;
-        border-radius: 12px;
-        padding: 30px 25px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    /* KESİN ÇÖZÜM: GİRİŞ KARTINI DERLİ TOPLU VE MERKEZDE TUTAN CSS */
+    div[data-testid="stForm"] {
+        max-width: 380px !important;
+        margin: 0 auto !important;
+        background-color: #111827 !important;
+        border: 1px solid #1f2937 !important;
+        border-radius: 12px !important;
+        padding: 24px 20px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
     }
 
     .table-responsive-box {
@@ -115,24 +115,22 @@ if "logged_in" not in st.session_state:
     st.session_state.username = ""
 
 def login_form():
-    col1, col2, col3 = st.columns([1, 1.2, 1])
-    with col2:
-        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-        st.markdown("<h2 style='text-align: center; color: #38bdf8; margin-bottom: 0px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 13px; margin-bottom: 25px;'>Medya Planlama ve Lokasyon Portalı</p>", unsafe_allow_html=True)
-        
-        with st.form("login_box"):
-            user = st.text_input("👤 Kullanıcı Adı:", placeholder="Kullanıcı adınızı girin")
-            pwd = st.text_input("🔑 Şifre:", type="password", placeholder="••••••••")
-            st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-            submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True, type="primary")
-            if submit:
-                if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
-                    st.session_state.logged_in = True
-                    st.session_state.username = user
-                    st.rerun()
-                else:
-                    st.error("Kullanıcı adı veya şifre hatalı!")
+    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #38bdf8; margin-bottom: 0px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 13px; margin-bottom: 20px;'>Medya Planlama ve Lokasyon Portalı</p>", unsafe_allow_html=True)
+    
+    with st.form("login_box"):
+        user = st.text_input("👤 Kullanıcı Adı:", placeholder="Kullanıcı adınızı girin")
+        pwd = st.text_input("🔑 Şifre:", type="password", placeholder="••••••••")
+        st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+        submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True, type="primary")
+        if submit:
+            if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
+                st.session_state.logged_in = True
+                st.session_state.username = user
+                st.rerun()
+            else:
+                st.error("Kullanıcı adı veya şifre hatalı!")
 
 if not st.session_state.logged_in:
     login_form()
@@ -194,7 +192,6 @@ def tahmin_mecra(unite_str, il_str):
         return "Kentvizyon"
     return "Kentvizyon"
 
-# Özel Ağların Kapsadığı Şehir Havuzları (Dublikasyon Önleme)
 STARBUCKS_ILLERI_SET = {
     "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Eskişehir", "Kocaeli", "Gaziantep", 
     "Konya", "Mersin", "Muğla", "Aydın", "Denizli", "Samsun", "Kayseri", "Tekirdağ", "Balıkesir", 

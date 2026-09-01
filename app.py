@@ -29,6 +29,15 @@ st.markdown("""
         border-radius: 8px;
         padding: 15px;
     }
+    .footer-text {
+        text-align: center;
+        color: #64748b;
+        font-size: 13px;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #1e293b;
+        letter-spacing: 0.5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -199,7 +208,70 @@ looker_url = st.sidebar.text_input(
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
-# --- 5. ÜST GEÇİŞ BUTONLARI (BAŞLIK & SEKMELER) ---
+# --- 5. RAPOR OLUŞTURMA YARDIMCISI ---
+def generate_html_report(df_to_export, report_title, is_arsiv=False):
+    if is_arsiv:
+        table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
+        table_rows_html = "".join([
+            f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{r['Adet']}</td><td>{r['Toplam Gösterim']:,}</td><td>{r['Frekans']}</td><td>{r['Erişim (Kişi)']:,}</td><td>{r['İl Nüfusu']:,}</td><td>{r['TR Nüfusu']:,}</td><td>%{r['TR Erişim %']:.2f}</td><td>{r['TR GRP']:.2f}</td></tr>"
+            for _, r in df_to_export.iterrows()
+        ])
+    else:
+        table_headers = "<th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
+        table_rows_html = "".join([
+            f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{r['Adet']}</td><td>{r['Toplam Gösterim']:,}</td><td>{r['Frekans']}</td><td>{r['Erişim (Kişi)']:,}</td><td>{r['İl Nüfusu']:,}</td><td>{r['TR Nüfusu']:,}</td><td>%{r['TR Erişim %']:.2f}</td><td>{r['TR GRP']:.2f}</td></tr>"
+            for _, r in df_to_export.iterrows()
+        ])
+
+    toplam_gos = df_to_export["Toplam Gösterim"].sum()
+    toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
+    kapsanan_il = df_to_export["İl"].nunique()
+    kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_to_export["İl"].unique())
+    maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
+
+    looker_section = ""
+    if looker_url:
+        looker_section = f"""
+        <div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;">
+            <h3 style="color: #38bdf8; margin-bottom: 15px;">🗺️ Kampanya Harita ve Lokasyon Paneli</h3>
+            <iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>
+        </div>
+        """
+
+    return f"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{report_title}</title>
+    <style>
+        body {{ background-color: #090d16; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; line-height: 1.5; }}
+        .kpi-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }}
+        .kpi-card {{ background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px; text-align: center; }}
+        table {{ width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; margin-top: 20px; }}
+        th {{ background: #1e293b; color: #38bdf8; padding: 12px; border: 1px solid #1f293d; }}
+        td {{ padding: 10px; border: 1px solid #1f293d; color: #cbd5e1; }}
+        tr:nth-child(even) {{ background: rgba(255,255,255,0.02); }}
+        .footer-note {{ text-align: center; color: #64748b; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
+    </style>
+</head>
+<body>
+    <h1 style="color: #f1f5f9;">📊 {report_title}</h1>
+    <div class="kpi-grid">
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{toplam_gos:,}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{toplam_grp:.2f}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">KAPSASANAN İL</div><div style="font-size: 24px; font-weight: bold; color: #c084fc;">{kapsanan_il} İl</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{maks_erisim}</div></div>
+    </div>
+    <table>
+        <thead><tr>{table_headers}</tr></thead>
+        <tbody>{table_rows_html}</tbody>
+    </table>
+    {looker_section}
+    <div class="footer-note">📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>
+</body>
+</html>"""
+
+# --- 6. ÜST GEÇİŞ BUTONLARI ---
 st.title("⚡ OOH MEDYA PLANLAMA & SİMÜLASYON MERKEZİ")
 
 col_btn1, col_btn2 = st.columns(2)
@@ -307,12 +379,23 @@ if st.session_state.active_tab == "simulasyon":
                     height=540
                 )
 
-            if st.button("🧹 Simülasyonu Temizle"):
-                st.session_state.sim_rows = []
-                st.rerun()
+            col_s1, col_s2 = st.columns([1, 4])
+            with col_s1:
+                if st.button("🧹 Simülasyonu Temizle"):
+                    st.session_state.sim_rows = []
+                    st.rerun()
+            with col_s2:
+                sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", is_arsiv=False)
+                st.download_button(
+                    label="📥 Harita Entegreli HTML Raporu Al",
+                    data=sim_html,
+                    file_name="OOH_Simulasyon_Raporu.html",
+                    mime="text/html",
+                    use_container_width=True
+                )
 
 # ==========================================
-# 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV (GÖRSELDEKİ BİREBİR YAPI)
+# 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
     st.markdown("### 📝 Yeni Kampanya Satırı Ekle")
@@ -394,12 +477,10 @@ elif st.session_state.active_tab == "arsiv":
             })
             st.success(f"✅ `{a_marka} - {a_kampanya}` satırı başarıyla eklendi!")
 
-        # Tablo ve Performans Özeti
         if st.session_state.arsiv_rows:
             df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
             st.markdown("---")
             
-            # Üst KPI Kartları
             ak1, ak2, ak3, ak4 = st.columns(4)
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
             toplam_grp_a = round(df_arsiv["TR GRP"].sum(), 2)
@@ -430,6 +511,20 @@ elif st.session_state.active_tab == "arsiv":
                     height=540
                 )
 
-            if st.button("🧹 Arşiv Listesini Temizle"):
-                st.session_state.arsiv_rows = []
-                st.rerun()
+            col_a1, col_a2 = st.columns([1, 4])
+            with col_a1:
+                if st.button("🧹 Arşiv Listesini Temizle"):
+                    st.session_state.arsiv_rows = []
+                    st.rerun()
+            with col_a2:
+                arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", is_arsiv=True)
+                st.download_button(
+                    label="📥 Harita Entegreli HTML Raporu Al",
+                    data=arsiv_html,
+                    file_name="OOH_Kampanya_Arsiv_Raporu.html",
+                    mime="text/html",
+                    use_container_width=True
+                )
+
+# --- 7. DİPNOT (FOOTER) ---
+st.markdown("<div class='footer-text'>📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>", unsafe_allow_html=True)

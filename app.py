@@ -124,7 +124,7 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. SAYI BİÇİMLENDİRME VE ÖZEL İL KÜMELERİ ---
+# --- 2. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
 def tr_tam_sayi(val):
     try:
         n = int(round(float(val)))
@@ -164,6 +164,21 @@ def temiz_sayi_al(val, default=0.0):
             s = parts[0] + parts[1]
     try: return float(s)
     except: return default
+
+def tahmin_mecra(unite_str, il_str):
+    u = str(unite_str).lower()
+    i = str(il_str).lower()
+    if "starbuck" in u or "starbuck" in i:
+        return "Core Medya"
+    elif "macfit" in u or "mac fit" in u or "macfit" in i or "mac fit" in i:
+        return "Donanım Medya"
+    elif "üni" in u or "uni" in u or "üniversite" in u:
+        return "Üniversite Network"
+    elif "istanbul" in i:
+        return "İBB / Medya A.Ş."
+    elif "ankara" in i or "izmir" in i:
+        return "Kentvizyon"
+    return "Kentvizyon"
 
 # Özel Ağların Kapsadığı Şehir Havuzları (Dublikasyon Önleme)
 STARBUCKS_ILLERI_SET = {
@@ -582,20 +597,32 @@ if st.session_state.active_tab == "simulasyon":
                 )
             with col_s5:
                 with st.popover("📁 Simülasyonu Arşive Aktar", use_container_width=True):
-                    st.markdown("##### 📌 Arşiv Kampanya Bilgileri")
+                    st.markdown("##### 📌 Genel Kampanya Bilgileri")
                     aktar_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="aktar_yil")
                     aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
                     aktar_donem = st.selectbox("Dönem:", aylar, index=0, key="aktar_donem")
                     aktar_marka = st.text_input("Marka:", placeholder="Örn: BİM", key="aktar_marka")
-                    aktar_kampanya = st.text_input("Kampanya:", placeholder="Örn: Kırtasiye", key="aktar_kampanya")
-                    aktar_mecra = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="aktar_mecra")
+                    aktar_kampanya = st.text_input("Kampanya Adı:", placeholder="Örn: Kırtasiye", key="aktar_kampanya")
+
+                    st.markdown("---")
+                    st.markdown("##### 🏢 Satır Bazlı Mecra Eşleştirmesi")
+                    
+                    mecra_girdileri = []
+                    for idx, row in enumerate(st.session_state.sim_rows):
+                        varsayilan_mecra = tahmin_mecra(row['Ünite'], row['İl'])
+                        m_val = st.text_input(
+                            f"{row['Ünite']} ({row['İl']}):",
+                            value=varsayilan_mecra,
+                            key=f"mecra_input_{idx}"
+                        )
+                        mecra_girdileri.append(m_val.strip() if m_val.strip() else varsayilan_mecra)
 
                     if st.button("✅ Arşive Gönder", use_container_width=True, type="primary"):
                         m_isim = aktar_marka.strip() if aktar_marka.strip() else "BİM"
                         k_isim = aktar_kampanya.strip() if aktar_kampanya.strip() else "Kırtasiye"
-                        c_isim = aktar_mecra.strip() if aktar_mecra.strip() else "Kentvizyon"
 
-                        for row in st.session_state.sim_rows:
+                        for idx, row in enumerate(st.session_state.sim_rows):
+                            c_isim = mecra_girdileri[idx]
                             st.session_state.arsiv_rows.append({
                                 "Yıl": int(aktar_yil),
                                 "Dönem (Ay)": aktar_donem,
@@ -615,7 +642,7 @@ if st.session_state.active_tab == "simulasyon":
                                 "TR Erişim %": float(row["TR Erişim %"]),
                                 "TR GRP": float(row["TR GRP"])
                             })
-                        st.success(f"✅ {len(st.session_state.sim_rows)} satır arşive başarıyla aktarıldı!")
+                        st.success(f"✅ {len(st.session_state.sim_rows)} satır kendi mecralarıyla arşive aktarıldı!")
                         st.rerun()
 
         # Harita Paneli
@@ -652,7 +679,7 @@ elif st.session_state.active_tab == "arsiv":
             a_kampanya_in = st.text_input("Kampanya:", placeholder="Örn: Kırtasiye", key="ars_kampanya")
             a_kampanya = a_kampanya_in.strip() if a_kampanya_in.strip() else "Kırtasiye"
         with k5:
-            a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="ars_mecra")
+            a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon / Donanım Medya", key="ars_mecra")
             a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
 
         # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle
@@ -786,7 +813,7 @@ elif st.session_state.active_tab == "arsiv":
             table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
-            col_a1, col_a2, col_a3, col_a4, col_a5 = st.columns([1, 1.2, 1, 1.2, 1.5])
+            col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
             with col_a1:
                 if st.button("↩️ Son Satırı Sil", key="ars_del_last", use_container_width=True):
                     if st.session_state.arsiv_rows:
@@ -798,7 +825,7 @@ elif st.session_state.active_tab == "arsiv":
                         "Silinecek Satır No:",
                         range(len(st.session_state.arsiv_rows)),
                         key="ars_del_select",
-                        format_func=lambda i: f"Satır {i+1}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Ünite']} ({st.session_state.arsiv_rows[i]['İl']})"
+                        format_func=lambda i: f"Satır {i+1}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Ünite']} ({st.session_state.arsiv_rows[i]['Mecra Adı']})"
                     )
                     if st.button("❌ Bu Satırı Sil", key="ars_del_btn", type="primary", use_container_width=True):
                         st.session_state.arsiv_rows.pop(silinecek_idx)

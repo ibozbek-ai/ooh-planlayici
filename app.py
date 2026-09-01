@@ -511,7 +511,7 @@ elif st.session_state.active_tab == "arsiv":
         with k10:
             a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet_input")
         with k11:
-            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
 
         a_periyod = st.session_state.ars_per
@@ -568,7 +568,7 @@ elif st.session_state.active_tab == "arsiv":
             maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
 
             ak1.metric("📊 Toplam Gösterim", f"{toplam_gos_a:,}")
-            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
+            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp_a:.2f}")
             ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 

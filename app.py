@@ -7,7 +7,7 @@ from openpyxl.utils import get_column_letter
 
 # Sayfa Yapılandırması
 st.set_page_config(
-    page_title="OOH Planlama Stüdyosu | Enterprise Dashboard",
+    page_title="OOH Planlama Stüdyosu | İbrahim Özbek Arslan",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -18,8 +18,14 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-    * {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    /* Temel Font - İkon Fontlarını Bozmayacak Şekilde */
+    html, body, .stApp, p, label, input, select, textarea {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Streamlit İkonlarının Bozulmasını Önleyen Kural */
+    span[data-testid="stIconMaterial"], .material-symbols-rounded, [class*="material-symbols"] {
+        font-family: 'Material Symbols Rounded', 'Material Icons' !important;
     }
 
     .stApp {
@@ -107,7 +113,7 @@ st.markdown("""
     /* Giriş Kartı */
     div[data-testid="stForm"] {
         max-width: 390px !important;
-        margin: 40px auto 0 auto !important;
+        margin: 30px auto 0 auto !important;
         background: linear-gradient(180deg, #111827 0%, #0f172a 100%) !important;
         border: 1px solid rgba(56, 189, 248, 0.2) !important;
         border-radius: 16px !important;
@@ -154,14 +160,19 @@ st.markdown("""
         background-color: rgba(56, 189, 248, 0.04);
     }
 
-    .footer-text {
+    .corporate-footer {
         text-align: center;
-        color: #475569;
+        color: #64748b;
         font-size: 12px;
+        font-weight: 500;
         margin-top: 50px;
         padding-top: 20px;
-        border-top: 1px solid rgba(255,255,255,0.05);
-        letter-spacing: 0.5px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        letter-spacing: 0.4px;
+    }
+    .corporate-footer strong {
+        color: #38bdf8;
+        font-weight: 700;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -175,14 +186,14 @@ if "logged_in" not in st.session_state:
     st.session_state.username = ""
 
 def login_form():
-    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; font-weight: 800; color: #38bdf8; margin-bottom: 2px; letter-spacing: -0.5px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #64748b; font-size: 13px; margin-bottom: 24px; font-weight: 500;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 13px; margin-bottom: 20px; font-weight: 500;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
     
     with st.form("login_box"):
         user = st.text_input("👤 Kullanıcı Adı:", placeholder="Kullanıcı adınızı girin")
         pwd = st.text_input("🔑 Şifre:", type="password", placeholder="••••••••")
-        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
         submit = st.form_submit_button("🚀 Güvenli Giriş Yap", use_container_width=True, type="primary")
         if submit:
             if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
@@ -191,6 +202,8 @@ def login_form():
                 st.rerun()
             else:
                 st.error("Kullanıcı adı veya şifre hatalı!")
+                
+    st.markdown("<div class='corporate-footer'>Bu yazılım ve hesaplama motoru <strong>İbrahim Özbek Arslan</strong> tarafından geliştirilmiştir.</div>", unsafe_allow_html=True)
 
 if not st.session_state.logged_in:
     login_form()
@@ -451,6 +464,9 @@ looker_url = st.sidebar.text_input(
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
+st.sidebar.markdown("---")
+st.sidebar.caption("⚡ **Geliştirici:** İbrahim Özbek Arslan")
+
 # --- 6. RAPOR OLUŞTURMA YARDIMCILARI (EXCEL & HTML) ---
 def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=False):
     output = io.BytesIO()
@@ -465,6 +481,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         summary_df = pd.DataFrame([
             {"Metrik": "Rapor Başlığı", "Değer": report_title},
+            {"Metrik": "Geliştirici & Sistem", "Değer": "İbrahim Özbek Arslan | OOH Planlama Stüdyosu"},
             {"Metrik": "Toplam Gösterim", "Değer": toplam_gos},
             {"Metrik": "Toplam TR GRP", "Değer": toplam_grp},
             {"Metrik": "Kapsanan İl Sayısı", "Değer": f"{kapsanan_il} İl"},
@@ -497,9 +514,9 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             cell.font = header_font
             cell.alignment = center_align
             
-        ws_sum["B2"].number_format = '#,##0'
-        ws_sum["B3"].number_format = '#,##0.00'
-        ws_sum["B5"].number_format = '0.0%'
+        ws_sum["B3"].number_format = '#,##0'
+        ws_sum["B4"].number_format = '#,##0.00'
+        ws_sum["B6"].number_format = '0.0%'
         
         ws_plan = wb['Medya Planı']
         for col in ws_plan.columns:
@@ -566,7 +583,8 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
         th {{ background: #1e293b; color: #38bdf8; padding: 12px; border: 1px solid #1f293d; text-align: center; }}
         td {{ padding: 10px; border: 1px solid #1f293d; color: #cbd5e1; text-align: center; }}
         tr:nth-child(even) {{ background: rgba(255,255,255,0.02); }}
-        .footer-note {{ text-align: center; color: #64748b; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
+        .footer-note {{ text-align: center; color: #94a3b8; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
+        .footer-note strong {{ color: #38bdf8; }}
     </style>
 </head>
 <body>
@@ -582,7 +600,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
         <tbody>{table_rows_html}</tbody>
     </table>
     {looker_section}
-    <div class="footer-note">📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>
+    <div class="footer-note">© 2026 <strong>İbrahim Özbek Arslan</strong> | Kurumsal OOH Medya Planlama & Simülasyon Sistemi. (CAFAS verileri dikkate alınarak hesaplanmıştır.)</div>
 </body>
 </html>"""
 
@@ -986,7 +1004,7 @@ elif st.session_state.active_tab == "arsiv":
             kapsanan_il_a, maks_erisim_a = hesapla_net_kapsama_metrikleri(df_arsiv, nufus_dict, TR_TOTAL_NUFUS)
 
             ak1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos_a))
-            ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp_a, 2))
+            ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp, 2))
             ak3.metric("🌐 Maks. TR Erişimi", f"%{tr_ondalik(maks_erisim_a, 1)}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
@@ -1038,5 +1056,5 @@ elif st.session_state.active_tab == "arsiv":
                     use_container_width=True
                 )
 
-# --- 8. DİPNOT (FOOTER) ---
-st.markdown("<div class='footer-text'>📌 CAFAS verileri dikkate alınarak geliştirilmiş Kurumsal OOH Medya Planlama Sistemi.</div>", unsafe_allow_html=True)
+# --- 8. KURUMSAL DİPNOT (FOOTER) ---
+st.markdown("<div class='corporate-footer'>Bu yazılım ve hesaplama motoru <strong>İbrahim Özbek Arslan</strong> tarafından geliştirilmiştir. • CAFAS verileri dikkate alınarak hazırlanmıştır.</div>", unsafe_allow_html=True)

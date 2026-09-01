@@ -7,89 +7,146 @@ from openpyxl.utils import get_column_letter
 
 # Sayfa Yapılandırması
 st.set_page_config(
-    page_title="OOH Medya Planlama & Simülatör",
+    page_title="OOH Planlama Stüdyosu | Enterprise Dashboard",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- CSS & TEMİZ KOYU TEMA ---
+# --- ULTRA-PREMIUM EXECUTIVE DARK THEME CSS ---
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    * {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
     .stApp {
-        background-color: #0b0f19;
-        color: #f8fafc;
+        background: radial-gradient(circle at 50% 0%, #172033 0%, #080c14 75%);
+        color: #f1f5f9;
     }
-    
+
+    /* Üst Başlık Stili */
+    .app-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .app-header h1 {
+        font-size: 26px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+
+    /* Buton Tasarımları */
     .stButton>button {
-        border-radius: 6px;
-        font-weight: 700;
-        height: 42px;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     
+    .stButton>button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25) !important;
+    }
+
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35) !important;
+    }
+
+    button[kind="secondary"] {
+        background-color: rgba(30, 41, 59, 0.7) !important;
+        color: #94a3b8 !important;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Input & Select Box Stilleri */
     div[data-baseweb="input"], div[data-baseweb="select"] {
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        background-color: #0f172a !important;
+        border: 1px solid #1e293b !important;
     }
-    
+
+    /* KPI Metric Kartları */
     div[data-testid="stMetric"] {
-        background-color: #111827;
-        border: 1px solid #1f2937;
-        border-radius: 8px;
-        padding: 12px 18px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        background: linear-gradient(145deg, rgba(17, 24, 39, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(12px);
     }
     div[data-testid="stMetricLabel"] {
-        font-size: 12px !important;
-        font-weight: 600 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
         color: #94a3b8 !important;
     }
     div[data-testid="stMetricValue"] {
-        font-size: 24px !important;
-        font-weight: 700 !important;
+        font-size: 26px !important;
+        font-weight: 800 !important;
         color: #f8fafc !important;
+        letter-spacing: -0.5px;
     }
 
-    /* Giriş Kartı Düzenlemesi */
+    /* Giriş Kartı */
     div[data-testid="stForm"] {
-        max-width: 380px !important;
-        margin: 0 auto !important;
-        background-color: #111827 !important;
-        border: 1px solid #1f2937 !important;
-        border-radius: 12px !important;
-        padding: 24px 20px !important;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+        max-width: 390px !important;
+        margin: 40px auto 0 auto !important;
+        background: linear-gradient(180deg, #111827 0%, #0f172a 100%) !important;
+        border: 1px solid rgba(56, 189, 248, 0.2) !important;
+        border-radius: 16px !important;
+        padding: 28px 24px !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.08) !important;
     }
 
+    /* Tablo Tasarımı */
     .table-responsive-box {
         width: 100%;
         overflow-x: auto;
-        margin: 15px 0 25px 0;
-        border: 1px solid #1f2937;
-        border-radius: 8px;
-        background-color: #0e1526;
+        margin: 20px 0 30px 0;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background-color: #0b1120;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
     .custom-ooh-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
-        letter-spacing: 0.2px;
     }
     .custom-ooh-table th {
-        background-color: #162035;
+        background-color: #131d33;
         color: #38bdf8;
-        padding: 14px 10px;
+        padding: 15px 12px;
         text-align: center !important;
         vertical-align: middle;
         font-weight: 700;
-        border-bottom: 2px solid #1f293d;
+        font-size: 12px;
+        letter-spacing: 0.4px;
+        border-bottom: 2px solid #1e293b;
         white-space: nowrap;
     }
     .custom-ooh-table td {
-        padding: 12px 10px;
+        padding: 13px 12px;
         text-align: center !important;
         vertical-align: middle;
         color: #e2e8f0;
-        border-bottom: 1px solid #1a243b;
+        border-bottom: 1px solid #151f33;
         white-space: nowrap;
     }
     .custom-ooh-table tbody tr:hover {
@@ -98,11 +155,11 @@ st.markdown("""
 
     .footer-text {
         text-align: center;
-        color: #64748b;
-        font-size: 13px;
-        margin-top: 40px;
+        color: #475569;
+        font-size: 12px;
+        margin-top: 50px;
         padding-top: 20px;
-        border-top: 1px solid #1e293b;
+        border-top: 1px solid rgba(255,255,255,0.05);
         letter-spacing: 0.5px;
     }
 </style>
@@ -117,15 +174,15 @@ if "logged_in" not in st.session_state:
     st.session_state.username = ""
 
 def login_form():
-    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; color: #38bdf8; margin-bottom: 0px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 13px; margin-bottom: 20px;'>Medya Planlama ve Lokasyon Portalı</p>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; font-weight: 800; color: #38bdf8; margin-bottom: 2px; letter-spacing: -0.5px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 13px; margin-bottom: 24px; font-weight: 500;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
     
     with st.form("login_box"):
         user = st.text_input("👤 Kullanıcı Adı:", placeholder="Kullanıcı adınızı girin")
         pwd = st.text_input("🔑 Şifre:", type="password", placeholder="••••••••")
-        st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
-        submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True, type="primary")
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        submit = st.form_submit_button("🚀 Güvenli Giriş Yap", use_container_width=True, type="primary")
         if submit:
             if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
                 st.session_state.logged_in = True
@@ -371,11 +428,9 @@ looker_url = st.sidebar.text_input(
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
-# --- 6. RAPOR OLUŞTURMA YARDIMCILARI (PROFESYONEL BİÇİMLİ EXCEL & HTML) ---
+# --- 6. RAPOR OLUŞTURMA YARDIMCILARI (EXCEL & HTML) ---
 def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=False):
     output = io.BytesIO()
-    
-    # Excel dataframe kopyası (Yüzde ve sayıları ham matematiksel float/int olarak tutar)
     df_excel = df_to_export.copy()
     if "TR Erişim %" in df_excel.columns:
         df_excel["TR Erişim %"] = df_excel["TR Erişim %"] / 100.0
@@ -397,13 +452,9 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         summary_df.to_excel(writer, sheet_name='Özet KPI', index=False)
         df_excel.to_excel(writer, sheet_name='Medya Planı', index=False)
         
-        # Openpyxl Stil & Biçim Giydirme
         wb = writer.book
-        
-        # Renkler ve Stiller
         header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
         header_font = Font(name="Calibri", size=11, bold=True, color="38BDF8")
-        bold_font = Font(name="Calibri", size=11, bold=True)
         center_align = Alignment(horizontal="center", vertical="center")
         left_align = Alignment(horizontal="left", vertical="center")
         thin_border = Border(
@@ -413,7 +464,6 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             bottom=Side(style='thin', color='CBD5E1')
         )
         
-        # 1. Sayfa: Özet KPI Şekillendirme
         ws_sum = wb['Özet KPI']
         for col in ws_sum.columns:
             for cell in col:
@@ -428,7 +478,6 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         ws_sum["B3"].number_format = '#,##0.00'
         ws_sum["B5"].number_format = '0.0%'
         
-        # 2. Sayfa: Medya Planı Şekillendirme
         ws_plan = wb['Medya Planı']
         for col in ws_plan.columns:
             for cell in col:
@@ -440,7 +489,6 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             cell.font = header_font
             cell.alignment = center_align
             
-        # Kolon Bazlı Hücre Sayı/Yüzde Formatları
         col_names = [cell.value for cell in ws_plan[1]]
         for row in range(2, ws_plan.max_row + 1):
             for col_idx, col_name in enumerate(col_names, start=1):
@@ -452,7 +500,6 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
                 elif col_name in ["TR Erişim %"]:
                     cell.number_format = '0.00%'
 
-        # Otomatik Kolon Genişlikleri
         for ws in [ws_sum, ws_plan]:
             for col in ws.columns:
                 max_len = max(len(str(cell.value or '')) for cell in col)
@@ -516,8 +563,12 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 </body>
 </html>"""
 
-# --- 7. ÜST GEÇİŞ BUTONLARI ---
-st.title("⚡ OOH MEDYA PLANLAMA & SİMÜLASYON MERKEZİ")
+# --- 7. ÜST MENÜ & BAŞLIK ---
+st.markdown("""
+<div class="app-header">
+    <h1>⚡ OOH PLANLAMA & SİMÜLASYON MERKEZİ</h1>
+</div>
+""", unsafe_allow_html=True)
 
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
@@ -532,14 +583,14 @@ with col_btn2:
         st.session_state.active_tab = "arsiv"
         st.rerun()
 
-st.markdown("---")
+st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
 # ==========================================
 # 1. SEKME: ANLIK HESAPLAMA & SİMÜLATÖR
 # ==========================================
 if st.session_state.active_tab == "simulasyon":
     if df_gost is not None and not df_gost.empty:
-        st.markdown("### 📝 Yeni Kampanya Simülasyon Planı Oluştur")
+        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 15px;'>📝 YENİ KAMPANYA SİMÜLASYONU</h4>", unsafe_allow_html=True)
 
         col_il, col_unite, col_per, col_sure, col_adet = st.columns([2.2, 2.2, 1.2, 1.2, 1.2])
         
@@ -648,7 +699,7 @@ if st.session_state.active_tab == "simulasyon":
 
         if st.session_state.sim_rows:
             df_sim = pd.DataFrame(st.session_state.sim_rows)
-            st.markdown("---")
+            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
             toplam_gos = df_sim["Toplam Gösterim"].sum()
             toplam_grp = round(df_sim["TR GRP"].sum(), 2)
@@ -757,11 +808,11 @@ if st.session_state.active_tab == "simulasyon":
                         st.rerun()
 
         # Harita Paneli
-        st.markdown("---")
-        st.markdown("### 🗺️ Canlı Looker Studio Harita Paneli")
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 15px;'>🗺️ CANLI LOOKER STUDIO HARİTA PANELİ</h4>", unsafe_allow_html=True)
         if looker_url:
             st.components.v1.html(
-                f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
+                f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
                 height=560
             )
         else:
@@ -771,7 +822,7 @@ if st.session_state.active_tab == "simulasyon":
 # 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
-    st.markdown("### 📝 Yeni Kampanya Satırı Ekle")
+    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 15px;'>📝 YENİ KAMPANYA SATIRI EKLE</h4>", unsafe_allow_html=True)
     
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
@@ -904,7 +955,7 @@ elif st.session_state.active_tab == "arsiv":
 
         if st.session_state.arsiv_rows:
             df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
-            st.markdown("---")
+            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
             
             ak1, ak2, ak3, ak4 = st.columns(4)
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
@@ -965,4 +1016,4 @@ elif st.session_state.active_tab == "arsiv":
                 )
 
 # --- 8. DİPNOT (FOOTER) ---
-st.markdown("<div class='footer-text'>📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>", unsafe_allow_html=True)
+st.markdown("<div class='footer-text'>📌 CAFAS verileri dikkate alınarak geliştirilmiş Kurumsal OOH Medya Planlama Sistemi.</div>", unsafe_allow_html=True)

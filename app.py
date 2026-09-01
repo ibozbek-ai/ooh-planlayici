@@ -7,167 +7,198 @@ from openpyxl.utils import get_column_letter
 
 # Sayfa Yapılandırması
 st.set_page_config(
-    page_title="OOH Medya Planlama & Simülatör",
+    page_title="OOH Planlama Stüdyosu | Medya Yönetim Merkezi",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- ULTRA-PREMIUM EXECUTIVE DARK THEME CSS ---
+# --- FERAH, MODERN & İÇ AÇICI ULTRA-PREMIUM TEMA CSS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-    html, body, .stApp, p, label, input, select, textarea {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* Temel Font - Modern & Büyük Tipografi */
+    html, body, .stApp, p, label, input, select, textarea, span, div {
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
-    /* Streamlit İkonlarının Bozulmasını Önleyen Kural */
+    /* İkonların Bozulmasını Engelleyen Kural */
     span[data-testid="stIconMaterial"], .material-symbols-rounded, [class*="material-symbols"] {
         font-family: 'Material Symbols Rounded', 'Material Icons' !important;
     }
 
+    /* Ferah, İç Açıcı Arka Plan Gradyanı */
     .stApp {
-        background: radial-gradient(circle at 50% 0%, #172033 0%, #080c14 75%);
-        color: #f1f5f9;
+        background: radial-gradient(circle at 50% -10%, #1e2c4f 0%, #0d1527 50%, #070a12 100%) !important;
+        color: #f8fafc !important;
+        font-size: 15px !important;
     }
 
-    /* Üst Başlık Stili */
+    /* Sol Menü (Sidebar) Ferahlatma */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #101a33 0%, #090e1c 100%) !important;
+        border-right: 1px solid rgba(56, 189, 248, 0.15) !important;
+    }
+
+    /* Üst Başlık */
     .app-header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
         margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 18px;
+        border-bottom: 1px solid rgba(56, 189, 248, 0.2);
     }
     .app-header h1 {
-        font-size: 26px !important;
+        font-size: 30px !important;
         font-weight: 800 !important;
         letter-spacing: -0.5px;
-        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        background: linear-gradient(135deg, #38bdf8 0%, #a5b4fc 50%, #60a5fa 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
     }
 
-    /* Buton Tasarımları */
-    .stButton>button, div[data-testid="stPopover"]>button {
-        border-radius: 8px !important;
+    /* Form Etiketleri (Label) Boyut & Renk */
+    div[data-testid="stWidgetLabel"] p {
+        font-size: 14.5px !important;
         font-weight: 600 !important;
-        font-size: 13px !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #cbd5e1 !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* Girdi Kutuları (Input, Select) - Ferah & Yüksek */
+    div[data-baseweb="input"], div[data-baseweb="select"] {
+        border-radius: 10px !important;
+        background-color: #131d36 !important;
+        border: 1.5px solid #233357 !important;
+        min-height: 48px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    }
+    div[data-baseweb="input"]:focus-within, div[data-baseweb="select"]:focus-within {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
+    }
+
+    div[data-baseweb="input"] input {
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        color: #ffffff !important;
+    }
+
+    /* Butonlar */
+    .stButton>button, div[data-testid="stPopover"]>button {
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        height: 48px !important;
+        padding: 0 22px !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         white-space: nowrap !important;
     }
-    
+
     .stButton>button:hover, div[data-testid="stPopover"]>button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35) !important;
     }
 
     button[kind="primary"] {
-        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%) !important;
         color: #ffffff !important;
         border: none !important;
-        box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35) !important;
+        box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4) !important;
     }
 
     button[kind="secondary"], div[data-testid="stPopover"]>button {
-        background-color: rgba(30, 41, 59, 0.7) !important;
-        color: #cbd5e1 !important;
-        backdrop-filter: blur(10px);
+        background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
     }
 
-    /* Input & Select Box Stilleri */
-    div[data-baseweb="input"], div[data-baseweb="select"] {
-        border-radius: 8px !important;
-        background-color: #0f172a !important;
-        border: 1px solid #1e293b !important;
-    }
-
-    /* KPI Metric Kartları */
+    /* KPI Metric Kartları - Canlı & Geniş */
     div[data-testid="stMetric"] {
-        background: linear-gradient(145deg, rgba(17, 24, 39, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(12px);
+        background: linear-gradient(145deg, rgba(26, 38, 68, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%) !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.2) !important;
+        border-radius: 14px !important;
+        padding: 18px 22px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
+        backdrop-filter: blur(14px) !important;
     }
     div[data-testid="stMetricLabel"] {
-        font-size: 11px !important;
+        font-size: 13px !important;
         font-weight: 700 !important;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
+        letter-spacing: 0.9px;
         color: #94a3b8 !important;
     }
     div[data-testid="stMetricValue"] {
-        font-size: 26px !important;
+        font-size: 30px !important;
         font-weight: 800 !important;
-        color: #f8fafc !important;
+        color: #38bdf8 !important;
         letter-spacing: -0.5px;
     }
 
-    /* Daha Geniş, Kibar ve Ferah Giriş Kartı */
+    /* Geniş ve Şık Giriş Formu */
     div[data-testid="stForm"] {
         max-width: 480px !important;
         margin: 50px auto 0 auto !important;
-        background: linear-gradient(180deg, #111827 0%, #0f172a 100%) !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 18px !important;
-        padding: 34px 30px !important;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.1) !important;
+        background: linear-gradient(180deg, #15213d 0%, #0e172a 100%) !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.3) !important;
+        border-radius: 20px !important;
+        padding: 38px 32px !important;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.15) !important;
     }
 
     /* Tablo Tasarımı */
     .table-responsive-box {
         width: 100%;
         overflow-x: auto;
-        margin: 20px 0 30px 0;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        background-color: #0b1120;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        margin: 22px 0 32px 0;
+        border: 1.5px solid rgba(56, 189, 248, 0.2);
+        border-radius: 14px;
+        background-color: #0d1529;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.4);
     }
     .custom-ooh-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 13px;
+        font-size: 14.5px;
     }
     .custom-ooh-table th {
-        background-color: #131d33;
+        background: linear-gradient(180deg, #1a2747 0%, #141f38 100%);
         color: #38bdf8;
-        padding: 15px 12px;
+        padding: 16px 14px;
         text-align: center !important;
         vertical-align: middle;
         font-weight: 700;
-        font-size: 12px;
-        letter-spacing: 0.4px;
-        border-bottom: 2px solid #1e293b;
+        font-size: 13.5px;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #24355a;
         white-space: nowrap;
     }
     .custom-ooh-table td {
-        padding: 13px 12px;
+        padding: 14px 14px;
         text-align: center !important;
         vertical-align: middle;
-        color: #e2e8f0;
-        border-bottom: 1px solid #151f33;
+        color: #f1f5f9;
+        border-bottom: 1px solid #1a2747;
         white-space: nowrap;
     }
     .custom-ooh-table tbody tr:hover {
-        background-color: rgba(56, 189, 248, 0.04);
+        background-color: rgba(56, 189, 248, 0.08);
     }
 
     .corporate-footer {
         text-align: center;
         color: #64748b;
-        font-size: 12px;
+        font-size: 13.5px;
         font-weight: 500;
-        margin-top: 50px;
-        padding-top: 20px;
+        margin-top: 55px;
+        padding-top: 22px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
-        letter-spacing: 0.4px;
+        letter-spacing: 0.5px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -182,14 +213,14 @@ if "logged_in" not in st.session_state:
 
 def login_form():
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; font-weight: 800; color: #38bdf8; margin-bottom: 4px; letter-spacing: -0.5px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 14px; margin-bottom: 24px;'>Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; font-weight: 800; font-size: 32px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 15px; margin-bottom: 26px; font-weight: 500;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
     
     with st.form("login_box"):
         user = st.text_input("Kullanıcı Adı:", placeholder="Kullanıcı adınızı giriniz")
         pwd = st.text_input("Şifre:", type="password", placeholder="••••••••")
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True, type="primary")
+        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+        submit = st.form_submit_button("🚀 Güvenli Giriş Yap", use_container_width=True, type="primary")
         if submit:
             if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
                 st.session_state.logged_in = True
@@ -476,6 +507,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         summary_df = pd.DataFrame([
             {"Metrik": "Rapor Başlığı", "Değer": report_title},
+            {"Metrik": "Geliştirici & Sistem", "Değer": "İbrahim Özbek Arslan | OOH Planlama Stüdyosu"},
             {"Metrik": "Toplam Gösterim", "Değer": toplam_gos},
             {"Metrik": "Toplam TR GRP", "Değer": toplam_grp},
             {"Metrik": "Kapsanan İl Sayısı", "Değer": f"{kapsanan_il} İl"},
@@ -508,9 +540,9 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             cell.font = header_font
             cell.alignment = center_align
             
-        ws_sum["B2"].number_format = '#,##0'
-        ws_sum["B3"].number_format = '#,##0.00'
-        ws_sum["B5"].number_format = '0.0%'
+        ws_sum["B3"].number_format = '#,##0'
+        ws_sum["B4"].number_format = '#,##0.00'
+        ws_sum["B6"].number_format = '0.0%'
         
         ws_plan = wb['Medya Planı']
         for col in ws_plan.columns:
@@ -624,7 +656,7 @@ st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 # ==========================================
 if st.session_state.active_tab == "simulasyon":
     if df_gost is not None and not df_gost.empty:
-        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 15px;'>📝 YENİ KAMPANYA SİMÜLASYONU</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>📝 YENİ KAMPANYA SİMÜLASYONU</h4>", unsafe_allow_html=True)
 
         col_il, col_unite, col_per, col_sure, col_adet = st.columns([2.2, 2.2, 1.2, 1.2, 1.2])
         
@@ -733,7 +765,7 @@ if st.session_state.active_tab == "simulasyon":
 
         if st.session_state.sim_rows:
             df_sim = pd.DataFrame(st.session_state.sim_rows)
-            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
             toplam_gos = df_sim["Toplam Gösterim"].sum()
             toplam_grp = round(df_sim["TR GRP"].sum(), 2)
@@ -843,7 +875,7 @@ if st.session_state.active_tab == "simulasyon":
 
         # Harita Paneli
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 15px;'>🗺️ CANLI LOOKER STUDIO HARİTA PANELİ</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>🗺️ CANLI LOOKER STUDIO HARİTA PANELİ</h4>", unsafe_allow_html=True)
         if looker_url:
             st.components.v1.html(
                 f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
@@ -856,7 +888,7 @@ if st.session_state.active_tab == "simulasyon":
 # 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
-    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 15px;'>📝 YENİ KAMPANYA SATIRI EKLE</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>📝 YENİ KAMPANYA SATIRI EKLE</h4>", unsafe_allow_html=True)
     
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
@@ -989,7 +1021,7 @@ elif st.session_state.active_tab == "arsiv":
 
         if st.session_state.arsiv_rows:
             df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
-            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
             
             ak1, ak2, ak3, ak4 = st.columns(4)
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
@@ -1049,5 +1081,5 @@ elif st.session_state.active_tab == "arsiv":
                     use_container_width=True
                 )
 
-# --- 8. DİPNOT (FOOTER) ---
+# --- 8. KURUMSAL DİPNOT (FOOTER) ---
 st.markdown("<div class='corporate-footer'>📌 CAFAS verileri dikkate alınarak geliştirilmiştir.</div>", unsafe_allow_html=True)

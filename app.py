@@ -296,9 +296,8 @@ if st.session_state.active_tab == "simulasyon":
     if df_gost is not None and not df_gost.empty:
         st.markdown("### 📝 Yeni Kampanya Simülasyon Planı Oluştur")
 
-        # Session State Başlangıç Değerleri
-        if "sim_periyod_val" not in st.session_state:
-            st.session_state.sim_periyod_val = 1.0
+        if "sim_per_val" not in st.session_state:
+            st.session_state.sim_per_val = 1.0
         if "sim_sure_val" not in st.session_state:
             st.session_state.sim_sure_val = 7
 
@@ -312,31 +311,31 @@ if st.session_state.active_tab == "simulasyon":
             def sim_unite_degisti():
                 u = st.session_state.sim_unite
                 b = sure_dict.get(u, 7.0)
-                st.session_state.sim_sure_val = int(round(b * st.session_state.sim_periyod_val))
+                st.session_state.sim_sure_val = int(round(b * st.session_state.sim_per_val))
 
             secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite", on_change=sim_unite_degisti)
             baz_sure = sure_dict.get(secilen_unite, 7.0)
 
-        # Çift Yönlü Callback Fonksiyonları
-        def sim_periyod_guncellendi():
-            p = st.session_state.sim_per_in
-            st.session_state.sim_periyod_val = p
+        # Çift yönlü bağımsız callback'ler
+        def on_sim_per_change():
+            p = st.session_state.sim_per_key
+            st.session_state.sim_per_val = p
             st.session_state.sim_sure_val = int(round(baz_sure * p))
 
-        def sim_sure_guncellendi():
-            s = st.session_state.sim_sure_in
+        def on_sim_sure_change():
+            s = st.session_state.sim_sure_key
             st.session_state.sim_sure_val = s
-            st.session_state.sim_periyod_val = round(s / baz_sure, 2) if baz_sure > 0 else 1.0
+            st.session_state.sim_per_val = round(s / baz_sure, 2) if baz_sure > 0 else 1.0
 
         with c3:
             st.number_input(
                 "⏱️ Periyod:",
                 min_value=0.1,
                 max_value=20.0,
-                value=float(st.session_state.sim_periyod_val),
+                value=float(st.session_state.sim_per_val),
                 step=0.1,
-                key="sim_per_in",
-                on_change=sim_periyod_guncellendi
+                key="sim_per_key",
+                on_change=on_sim_per_change
             )
         with c4:
             st.number_input(
@@ -344,13 +343,13 @@ if st.session_state.active_tab == "simulasyon":
                 min_value=1,
                 value=int(st.session_state.sim_sure_val),
                 step=1,
-                key="sim_sure_in",
-                on_change=sim_sure_guncellendi
+                key="sim_sure_key",
+                on_change=on_sim_sure_change
             )
         with c5:
             adet_val = st.number_input("🔢 Adet:", min_value=1, value=100, step=10, key="sim_adet")
 
-        periyod_val = st.session_state.sim_periyod_val
+        periyod_val = st.session_state.sim_per_val
         sure_val = st.session_state.sim_sure_val
 
         if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True):
@@ -446,9 +445,8 @@ elif st.session_state.active_tab == "arsiv":
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
         
-        # Session State Başlangıç Değerleri
-        if "ars_periyod_val" not in st.session_state:
-            st.session_state.ars_periyod_val = 1.0
+        if "ars_per_val" not in st.session_state:
+            st.session_state.ars_per_val = 1.0
         if "ars_sure_val" not in st.session_state:
             st.session_state.ars_sure_val = 7
 
@@ -477,30 +475,30 @@ elif st.session_state.active_tab == "arsiv":
             def ars_unite_degisti():
                 u = st.session_state.ars_unite
                 b = sure_dict.get(u, 7.0)
-                st.session_state.ars_sure_val = int(round(b * st.session_state.ars_periyod_val))
+                st.session_state.ars_sure_val = int(round(b * st.session_state.ars_per_val))
 
             a_unite = st.selectbox("Ünite:", a_uniteler, key="ars_unite", on_change=ars_unite_degisti)
             baz_sure_a = sure_dict.get(a_unite, 7.0)
 
-        def ars_periyod_guncellendi():
-            p = st.session_state.ars_per_in
-            st.session_state.ars_periyod_val = p
+        def on_ars_per_change():
+            p = st.session_state.ars_per_key
+            st.session_state.ars_per_val = p
             st.session_state.ars_sure_val = int(round(baz_sure_a * p))
 
-        def ars_sure_guncellendi():
-            s = st.session_state.ars_sure_in
+        def on_ars_sure_change():
+            s = st.session_state.ars_sure_key
             st.session_state.ars_sure_val = s
-            st.session_state.ars_periyod_val = round(s / baz_sure_a, 2) if baz_sure_a > 0 else 1.0
+            st.session_state.ars_per_val = round(s / baz_sure_a, 2) if baz_sure_a > 0 else 1.0
 
         with k8:
             st.number_input(
                 "Periyod:",
                 min_value=0.1,
                 max_value=20.0,
-                value=float(st.session_state.ars_periyod_val),
+                value=float(st.session_state.ars_per_val),
                 step=0.1,
-                key="ars_per_in",
-                on_change=ars_periyod_guncellendi
+                key="ars_per_key",
+                on_change=on_ars_per_change
             )
         with k9:
             st.number_input(
@@ -508,8 +506,8 @@ elif st.session_state.active_tab == "arsiv":
                 min_value=1,
                 value=int(st.session_state.ars_sure_val),
                 step=1,
-                key="ars_sure_in",
-                on_change=ars_sure_guncellendi
+                key="ars_sure_key",
+                on_change=on_ars_sure_change
             )
         with k10:
             a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet")
@@ -517,7 +515,7 @@ elif st.session_state.active_tab == "arsiv":
             st.markdown("<br>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
 
-        a_periyod = st.session_state.ars_periyod_val
+        a_periyod = st.session_state.ars_per_val
         a_sure = st.session_state.ars_sure_val
 
         if ekle_btn:
@@ -571,7 +569,7 @@ elif st.session_state.active_tab == "arsiv":
             maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
 
             ak1.metric("📊 Toplam Gösterim", f"{toplam_gos_a:,}")
-            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
+            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp_a:.2f}")
             ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 

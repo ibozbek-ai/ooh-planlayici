@@ -171,6 +171,20 @@ def temiz_sayi_al(val, default=0.0):
     try: return float(s)
     except: return default
 
+# Türkiye İlleri Listesi (Otomatik Kolon Tespiti İçin)
+TURK_ILLERI = {
+    "adana", "adıyaman", "afyonkarahisar", "ağrı", "amasya", "ankara", "antalya", "artvin", "aydın", 
+    "balıkesir", "bilecik", "bingöl", "bitlis", "bolu", "burdur", "bursa", "çanakkale", "çankırı", 
+    "çorum", "denizli", "diyarbakır", "edirne", "elazığ", "erzincan", "erzurum", "eskişehir", 
+    "gaziantep", "giresun", "gümüşhane", "hakkari", "hatay", "ısparta", "mersin", "istanbul", 
+    "i̇stanbul", "izmir", "i̇zmir", "kars", "kastamonu", "kayseri", "kırklareli", "kırşehir", 
+    "kocaeli", "konya", "kütahya", "malatya", "manisa", "kahramanmaraş", "mardin", "muğla", 
+    "muş", "nevşehir", "niğde", "ordu", "rize", "sakarya", "samsun", "siirt", "sinop", "sivas", 
+    "tekirdağ", "tokat", "trabzon", "tunceli", "şanlıurfa", "uşak", "van", "yozgat", "zonguldak", 
+    "aksaray", "bayburt", "karaman", "kırıkkale", "batman", "şırnak", "bartın", "ardahan", "ığdır", 
+    "yalova", "karabük", "kilis", "osmaniye", "düzce", "anadolu illeri", "türkiye", "genel"
+}
+
 @st.cache_data(ttl=10)
 def veriyi_yukle(dosya_yolu_veya_url):
     try:
@@ -191,45 +205,62 @@ def veriyi_yukle(dosya_yolu_veya_url):
             sheet = 'Günlük Gösterim Sayıları' if 'Günlük Gösterim Sayıları' in excel_obj.sheet_names else excel_obj.sheet_names[0]
             df_raw = pd.read_excel(dosya_yolu_veya_url, sheet_name=sheet, header=None)
 
-        # Akıllı Kolon & Başlık Tespiti
-        il_idx, unite_idx, gost_idx, frek_idx, net_idx, endeks_idx = -1, -1, -1, -1, -1, -1
-        header_row = -1
+        # 1. Başlık Satırını ve Kolonları İçerik Taramasıyla Doğrula
+        il_col = -1
+        unite_col = -1
+        start_row = 1
 
-        for r in range(min(15, len(df_raw))):
-            row_vals = [str(x).strip().lower() for x in df_raw.iloc[r].tolist()]
-            for c, val in enumerate(row_vals):
-                if val == "il" or val == "i̇l": il_idx = c
-                elif "ünite" in val or "unite" in val: unite_idx = c
-                elif "günlük" in val or "gösterim" in val or "gosterim" in val: gost_idx = c
-                elif "frekans" in val: frek_idx = c
-                elif "network" in val or "net" in val: net_idx = c
-                elif "endeks" in val: endeks_idx = c
-            
-            if il_idx != -1 and unite_idx != -1:
-                header_row = r
+        for r in range(min(10, len(df_raw))):
+            row_items = [str(x).strip().lower() for x in df_raw.iloc[r].tolist()]
+            for idx, item in enumerate(row_items):
+                if item in ["il", "i̇l", "i̇ller", "iller"]:
+                    il_col = idx
+                elif "ünite" in item or "unite" in item:
+                    unite_col = idx
+            if il_col != -1 and unite_col != -1:
+                start_row = r + 1
                 break
 
-        # Kolonlar bulunamadıysa standart güvenli fallback
-        if header_row == -1:
-            header_row = 1
-            il_idx, unite_idx, gost_idx, frek_idx, net_idx, endeks_idx = 1, 2, 3, 4, 5, 6
-        else:
-            if gost_idx == -1: gost_idx = 3
-            if frek_idx == -1: frek_idx = 4
-            if net_idx == -1: net_idx = 5
-            if endeks_idx == -1: endeks_idx = 6
+        # Başlık bulunamazsa veri içeriğine göre otomatik tanı
+        if il_col == -1 or unite_col == -1:
+            best_il_match = 0
+            for c in range(min(5, df_raw.shape[1])):
+                col_vals = [str(x).strip().lower() for x in df_raw.iloc[1:25, c].dropna().tolist()]
+                match_count = sum(1 for v in col_vals if v in TURK_ILLERI)
+                if match_count > best_il_match:
+                    best_il_match = match_count
+                    il_col = c
+            
+            # Ünite kolonu İl olmayan en yakın metin kolonu olur
+            for c in range(min(5, df_raw.shape[1])):
+                if c != il_col:
+                    col_vals = [str(x).strip() for x in df_raw.iloc[1:25, c].dropna().tolist()]
+                    if any(len(v) > 2 for v in col_vals):
+                        unite_col = c
+                        break
+
+        # Güvenli İndeks Atamaları
+        if il_col == -1: il_col = 1
+        if unite_col == -1: unite_col = 2
+        
+        # Sayısal Kolonlar (İl ve Ünite'den sonraki 3, 4, 5, 6. kolonlar)
+        gost_col = max(il_col, unite_col) + 1
+        frek_col = gost_col + 1
+        net_col = frek_col + 1
+        endeks_col = net_col + 1
 
         rows_data = []
-        for r in range(header_row + 1, len(df_raw)):
-            il_val = str(df_raw.iloc[r, il_idx]).strip() if df_raw.shape[1] > il_idx else ""
-            unite_val = str(df_raw.iloc[r, unite_idx]).strip() if df_raw.shape[1] > unite_idx else ""
-            if not il_val or il_val.lower() in ['nan', 'none', ''] or not unite_val or unite_val.lower() in ['nan', 'none', '']:
+        for r in range(start_row, len(df_raw)):
+            il_val = str(df_raw.iloc[r, il_col]).strip() if df_raw.shape[1] > il_col else ""
+            unite_val = str(df_raw.iloc[r, unite_col]).strip() if df_raw.shape[1] > unite_col else ""
+            
+            if not il_val or il_val.lower() in ['nan', 'none', '', 'il', 'i̇l'] or not unite_val or unite_val.lower() in ['nan', 'none', '', 'ünite', 'unite']:
                 continue
 
-            gost_val = temiz_sayi_al(df_raw.iloc[r, gost_idx] if df_raw.shape[1] > gost_idx else 0, 0.0)
-            frek_val = temiz_sayi_al(df_raw.iloc[r, frek_idx] if df_raw.shape[1] > frek_idx else 1, 1.0)
-            net_val = temiz_sayi_al(df_raw.iloc[r, net_idx] if df_raw.shape[1] > net_idx else 100, 100.0)
-            endeks_raw = temiz_sayi_al(df_raw.iloc[r, endeks_idx] if df_raw.shape[1] > endeks_idx else 1, 1.0)
+            gost_val = temiz_sayi_al(df_raw.iloc[r, gost_col] if df_raw.shape[1] > gost_col else 0, 0.0)
+            frek_val = temiz_sayi_al(df_raw.iloc[r, frek_col] if df_raw.shape[1] > frek_col else 1, 1.0)
+            net_val = temiz_sayi_al(df_raw.iloc[r, net_col] if df_raw.shape[1] > net_col else 100, 100.0)
+            endeks_raw = temiz_sayi_al(df_raw.iloc[r, endeks_col] if df_raw.shape[1] > endeks_col else 1, 1.0)
             endeks_val = endeks_raw / 100.0 if endeks_raw > 1.5 else endeks_raw
 
             rows_data.append({
@@ -243,6 +274,7 @@ def veriyi_yukle(dosya_yolu_veya_url):
 
         df_gost = pd.DataFrame(rows_data)
 
+        # Nüfus & Süre Haritaları
         nufus_dict = {
             "İstanbul": 15754053, "Ankara": 5910320, "İzmir": 4504185, 
             "Bursa": 3263011, "Antalya": 2777677, "Türkiye": 86920168
@@ -258,14 +290,14 @@ def veriyi_yukle(dosya_yolu_veya_url):
         for c in range(df_raw.shape[1]):
             col_txt = " ".join([str(v) for v in df_raw.iloc[:, c].dropna().values])
             if "Nüfus" in col_txt:
-                for r in range(header_row, len(df_raw)):
+                for r in range(start_row - 1, len(df_raw)):
                     il_c = str(df_raw.iloc[r, c-1] if c>=1 else "").strip()
                     nuf_val = temiz_sayi_al(df_raw.iloc[r, c], None)
                     if il_c and nuf_val is not None and il_c.lower() != 'nan':
                         nufus_dict[il_c] = nuf_val
 
             if "Kullanım Süresi" in col_txt or "Süre" in col_txt:
-                for r in range(header_row, len(df_raw)):
+                for r in range(start_row - 1, len(df_raw)):
                     u_c = str(df_raw.iloc[r, c-2] if c>=2 else df_raw.iloc[r, c-1]).strip()
                     sure_val = temiz_sayi_al(df_raw.iloc[r, c], None)
                     if u_c and sure_val is not None and u_c.lower() != 'nan':
@@ -417,25 +449,35 @@ if st.session_state.active_tab == "simulasyon":
         
         with col_il:
             il_listesi = sorted(list(set(df_gost['İl'].tolist())))
-            secilen_il = st.selectbox("📍 İl Seçin:", il_listesi, key="sim_il_select")
+            
+            def on_sim_il_change():
+                sec_il = st.session_state.sim_il_select
+                uniteler_yeni = sorted(list(set(df_gost[df_gost['İl'] == sec_il]['Ünite'].tolist())))
+                if uniteler_yeni:
+                    ilk_unite = uniteler_yeni[0]
+                    b = sure_dict.get(ilk_unite, 7.0)
+                    st.session_state.sim_sure = int(round(b * st.session_state.sim_per))
+                    row_match = df_gost[(df_gost['İl'] == sec_il) & (df_gost['Ünite'] == ilk_unite)]
+                    if not row_match.empty:
+                        st.session_state.sim_adet_input = int(row_match['Network Adedi'].values[0])
+
+            secilen_il = st.selectbox("📍 İl Seçin:", il_listesi, key="sim_il_select", on_change=on_sim_il_change)
 
         with col_unite:
             uniteler = sorted(list(set(df_gost[df_gost['İl'] == secilen_il]['Ünite'].tolist())))
             
-            def on_sim_unite_or_il_change():
+            def on_sim_unite_change():
                 u = st.session_state.sim_unite_select
                 b = sure_dict.get(u, 7.0)
                 st.session_state.sim_sure = int(round(b * st.session_state.sim_per))
                 
-                # Seçilen ünitenin network adedini anında al
                 row_match = df_gost[(df_gost['İl'] == st.session_state.sim_il_select) & (df_gost['Ünite'] == u)]
                 if not row_match.empty:
                     st.session_state.sim_adet_input = int(row_match['Network Adedi'].values[0])
 
-            secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite_select", on_change=on_sim_unite_or_il_change)
+            secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite_select", on_change=on_sim_unite_change)
             baz_sure = sure_dict.get(secilen_unite, 7.0)
 
-            # İlk render için güncel network adedi
             current_net_row = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
             current_net_adet = int(current_net_row['Network Adedi'].values[0]) if not current_net_row.empty else 100
 
@@ -467,7 +509,6 @@ if st.session_state.active_tab == "simulasyon":
             )
 
         with col_adet:
-            # Kutuda doğrudan ünitenin tablodaki gerçek Network Adedi gelir
             if "sim_adet_input" not in st.session_state:
                 st.session_state.sim_adet_input = current_net_adet
             adet_val = st.number_input("🔢 Adet:", min_value=1, value=int(st.session_state.sim_adet_input), step=1, key="sim_adet_input")
@@ -624,21 +665,32 @@ elif st.session_state.active_tab == "arsiv":
         # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle
         k6, k7, k8, k9, k10, k11 = st.columns([2.2, 2.5, 1.2, 1.2, 1.2, 1.7])
         with k6:
-            a_il = st.selectbox("İl:", il_listesi, key="ars_il_select")
+            def on_ars_il_change():
+                sec_il_a = st.session_state.ars_il_select
+                uniteler_yeni_a = sorted(list(set(df_gost[df_gost['İl'] == sec_il_a]['Ünite'].tolist())))
+                if uniteler_yeni_a:
+                    ilk_u = uniteler_yeni_a[0]
+                    b = sure_dict.get(ilk_u, 7.0)
+                    st.session_state.ars_sure = int(round(b * st.session_state.ars_per))
+                    row_match_a = df_gost[(df_gost['İl'] == sec_il_a) & (df_gost['Ünite'] == ilk_u)]
+                    if not row_match_a.empty:
+                        st.session_state.ars_adet_input = int(row_match_a['Network Adedi'].values[0])
+
+            a_il = st.selectbox("İl:", il_listesi, key="ars_il_select", on_change=on_ars_il_change)
+
         with k7:
             a_uniteler = sorted(list(set(df_gost[df_gost['İl'] == a_il]['Ünite'].tolist())))
             
-            def on_ars_unite_or_il_change():
+            def on_ars_unite_change():
                 u = st.session_state.ars_unite_select
                 b = sure_dict.get(u, 7.0)
                 st.session_state.ars_sure = int(round(b * st.session_state.ars_per))
                 
-                # Seçilen ünitenin network adedini anında al
                 row_match_a = df_gost[(df_gost['İl'] == st.session_state.ars_il_select) & (df_gost['Ünite'] == u)]
                 if not row_match_a.empty:
                     st.session_state.ars_adet_input = int(row_match_a['Network Adedi'].values[0])
 
-            a_unite = st.selectbox("Ünite:", a_uniteler, key="ars_unite_select", on_change=on_ars_unite_or_il_change)
+            a_unite = st.selectbox("Ünite:", a_uniteler, key="ars_unite_select", on_change=on_ars_unite_change)
             baz_sure_a = sure_dict.get(a_unite, 7.0)
             
             current_net_row_a = df_gost[(df_gost['İl'] == a_il) & (df_gost['Ünite'] == a_unite)]

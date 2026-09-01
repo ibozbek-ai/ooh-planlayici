@@ -124,7 +124,7 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. SAYI BİÇİMLENDİRME YARDIMCILARI ---
+# --- 2. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
 def tr_tam_sayi(val):
     try:
         n = int(round(float(val)))
@@ -165,6 +165,31 @@ def temiz_sayi_al(val, default=0.0):
     try: return float(s)
     except: return default
 
+def hesapla_kapsanan_il_sayisi(df):
+    if df is None or df.empty:
+        return 0
+    toplam_il = 0
+    eklenen_ozeller = set()
+    standart_iller = set()
+
+    for _, r in df.iterrows():
+        il_str = str(r.get('İl', '')).strip().lower()
+        unite_str = str(r.get('Ünite', '')).strip().lower()
+
+        if ("starbuck" in il_str or "starbuck" in unite_str) and "starbucks" not in eklenen_ozeller:
+            toplam_il += 38
+            eklenen_ozeller.add("starbucks")
+        elif ("macfit" in il_str or "mac fit" in il_str or "macfit" in unite_str or "mac fit" in unite_str) and "macfit" not in eklenen_ozeller:
+            toplam_il += 20
+            eklenen_ozeller.add("macfit")
+        elif ("üni" in il_str or "uni" in il_str or "üniversite" in il_str or "üni" in unite_str or "uni" in unite_str) and "uni" not in eklenen_ozeller:
+            toplam_il += 9
+            eklenen_ozeller.add("uni")
+        elif not any(x in il_str for x in ["starbuck", "macfit", "mac fit", "üni", "uni"]):
+            standart_iller.add(r['İl'])
+
+    return min(81, toplam_il + len(standart_iller))
+
 # --- 3. DOĞRUDAN EXCEL MOTORU (OUTDOOR.xlsx) ---
 @st.cache_data(ttl=10)
 def yerel_exceli_yukle():
@@ -174,7 +199,6 @@ def yerel_exceli_yukle():
         sheet = 'Günlük Gösterim Sayıları' if 'Günlük Gösterim Sayıları' in excel_obj.sheet_names else excel_obj.sheet_names[0]
         df_raw = pd.read_excel(excel_path, sheet_name=sheet, header=None)
 
-        # Tablo başlık satırını bul (Genellikle 2. satır, indeks 1)
         start_row = 1
         for r in range(min(10, len(df_raw))):
             b_val = str(df_raw.iloc[r, 1]).strip().lower() if df_raw.shape[1] > 1 else ""
@@ -208,7 +232,6 @@ def yerel_exceli_yukle():
 
         df_gost = pd.DataFrame(rows_data)
 
-        # Standart Nüfus & Süre Sözlükleri
         nufus_dict = {
             "İstanbul": 15754053, "Ankara": 5910320, "İzmir": 4504185, 
             "Bursa": 3263011, "Antalya": 2777677, "Türkiye": 86920168
@@ -218,10 +241,10 @@ def yerel_exceli_yukle():
             "Megalight": 7, "Üst Geçit Alınlık": 15, "Giantboard": 10,
             "Elektrik Direği Banner": 14, "Avm Dış Led Ekran": 7, "Dijital Raket": 7,
             "Dijital Ekran": 7, "Toplu Taşıma Ekran": 7, "Tramvay Raket CLP": 7, "Raket CLP": 7,
-            "Üni Ekran": 7, "Üniversite Ekran": 7
+            "Üni Ekran": 7, "Üniversite Ekran": 7, "Starbucks Kasa Arkası Ekran": 7,
+            "MacFit Ekran": 7
         }
 
-        # Excel'deki Nüfus ve Süre tablolarını dinamik oku
         for c in range(5, df_raw.shape[1]):
             col_txt = " ".join([str(v) for v in df_raw.iloc[:, c].dropna().values])
             if "Nüfus" in col_txt:
@@ -247,7 +270,7 @@ def yerel_exceli_yukle():
 
         return df_gost, nufus_dict, sure_dict, tr_nufus
     except Exception as e:
-        st.error(f"Excel Okuma Hatası (OUTDOOR.xlsx bulunamadı veya biçimi hatalı): {e}")
+        st.error(f"Excel Okuma Hatası (OUTDOOR.xlsx): {e}")
         return None, {}, {}, 86920168
 
 df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = yerel_exceli_yukle()
@@ -308,8 +331,8 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 
     toplam_gos = df_to_export["Toplam Gösterim"].sum()
     toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
-    kapsanan_il = df_to_export["İl"].nunique()
-    kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_to_export["İl"].unique())
+    kapsanan_il = hesapla_kapsanan_il_sayisi(df_to_export)
+    kapsanan_nufus = sum(df_to_export.drop_duplicates(subset=["İl"])["İl Nüfusu"])
     maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
 
     looker_section = ""
@@ -485,8 +508,8 @@ if st.session_state.active_tab == "simulasyon":
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
             toplam_gos = df_sim["Toplam Gösterim"].sum()
             toplam_grp = round(df_sim["TR GRP"].sum(), 2)
-            kapsanan_il = df_sim["İl"].nunique()
-            kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_sim["İl"].unique())
+            kapsanan_il = hesapla_kapsanan_il_sayisi(df_sim)
+            kapsanan_nufus = sum(df_sim.drop_duplicates(subset=["İl"])["İl Nüfusu"])
             maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
 
             kpi1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos))
@@ -707,8 +730,8 @@ elif st.session_state.active_tab == "arsiv":
             ak1, ak2, ak3, ak4 = st.columns(4)
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
             toplam_grp_a = round(df_arsiv["TR GRP"].sum(), 2)
-            kapsanan_il_a = df_arsiv["İl"].nunique()
-            kapsanan_nufus_a = sum(nufus_dict.get(il, 719000) for il in df_arsiv["İl"].unique())
+            kapsanan_il_a = hesapla_kapsanan_il_sayisi(df_arsiv)
+            kapsanan_nufus_a = sum(df_arsiv.drop_duplicates(subset=["İl"])["İl Nüfusu"])
             maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
 
             ak1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos_a))

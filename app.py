@@ -13,31 +13,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- FERAH, MODERN & İÇ AÇICI ULTRA-PREMIUM TEMA CSS ---
+# --- ULTRA-PREMIUM EXECUTIVE DYNAMIC CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-    /* Temel Font - Modern & Büyük Tipografi */
     html, body, .stApp, p, label, input, select, textarea, span, div {
         font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
-    /* İkonların Bozulmasını Engelleyen Kural */
+    /* İkon İzolasyonu */
     span[data-testid="stIconMaterial"], .material-symbols-rounded, [class*="material-symbols"] {
         font-family: 'Material Symbols Rounded', 'Material Icons' !important;
     }
 
-    /* Ferah, İç Açıcı Arka Plan Gradyanı */
+    /* Ferah Arka Plan */
     .stApp {
-        background: radial-gradient(circle at 50% -10%, #1e2c4f 0%, #0d1527 50%, #070a12 100%) !important;
+        background: radial-gradient(circle at 50% -10%, #1a294d 0%, #0d1629 50%, #070b14 100%) !important;
         color: #f8fafc !important;
         font-size: 15px !important;
     }
 
-    /* Sol Menü (Sidebar) Ferahlatma */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #101a33 0%, #090e1c 100%) !important;
+        background: linear-gradient(180deg, #101c38 0%, #090e1c 100%) !important;
         border-right: 1px solid rgba(56, 189, 248, 0.15) !important;
     }
 
@@ -60,7 +58,7 @@ st.markdown("""
         margin: 0;
     }
 
-    /* Form Etiketleri (Label) Boyut & Renk */
+    /* Form Etiketleri */
     div[data-testid="stWidgetLabel"] p {
         font-size: 14.5px !important;
         font-weight: 600 !important;
@@ -68,59 +66,94 @@ st.markdown("""
         margin-bottom: 6px !important;
     }
 
-    /* Girdi Kutuları (Input, Select) - Ferah & Yüksek */
+    /* Girdi Kutuları */
     div[data-baseweb="input"], div[data-baseweb="select"] {
         border-radius: 10px !important;
-        background-color: #131d36 !important;
-        border: 1.5px solid #233357 !important;
+        background-color: #131f3b !important;
+        border: 1.5px solid #24355c !important;
         min-height: 48px !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
     }
     div[data-baseweb="input"]:focus-within, div[data-baseweb="select"]:focus-within {
         border-color: #38bdf8 !important;
-        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3) !important;
     }
-
     div[data-baseweb="input"] input {
         font-size: 15px !important;
         font-weight: 500 !important;
         color: #ffffff !important;
     }
 
-    /* Butonlar */
+    /* BUTONLAR - GENEL TABAN */
     .stButton>button, div[data-testid="stPopover"]>button {
         border-radius: 10px !important;
         font-weight: 700 !important;
-        font-size: 15px !important;
-        height: 48px !important;
-        padding: 0 22px !important;
+        font-size: 15.5px !important;
+        height: 50px !important;
+        padding: 0 24px !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         white-space: nowrap !important;
     }
 
+    /* BUTON ÜZERİNE GELME (HOVER) ETKİSİ */
     .stButton>button:hover, div[data-testid="stPopover"]>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35) !important;
+        transform: translateY(-3px) scale(1.01) !important;
+        cursor: pointer !important;
     }
 
-    button[kind="primary"] {
-        background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%) !important;
+    /* 1. ÜST SEKME SEÇİM BUTONLARI */
+    .tab-btn-active > button {
+        background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
         color: #ffffff !important;
-        border: none !important;
-        box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4) !important;
+        border: 1.5px solid #38bdf8 !important;
+        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+    }
+    .tab-btn-active > button:hover {
+        box-shadow: 0 8px 25px rgba(56, 189, 248, 0.6) !important;
     }
 
+    .tab-btn-inactive > button {
+        background: linear-gradient(135deg, #111a2e 0%, #16223d 100%) !important;
+        color: #94a3b8 !important;
+        border: 1.5px solid #233354 !important;
+    }
+    .tab-btn-inactive > button:hover {
+        background: linear-gradient(135deg, #1e2c4d 0%, #24355a 100%) !important;
+        color: #f8fafc !important;
+        border-color: #38bdf8 !important;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* 2. EKLE BUTONLARI (Zümrüt Yeşili - Canlı & Ayrışan) */
+    .action-add-btn > button {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+        color: #ffffff !important;
+        border: 1.5px solid #34d399 !important;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+        font-size: 16px !important;
+    }
+    .action-add-btn > button:hover {
+        background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+        box-shadow: 0 8px 25px rgba(52, 211, 153, 0.6) !important;
+        border-color: #6ee7b7 !important;
+    }
+
+    /* 3. İKİNCİL / YÖNETİM BUTONLARI */
     button[kind="secondary"], div[data-testid="stPopover"]>button {
         background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
         color: #e2e8f0 !important;
-        border: 1px solid #334155 !important;
+        border: 1.5px solid #334155 !important;
+    }
+    button[kind="secondary"]:hover, div[data-testid="stPopover"]>button:hover {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25) !important;
+        color: #ffffff !important;
     }
 
-    /* KPI Metric Kartları - Canlı & Geniş */
+    /* KPI Metric Kartları */
     div[data-testid="stMetric"] {
-        background: linear-gradient(145deg, rgba(26, 38, 68, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%) !important;
-        border: 1.5px solid rgba(56, 189, 248, 0.2) !important;
+        background: linear-gradient(145deg, rgba(26, 38, 68, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%) !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
         border-radius: 14px !important;
         padding: 18px 22px !important;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
@@ -140,7 +173,7 @@ st.markdown("""
         letter-spacing: -0.5px;
     }
 
-    /* Geniş ve Şık Giriş Formu */
+    /* Giriş Formu */
     div[data-testid="stForm"] {
         max-width: 480px !important;
         margin: 50px auto 0 auto !important;
@@ -636,18 +669,23 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# SEKME GEÇİŞ BUTONLARI (Aktif ve Pasif Sınıflarıyla Ayrıştırıldı)
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
-    btn_type1 = "primary" if st.session_state.active_tab == "simulasyon" else "secondary"
-    if st.button("📊 Anlık Hesaplama & Simülatör", type=btn_type1, use_container_width=True):
+    btn1_class = "tab-btn-active" if st.session_state.active_tab == "simulasyon" else "tab-btn-inactive"
+    st.markdown(f'<div class="{btn1_class}">', unsafe_allow_html=True)
+    if st.button("📊 Anlık Hesaplama & Simülatör", key="tab_sim_btn", use_container_width=True):
         st.session_state.active_tab = "simulasyon"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_btn2:
-    btn_type2 = "primary" if st.session_state.active_tab == "arsiv" else "secondary"
-    if st.button("📁 Kampanya Yönetimi & Yıllık Arşiv", type=btn_type2, use_container_width=True):
+    btn2_class = "tab-btn-active" if st.session_state.active_tab == "arsiv" else "tab-btn-inactive"
+    st.markdown(f'<div class="{btn2_class}">', unsafe_allow_html=True)
+    if st.button("📁 Kampanya Yönetimi & Yıllık Arşiv", key="tab_ars_btn", use_container_width=True):
         st.session_state.active_tab = "arsiv"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
@@ -729,7 +767,12 @@ if st.session_state.active_tab == "simulasyon":
         periyod_val = st.session_state.sim_per
         sure_val = st.session_state.sim_sure
 
-        if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True, type="primary"):
+        # ÖZEL ZÜMRÜT YEŞİLİ EKLE BUTONU
+        st.markdown('<div class="action-add-btn">', unsafe_allow_html=True)
+        ekle_tiklandi = st.button("➕ Simülasyon Satırını Plana Ekle", key="sim_add_row_btn", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        if ekle_tiklandi:
             m_gost = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
             gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
             baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
@@ -975,7 +1018,10 @@ elif st.session_state.active_tab == "arsiv":
             a_adet = st.number_input("Adet:", min_value=1, value=int(st.session_state.ars_adet_input), step=1, key="ars_adet_input")
         with k11:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-            ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
+            # ÖZEL ZÜMRÜT YEŞİLİ EKLE BUTONU
+            st.markdown('<div class="action-add-btn">', unsafe_allow_html=True)
+            ekle_btn = st.button("➕ Ekle", key="ars_add_btn", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         a_periyod = st.session_state.ars_per
         a_sure = st.session_state.ars_sure
@@ -1038,7 +1084,7 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4, col_a5 = st.columns([1, 1.2, 1, 1.2, 1.2])

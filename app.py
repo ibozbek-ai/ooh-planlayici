@@ -190,8 +190,8 @@ def hesapla_kapsanan_il_sayisi(df):
 
     return min(81, toplam_il + len(standart_iller))
 
-# --- 3. DOĞRUDAN EXCEL MOTORU (OUTDOOR.xlsx) ---
-@st.cache_data(ttl=10)
+# --- 3. DOĞRUDAN VE JET HIZINDA EXCEL MOTORU (KALICI ÖNBELLEK) ---
+@st.cache_data
 def yerel_exceli_yukle():
     try:
         excel_path = "OUTDOOR.xlsx"

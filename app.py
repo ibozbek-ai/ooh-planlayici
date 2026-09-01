@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS & SADE KOYU TEMA (HİZALANMIŞ & TEMİZ) ---
+# --- CSS & SADE KOYU TEMA ---
 st.markdown("""
 <style>
     .stApp {
@@ -466,7 +466,7 @@ elif st.session_state.active_tab == "arsiv":
             a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="ars_mecra")
             a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
 
-        # 2. Satır Girişleri
+        # 2. Satır Girişleri (Periyod ve Gün Çift Yönlü Senkronize)
         k6, k7, k8, k9, k10, k11 = st.columns([1.5, 2, 1, 1, 1, 1.2])
         with k6:
             a_il = st.selectbox("İl:", il_listesi, key="ars_il_select")
@@ -509,7 +509,7 @@ elif st.session_state.active_tab == "arsiv":
         with k10:
             a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet_input")
         with k11:
-            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
 
         a_periyod = st.session_state.ars_per

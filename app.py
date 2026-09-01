@@ -47,15 +47,16 @@ st.markdown("""
     }
 
     /* Buton Tasarımları */
-    .stButton>button {
+    .stButton>button, div[data-testid="stPopover"]>button {
         border-radius: 8px !important;
         font-weight: 600 !important;
         font-size: 13px !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        white-space: nowrap !important;
     }
     
-    .stButton>button:hover {
+    .stButton>button:hover, div[data-testid="stPopover"]>button:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25) !important;
     }
@@ -67,9 +68,9 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35) !important;
     }
 
-    button[kind="secondary"] {
+    button[kind="secondary"], div[data-testid="stPopover"]>button {
         background-color: rgba(30, 41, 59, 0.7) !important;
-        color: #94a3b8 !important;
+        color: #cbd5e1 !important;
         backdrop-filter: blur(10px);
     }
 
@@ -269,11 +270,29 @@ UNI_ILLERI_SET = {
     "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Eskişehir", "Konya", "Trabzon", "Erzurum"
 }
 
+def get_il_nufusu(il_adi, nufus_dict):
+    il_adi = str(il_adi).strip()
+    if "starbuck" in il_adi.lower():
+        return float(nufus_dict.get("Starbucks İlleri", 58150000))
+    elif "macfit" in il_adi.lower() or "mac fit" in il_adi.lower():
+        return float(nufus_dict.get("MacFit İlleri", 52274000))
+    elif "üni" in il_adi.lower() or "uni" in il_adi.lower():
+        return float(nufus_dict.get("Üni İlleri", 36462000))
+    elif "anadolu" in il_adi.lower():
+        val = float(nufus_dict.get("Anadolu İlleri", 719000))
+        return val if val > 0 else 719000.0
+    
+    val = float(nufus_dict.get(il_adi, 0))
+    if val <= 0:
+        val = float(nufus_dict.get("Anadolu İlleri", 719000))
+    return val if val > 0 else 719000.0
+
 def hesapla_net_kapsama_metrikleri(df, nufus_dict, tr_total_nufus):
     if df is None or df.empty:
         return 0, 0.0
 
     kapsanan_tekil_iller = set()
+    ozel_ag_nufuslari = []
     
     for _, r in df.iterrows():
         il_str = str(r.get('İl', '')).strip().lower()
@@ -281,10 +300,13 @@ def hesapla_net_kapsama_metrikleri(df, nufus_dict, tr_total_nufus):
 
         if "starbuck" in il_str or "starbuck" in unite_str:
             kapsanan_tekil_iller.update(STARBUCKS_ILLERI_SET)
+            ozel_ag_nufuslari.append(58150000)
         elif "macfit" in il_str or "mac fit" in il_str or "macfit" in unite_str or "mac fit" in unite_str:
             kapsanan_tekil_iller.update(MACFIT_ILLERI_SET)
+            ozel_ag_nufuslari.append(52274000)
         elif "üni" in il_str or "uni" in il_str or "üniversite" in il_str or "üni" in unite_str or "uni" in unite_str:
             kapsanan_tekil_iller.update(UNI_ILLERI_SET)
+            ozel_ag_nufuslari.append(36462000)
         elif "anadolu" in il_str:
             kapsanan_tekil_iller.add("Anadolu İlleri")
         else:
@@ -293,8 +315,11 @@ def hesapla_net_kapsama_metrikleri(df, nufus_dict, tr_total_nufus):
     toplam_il_sayisi = min(81, len(kapsanan_tekil_iller))
     
     net_nufus = 0
-    for il in kapsanan_tekil_iller:
-        net_nufus += nufus_dict.get(il, nufus_dict.get("Anadolu İlleri", 719000))
+    if ozel_ag_nufuslari and len(kapsanan_tekil_iller) <= 38:
+        net_nufus = max(ozel_ag_nufuslari)
+    else:
+        for il in kapsanan_tekil_iller:
+            net_nufus += get_il_nufusu(il, nufus_dict)
     
     maks_erisim_pct = min(100.0, round((net_nufus / tr_total_nufus) * 100, 1))
     return toplam_il_sayisi, maks_erisim_pct
@@ -348,7 +373,8 @@ def yerel_exceli_yukle():
             "Hatay": 1544640, "Manisa": 1475716, "Kayseri": 1445495, "Samsun": 1377546,
             "Balıkesir": 1273519, "Tekirdağ": 1167059, "Aydın": 1161702, "Van": 1127612,
             "Trabzon": 824352, "Eskişehir": 915418, "Denizli": 1059082, "Sakarya": 1098115,
-            "Muğla": 1066736, "Türkiye": 86920168
+            "Muğla": 1066736, "Türkiye": 86920168, "Starbucks İlleri": 58150000,
+            "MacFit İlleri": 52274000, "Üni İlleri": 36462000, "Anadolu İlleri": 719000
         }
         sure_dict = {
             "Durak Raket CLP": 7, "Billboard": 7, "Afiş Değiştiricili Megalight": 7,
@@ -365,22 +391,19 @@ def yerel_exceli_yukle():
                 for r in range(start_row - 1, len(df_raw)):
                     il_c = str(df_raw.iloc[r, c-1] if c>=1 else "").strip()
                     nuf_val = temiz_sayi_al(df_raw.iloc[r, c], None)
-                    if il_c and nuf_val is not None and il_c.lower() != 'nan':
+                    if il_c and nuf_val is not None and il_c.lower() != 'nan' and nuf_val > 0:
                         nufus_dict[il_c] = nuf_val
 
             if "Kullanım Süresi" in col_txt or "Süre" in col_txt:
                 for r in range(start_row - 1, len(df_raw)):
                     u_c = str(df_raw.iloc[r, c-2] if c>=2 else df_raw.iloc[r, c-1]).strip()
                     sure_val = temiz_sayi_al(df_raw.iloc[r, c], None)
-                    if u_c and sure_val is not None and u_c.lower() != 'nan':
+                    if u_c and sure_val is not None and u_c.lower() != 'nan' and sure_val > 0:
                         sure_dict[u_c] = sure_val
 
         tr_nufus = float(nufus_dict.get("Türkiye", 86920168))
-        ozel_iller = [k for k in nufus_dict.keys() if k not in ["Türkiye", "Anadolu İlleri", "TR", "Genel", "Starbucks İlleri", "MacFit İlleri", "Üni İlleri"]]
-        ozel_toplam = sum(nufus_dict[k] for k in ozel_iller if k in nufus_dict)
-        kalan_il = max(1, 81 - len(ozel_iller))
-        anadolu_ort = round(max(0, tr_nufus - ozel_toplam) / kalan_il)
-        nufus_dict["Anadolu İlleri"] = float(anadolu_ort)
+        if nufus_dict.get("Anadolu İlleri", 0) <= 0:
+            nufus_dict["Anadolu İlleri"] = 719000.0
 
         return df_gost, nufus_dict, sure_dict, tr_nufus
     except Exception as e:
@@ -675,7 +698,7 @@ if st.session_state.active_tab == "simulasyon":
             else:
                 dinamik_frekans = 0.0
 
-            il_nufus = float(nufus_dict.get(secilen_il, nufus_dict.get("Anadolu İlleri", 719000)))
+            il_nufus = get_il_nufusu(secilen_il, nufus_dict)
             toplam_gosterim = gunluk_gost * sure_val * adet_val
             erisim_kisi = (toplam_gosterim / dinamik_frekans) if dinamik_frekans > 0 else 0
             erisim_pct_tr = (erisim_kisi / TR_TOTAL_NUFUS) * 100
@@ -926,7 +949,7 @@ elif st.session_state.active_tab == "arsiv":
             else:
                 dinamik_frekans = 0.0
 
-            il_nufus = float(nufus_dict.get(a_il, nufus_dict.get("Anadolu İlleri", 719000)))
+            il_nufus = get_il_nufusu(a_il, nufus_dict)
             toplam_gosterim = gunluk_gost * a_sure * a_adet
             erisim_kisi = (toplam_gosterim / dinamik_frekans) if dinamik_frekans > 0 else 0
             erisim_pct_tr = (erisim_kisi / TR_TOTAL_NUFUS) * 100

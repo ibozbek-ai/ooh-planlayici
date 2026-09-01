@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import io
 import json
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 # Sayfa Yapılandırması
 st.set_page_config(
@@ -47,7 +49,7 @@ st.markdown("""
         color: #f8fafc !important;
     }
 
-    /* KESİN ÇÖZÜM: GİRİŞ KARTINI DERLİ TOPLU VE MERKEZDE TUTAN CSS */
+    /* Giriş Kartı Düzenlemesi */
     div[data-testid="stForm"] {
         max-width: 380px !important;
         margin: 0 auto !important;
@@ -369,26 +371,94 @@ looker_url = st.sidebar.text_input(
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
-# --- 6. RAPOR OLUŞTURMA YARDIMCILARI (HTML & EXCEL) ---
+# --- 6. RAPOR OLUŞTURMA YARDIMCILARI (PROFESYONEL BİÇİMLİ EXCEL & HTML) ---
 def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=False):
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        toplam_gos = df_to_export["Toplam Gösterim"].sum()
-        toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
-        kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_to_export, nufus_dict, TR_TOTAL_NUFUS)
+    
+    # Excel dataframe kopyası (Yüzde ve sayıları ham matematiksel float/int olarak tutar)
+    df_excel = df_to_export.copy()
+    if "TR Erişim %" in df_excel.columns:
+        df_excel["TR Erişim %"] = df_excel["TR Erişim %"] / 100.0
 
+    toplam_gos = int(df_to_export["Toplam Gösterim"].sum())
+    toplam_grp = float(round(df_to_export["TR GRP"].sum(), 2))
+    kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_to_export, nufus_dict, TR_TOTAL_NUFUS)
+
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
         summary_df = pd.DataFrame([
-            {"Metrik": "Rapor Adı", "Değer": report_title},
-            {"Metrik": "Toplam Gösterim", "Değer": int(toplam_gos)},
-            {"Metrik": "Toplam TR GRP", "Değer": float(toplam_grp)},
+            {"Metrik": "Rapor Başlığı", "Değer": report_title},
+            {"Metrik": "Toplam Gösterim", "Değer": toplam_gos},
+            {"Metrik": "Toplam TR GRP", "Değer": toplam_grp},
             {"Metrik": "Kapsanan İl Sayısı", "Değer": f"{kapsanan_il} İl"},
-            {"Metrik": "Maks. TR Erişimi", "Değer": f"%{maks_erisim}"},
-            {"Metrik": "Looker Harita Linki", "Değer": looker_link if looker_link else "Belirtilmedi"}
+            {"Metrik": "Maks. TR Erişimi", "Değer": float(maks_erisim / 100.0)},
+            {"Metrik": "Looker Studio Harita Linki", "Değer": looker_link if looker_link else "Belirtilmedi"}
         ])
         
-        summary_df.to_excel(writer, sheet_name='Özet & KPI', index=False)
-        df_to_export.to_excel(writer, sheet_name='Plan Detayı', index=False)
-    
+        summary_df.to_excel(writer, sheet_name='Özet KPI', index=False)
+        df_excel.to_excel(writer, sheet_name='Medya Planı', index=False)
+        
+        # Openpyxl Stil & Biçim Giydirme
+        wb = writer.book
+        
+        # Renkler ve Stiller
+        header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+        header_font = Font(name="Calibri", size=11, bold=True, color="38BDF8")
+        bold_font = Font(name="Calibri", size=11, bold=True)
+        center_align = Alignment(horizontal="center", vertical="center")
+        left_align = Alignment(horizontal="left", vertical="center")
+        thin_border = Border(
+            left=Side(style='thin', color='CBD5E1'),
+            right=Side(style='thin', color='CBD5E1'),
+            top=Side(style='thin', color='CBD5E1'),
+            bottom=Side(style='thin', color='CBD5E1')
+        )
+        
+        # 1. Sayfa: Özet KPI Şekillendirme
+        ws_sum = wb['Özet KPI']
+        for col in ws_sum.columns:
+            for cell in col:
+                cell.border = thin_border
+                cell.alignment = left_align
+        for cell in ws_sum[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            
+        ws_sum["B2"].number_format = '#,##0'
+        ws_sum["B3"].number_format = '#,##0.00'
+        ws_sum["B5"].number_format = '0.0%'
+        
+        # 2. Sayfa: Medya Planı Şekillendirme
+        ws_plan = wb['Medya Planı']
+        for col in ws_plan.columns:
+            for cell in col:
+                cell.border = thin_border
+                cell.alignment = center_align
+                
+        for cell in ws_plan[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            
+        # Kolon Bazlı Hücre Sayı/Yüzde Formatları
+        col_names = [cell.value for cell in ws_plan[1]]
+        for row in range(2, ws_plan.max_row + 1):
+            for col_idx, col_name in enumerate(col_names, start=1):
+                cell = ws_plan.cell(row=row, column=col_idx)
+                if col_name in ["Adet", "Toplam Gösterim", "Erişim (Kişi)", "İl Nüfusu", "TR Nüfusu"]:
+                    cell.number_format = '#,##0'
+                elif col_name in ["Frekans", "TR GRP"]:
+                    cell.number_format = '#,##0.00'
+                elif col_name in ["TR Erişim %"]:
+                    cell.number_format = '0.00%'
+
+        # Otomatik Kolon Genişlikleri
+        for ws in [ws_sum, ws_plan]:
+            for col in ws.columns:
+                max_len = max(len(str(cell.value or '')) for cell in col)
+                col_letter = get_column_letter(col[0].column)
+                ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
     return output.getvalue()
 
 def generate_html_report(df_to_export, report_title, include_looker=False, is_arsiv=False):

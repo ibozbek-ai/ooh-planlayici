@@ -12,23 +12,45 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS & SADE KOYU TEMA ---
+# --- CSS & TEMİZ KOYU TEMA (HİZALANMIŞ & DENGELİ) ---
 st.markdown("""
 <style>
     .stApp {
         background-color: #0b0f19;
         color: #f8fafc;
     }
+    
+    /* Buton Tasarımları */
     .stButton>button {
         border-radius: 6px;
         font-weight: 700;
+        height: 42px;
     }
-    div[data-testid="stForm"] {
+    
+    /* Form & Input Hizalamaları */
+    div[data-baseweb="input"], div[data-baseweb="select"] {
+        border-radius: 6px !important;
+    }
+    
+    /* Metrik Kartları */
+    div[data-testid="stMetric"] {
         background-color: #111827;
         border: 1px solid #1f2937;
         border-radius: 8px;
-        padding: 15px;
+        padding: 12px 18px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
+    div[data-testid="stMetricLabel"] {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #94a3b8 !important;
+    }
+    div[data-testid="stMetricValue"] {
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        color: #f8fafc !important;
+    }
+
     .footer-text {
         text-align: center;
         color: #64748b;
@@ -308,7 +330,7 @@ if st.session_state.active_tab == "simulasyon":
     if df_gost is not None and not df_gost.empty:
         st.markdown("### 📝 Yeni Kampanya Simülasyon Planı Oluştur")
 
-        col_il, col_unite, col_per, col_sure, col_adet = st.columns([2, 2, 1, 1, 1])
+        col_il, col_unite, col_per, col_sure, col_adet = st.columns([2.2, 2.2, 1.2, 1.2, 1.2])
         
         with col_il:
             il_listesi = sorted(list(set(df_gost['İl'].tolist())))
@@ -358,7 +380,7 @@ if st.session_state.active_tab == "simulasyon":
         periyod_val = st.session_state.sim_per
         sure_val = st.session_state.sim_sure
 
-        if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True):
+        if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True, type="primary"):
             m_gost = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
             gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
             baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
@@ -390,6 +412,7 @@ if st.session_state.active_tab == "simulasyon":
                 "TR Erişim %": round(erisim_pct_tr, 2),
                 "TR GRP": round(grp_tr, 2)
             })
+            st.rerun()
 
         if st.session_state.sim_rows:
             df_sim = pd.DataFrame(st.session_state.sim_rows)
@@ -416,7 +439,7 @@ if st.session_state.active_tab == "simulasyon":
                 "Frekans": "{:.1f}"
             }), use_container_width=True)
 
-            col_s1, col_s2 = st.columns([1, 4])
+            col_s1, col_s2 = st.columns([1, 2])
             with col_s1:
                 if st.button("🧹 Planı Temizle", use_container_width=True):
                     st.session_state.sim_rows = []
@@ -451,8 +474,8 @@ elif st.session_state.active_tab == "arsiv":
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        # 1. Satır: Yıl, Dönem, Marka, Kampanya, Mecra
-        k1, k2, k3, k4, k5 = st.columns([1.2, 1.3, 2, 2, 2])
+        # 1. Satır: Yıl, Dönem, Marka, Kampanya, Mecra (Eşit ve simetrik genişlik)
+        k1, k2, k3, k4, k5 = st.columns([1.2, 1.3, 2.5, 2.5, 2.5])
         with k1:
             a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
         with k2:
@@ -468,8 +491,8 @@ elif st.session_state.active_tab == "arsiv":
             a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="ars_mecra")
             a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
 
-        # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle
-        k6, k7, k8, k9, k10, k11 = st.columns([2, 2, 1, 1, 1, 1.2])
+        # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle (Hizalı ve Ekle butonu dengeli)
+        k6, k7, k8, k9, k10, k11 = st.columns([2.2, 2.5, 1.2, 1.2, 1.2, 1.7])
         with k6:
             a_il = st.selectbox("İl:", il_listesi, key="ars_il_select")
         with k7:
@@ -511,7 +534,7 @@ elif st.session_state.active_tab == "arsiv":
         with k10:
             a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet_input")
         with k11:
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
 
         a_periyod = st.session_state.ars_per
@@ -583,7 +606,7 @@ elif st.session_state.active_tab == "arsiv":
                 "Adet": "{:,}"
             }), use_container_width=True)
 
-            col_a1, col_a2 = st.columns([1, 4])
+            col_a1, col_a2 = st.columns([1, 2])
             with col_a1:
                 if st.button("🧹 Arşivi Temizle", use_container_width=True):
                     st.session_state.arsiv_rows = []

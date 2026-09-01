@@ -124,7 +124,7 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
+# --- 2. SAYI BİÇİMLENDİRME VE ÖZEL İL KÜMELERİ ---
 def tr_tam_sayi(val):
     try:
         n = int(round(float(val)))
@@ -165,30 +165,54 @@ def temiz_sayi_al(val, default=0.0):
     try: return float(s)
     except: return default
 
-def hesapla_kapsanan_il_sayisi(df):
-    if df is None or df.empty:
-        return 0
-    toplam_il = 0
-    eklenen_ozeller = set()
-    standart_iller = set()
+# Özel Ağların Kapsadığı Şehir Havuzları (Dublikasyon Önleme)
+STARBUCKS_ILLERI_SET = {
+    "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Eskişehir", "Kocaeli", "Gaziantep", 
+    "Konya", "Mersin", "Muğla", "Aydın", "Denizli", "Samsun", "Kayseri", "Tekirdağ", "Balıkesir", 
+    "Trabzon", "Sakarya", "Çanakkale", "Hatay", "Manisa", "Afyonkarahisar", "Isparta", "Edirne", 
+    "Kütahya", "Sivas", "Malatya", "Kahramanmaraş", "Şanlıurfa", "Diyarbakır", "Zonguldak", "Yalova", 
+    "Bolu", "Düzce", "Ordu", "Rize"
+}
 
+MACFIT_ILLERI_SET = {
+    "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Eskişehir", "Kocaeli", "Gaziantep", 
+    "Konya", "Mersin", "Muğla", "Aydın", "Denizli", "Samsun", "Kayseri", "Tekirdağ", "Balıkesir", 
+    "Sakarya", "Yalova"
+}
+
+UNI_ILLERI_SET = {
+    "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Eskişehir", "Konya", "Trabzon", "Erzurum"
+}
+
+def hesapla_net_kapsama_metrikleri(df, nufus_dict, tr_total_nufus):
+    if df is None or df.empty:
+        return 0, 0.0
+
+    kapsanan_tekil_iller = set()
+    
     for _, r in df.iterrows():
         il_str = str(r.get('İl', '')).strip().lower()
         unite_str = str(r.get('Ünite', '')).strip().lower()
 
-        if ("starbuck" in il_str or "starbuck" in unite_str) and "starbucks" not in eklenen_ozeller:
-            toplam_il += 38
-            eklenen_ozeller.add("starbucks")
-        elif ("macfit" in il_str or "mac fit" in il_str or "macfit" in unite_str or "mac fit" in unite_str) and "macfit" not in eklenen_ozeller:
-            toplam_il += 20
-            eklenen_ozeller.add("macfit")
-        elif ("üni" in il_str or "uni" in il_str or "üniversite" in il_str or "üni" in unite_str or "uni" in unite_str) and "uni" not in eklenen_ozeller:
-            toplam_il += 9
-            eklenen_ozeller.add("uni")
-        elif not any(x in il_str for x in ["starbuck", "macfit", "mac fit", "üni", "uni"]):
-            standart_iller.add(r['İl'])
+        if "starbuck" in il_str or "starbuck" in unite_str:
+            kapsanan_tekil_iller.update(STARBUCKS_ILLERI_SET)
+        elif "macfit" in il_str or "mac fit" in il_str or "macfit" in unite_str or "mac fit" in unite_str:
+            kapsanan_tekil_iller.update(MACFIT_ILLERI_SET)
+        elif "üni" in il_str or "uni" in il_str or "üniversite" in il_str or "üni" in unite_str or "uni" in unite_str:
+            kapsanan_tekil_iller.update(UNI_ILLERI_SET)
+        elif "anadolu" in il_str:
+            kapsanan_tekil_iller.add("Anadolu İlleri")
+        else:
+            kapsanan_tekil_iller.add(r['İl'])
 
-    return min(81, toplam_il + len(standart_iller))
+    toplam_il_sayisi = min(81, len(kapsanan_tekil_iller))
+    
+    net_nufus = 0
+    for il in kapsanan_tekil_iller:
+        net_nufus += nufus_dict.get(il, nufus_dict.get("Anadolu İlleri", 719000))
+    
+    maks_erisim_pct = min(100.0, round((net_nufus / tr_total_nufus) * 100, 1))
+    return toplam_il_sayisi, maks_erisim_pct
 
 # --- 3. EXCEL VERİ MOTORU ---
 @st.cache_data
@@ -234,7 +258,12 @@ def yerel_exceli_yukle():
 
         nufus_dict = {
             "İstanbul": 15754053, "Ankara": 5910320, "İzmir": 4504185, 
-            "Bursa": 3263011, "Antalya": 2777677, "Türkiye": 86920168
+            "Bursa": 3263011, "Antalya": 2777677, "Adana": 2274106, "Konya": 2320645,
+            "Gaziantep": 2185982, "Kocaeli": 2102907, "Mersin": 1938389, "Diyarbakır": 1818133,
+            "Hatay": 1544640, "Manisa": 1475716, "Kayseri": 1445495, "Samsun": 1377546,
+            "Balıkesir": 1273519, "Tekirdağ": 1167059, "Aydın": 1161702, "Van": 1127612,
+            "Trabzon": 824352, "Eskişehir": 915418, "Denizli": 1059082, "Sakarya": 1098115,
+            "Muğla": 1066736, "Türkiye": 86920168
         }
         sure_dict = {
             "Durak Raket CLP": 7, "Billboard": 7, "Afiş Değiştiricili Megalight": 7,
@@ -262,8 +291,8 @@ def yerel_exceli_yukle():
                         sure_dict[u_c] = sure_val
 
         tr_nufus = float(nufus_dict.get("Türkiye", 86920168))
-        ozel_iller = [k for k in nufus_dict.keys() if k not in ["Türkiye", "Anadolu İlleri", "TR", "Genel"]]
-        ozel_toplam = sum(nufus_dict[k] for k in ozel_iller)
+        ozel_iller = [k for k in nufus_dict.keys() if k not in ["Türkiye", "Anadolu İlleri", "TR", "Genel", "Starbucks İlleri", "MacFit İlleri", "Üni İlleri"]]
+        ozel_toplam = sum(nufus_dict[k] for k in ozel_iller if k in nufus_dict)
         kalan_il = max(1, 81 - len(ozel_iller))
         anadolu_ort = round(max(0, tr_nufus - ozel_toplam) / kalan_il)
         nufus_dict["Anadolu İlleri"] = float(anadolu_ort)
@@ -331,9 +360,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 
     toplam_gos = df_to_export["Toplam Gösterim"].sum()
     toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
-    kapsanan_il = hesapla_kapsanan_il_sayisi(df_to_export)
-    kapsanan_nufus = sum(df_to_export.drop_duplicates(subset=["İl"])["İl Nüfusu"])
-    maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
+    kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_to_export, nufus_dict, TR_TOTAL_NUFUS)
 
     looker_section = ""
     if include_looker and looker_url:
@@ -508,9 +535,7 @@ if st.session_state.active_tab == "simulasyon":
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
             toplam_gos = df_sim["Toplam Gösterim"].sum()
             toplam_grp = round(df_sim["TR GRP"].sum(), 2)
-            kapsanan_il = hesapla_kapsanan_il_sayisi(df_sim)
-            kapsanan_nufus = sum(df_sim.drop_duplicates(subset=["İl"])["İl Nüfusu"])
-            maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
+            kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_sim, nufus_dict, TR_TOTAL_NUFUS)
 
             kpi1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos))
             kpi2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp, 2))
@@ -746,9 +771,7 @@ elif st.session_state.active_tab == "arsiv":
             ak1, ak2, ak3, ak4 = st.columns(4)
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
             toplam_grp_a = round(df_arsiv["TR GRP"].sum(), 2)
-            kapsanan_il_a = hesapla_kapsanan_il_sayisi(df_arsiv)
-            kapsanan_nufus_a = sum(df_arsiv.drop_duplicates(subset=["İl"])["İl Nüfusu"])
-            maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
+            kapsanan_il_a, maks_erisim_a = hesapla_net_kapsama_metrikleri(df_arsiv, nufus_dict, TR_TOTAL_NUFUS)
 
             ak1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos_a))
             ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp_a, 2))
@@ -763,7 +786,7 @@ elif st.session_state.active_tab == "arsiv":
             table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
-            col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
+            col_a1, col_a2, col_a3, col_a4, col_a5 = st.columns([1, 1.2, 1, 1.2, 1.5])
             with col_a1:
                 if st.button("↩️ Son Satırı Sil", key="ars_del_last", use_container_width=True):
                     if st.session_state.arsiv_rows:

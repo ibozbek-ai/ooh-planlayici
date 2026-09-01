@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS & TEMİZ KOYU TEMA (HİZALANMIŞ & DENGELİ) ---
+# --- CSS & SADE KOYU TEMA ---
 st.markdown("""
 <style>
     .stApp {
@@ -439,7 +439,8 @@ if st.session_state.active_tab == "simulasyon":
                 "Frekans": "{:.1f}"
             }), use_container_width=True)
 
-            col_s1, col_s2 = st.columns([1, 2])
+            # Butonlar: Temizle, HTML Rapor ve Arşive Aktar
+            col_s1, col_s2, col_s3 = st.columns([1, 1.2, 1.5])
             with col_s1:
                 if st.button("🧹 Planı Temizle", use_container_width=True):
                     st.session_state.sim_rows = []
@@ -447,12 +448,49 @@ if st.session_state.active_tab == "simulasyon":
             with col_s2:
                 sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", include_looker=True, is_arsiv=False)
                 st.download_button(
-                    label="📥 Harita Entegreli HTML Raporu Al",
+                    label="📥 HTML Raporu Al",
                     data=sim_html,
                     file_name="OOH_Simulasyon_Raporu.html",
                     mime="text/html",
                     use_container_width=True
                 )
+            with col_s3:
+                with st.popover("📁 Simülasyonu Arşive Aktar", use_container_width=True):
+                    st.markdown("##### 📌 Arşiv Kampanya Bilgileri")
+                    aktar_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="aktar_yil")
+                    aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+                    aktar_donem = st.selectbox("Dönem:", aylar, index=0, key="aktar_donem")
+                    aktar_marka = st.text_input("Marka:", placeholder="Örn: BİM", key="aktar_marka")
+                    aktar_kampanya = st.text_input("Kampanya:", placeholder="Örn: Kırtasiye", key="aktar_kampanya")
+                    aktar_mecra = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="aktar_mecra")
+
+                    if st.button("✅ Arşive Gönder", use_container_width=True, type="primary"):
+                        m_isim = aktar_marka.strip() if aktar_marka.strip() else "BİM"
+                        k_isim = aktar_kampanya.strip() if aktar_kampanya.strip() else "Kırtasiye"
+                        c_isim = aktar_mecra.strip() if aktar_mecra.strip() else "Kentvizyon"
+
+                        for row in st.session_state.sim_rows:
+                            st.session_state.arsiv_rows.append({
+                                "Yıl": int(aktar_yil),
+                                "Dönem (Ay)": aktar_donem,
+                                "Marka": m_isim,
+                                "Kampanya Adı": k_isim,
+                                "Mecra Adı": c_isim,
+                                "Ünite": row["Ünite"],
+                                "İl": row["İl"],
+                                "Süre (Gün)": row["Süre (Gün)"],
+                                "Periyod": row["Periyod"],
+                                "Adet": row["Adet"],
+                                "Toplam Gösterim": row["Toplam Gösterim"],
+                                "Frekans": row["Frekans"],
+                                "Erişim (Kişi)": row["Erişim (Kişi)"],
+                                "İl Nüfusu": row["İl Nüfusu"],
+                                "TR Nüfusu": row["TR Nüfusu"],
+                                "TR Erişim %": row["TR Erişim %"],
+                                "TR GRP": row["TR GRP"]
+                            })
+                        st.success(f"✅ {len(st.session_state.sim_rows)} satır arşive başarıyla aktarıldı!")
+                        st.rerun()
 
         # Harita Paneli
         st.markdown("---")
@@ -474,7 +512,7 @@ elif st.session_state.active_tab == "arsiv":
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        # 1. Satır: Yıl, Dönem, Marka, Kampanya, Mecra (Eşit ve simetrik genişlik)
+        # 1. Satır: Yıl, Dönem, Marka, Kampanya, Mecra
         k1, k2, k3, k4, k5 = st.columns([1.2, 1.3, 2.5, 2.5, 2.5])
         with k1:
             a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
@@ -491,7 +529,7 @@ elif st.session_state.active_tab == "arsiv":
             a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="ars_mecra")
             a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
 
-        # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle (Hizalı ve Ekle butonu dengeli)
+        # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle
         k6, k7, k8, k9, k10, k11 = st.columns([2.2, 2.5, 1.2, 1.2, 1.2, 1.7])
         with k6:
             a_il = st.selectbox("İl:", il_listesi, key="ars_il_select")
@@ -606,12 +644,28 @@ elif st.session_state.active_tab == "arsiv":
                 "Adet": "{:,}"
             }), use_container_width=True)
 
-            col_a1, col_a2 = st.columns([1, 2])
+            # Alt İşlem Butonları: Son Satırı Sil, Seçili Satırı Sil, Arşivi Temizle, HTML Rapor
+            col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
             with col_a1:
-                if st.button("🧹 Arşivi Temizle", use_container_width=True):
+                if st.button("↩️ Son Satırı Sil", use_container_width=True):
+                    if st.session_state.arsiv_rows:
+                        st.session_state.arsiv_rows.pop()
+                        st.rerun()
+            with col_a2:
+                with st.popover("🗑️ Seçili Satırı Sil", use_container_width=True):
+                    silinecek_idx = st.selectbox(
+                        "Silinecek Satır No:",
+                        range(len(st.session_state.arsiv_rows)),
+                        format_func=lambda i: f"Satır {i}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Ünite']} ({st.session_state.arsiv_rows[i]['İl']})"
+                    )
+                    if st.button("❌ Bu Satırı Sil", type="primary", use_container_width=True):
+                        st.session_state.arsiv_rows.pop(silinecek_idx)
+                        st.rerun()
+            with col_a3:
+                if st.button("🧹 Tümünü Temizle", use_container_width=True):
                     st.session_state.arsiv_rows = []
                     st.rerun()
-            with col_a2:
+            with col_a4:
                 arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", include_looker=False, is_arsiv=True)
                 st.download_button(
                     label="📥 HTML Raporu Al",

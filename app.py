@@ -95,7 +95,7 @@ st.markdown("""
         white-space: nowrap !important;
     }
 
-    /* BUTON ÜZERİNE GELME (HOVER) ETKİSİ */
+    /* BUTON HOVER */
     .stButton>button:hover, div[data-testid="stPopover"]>button:hover {
         transform: translateY(-3px) scale(1.01) !important;
         cursor: pointer !important;
@@ -124,7 +124,7 @@ st.markdown("""
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
     }
 
-    /* 2. EKLE BUTONLARI (Zümrüt Yeşili - Canlı & Ayrışan) */
+    /* 2. EKLE BUTONLARI (Zümrüt Yeşili) */
     .action-add-btn > button {
         background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
         color: #ffffff !important;
@@ -1018,7 +1018,6 @@ elif st.session_state.active_tab == "arsiv":
             a_adet = st.number_input("Adet:", min_value=1, value=int(st.session_state.ars_adet_input), step=1, key="ars_adet_input")
         with k11:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-            # ÖZEL ZÜMRÜT YEŞİLİ EKLE BUTONU
             st.markdown('<div class="action-add-btn">', unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", key="ars_add_btn", use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -1084,7 +1083,8 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
+            # Hata Düzeltildi: rows_arsiv_html doğru çağrılıyor
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4, col_a5 = st.columns([1, 1.2, 1, 1.2, 1.2])

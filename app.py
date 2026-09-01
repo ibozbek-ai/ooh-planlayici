@@ -209,7 +209,7 @@ looker_url = st.sidebar.text_input(
 )
 
 # --- 5. RAPOR OLUŞTURMA YARDIMCISI ---
-def generate_html_report(df_to_export, report_title, is_arsiv=False):
+def generate_html_report(df_to_export, report_title, include_looker=False, is_arsiv=False):
     if is_arsiv:
         table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
         table_rows_html = "".join([
@@ -230,7 +230,7 @@ def generate_html_report(df_to_export, report_title, is_arsiv=False):
     maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
 
     looker_section = ""
-    if looker_url:
+    if include_looker and looker_url:
         looker_section = f"""
         <div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;">
             <h3 style="color: #38bdf8; margin-bottom: 15px;">🗺️ Kampanya Harita ve Lokasyon Paneli</h3>
@@ -372,20 +372,13 @@ if st.session_state.active_tab == "simulasyon":
                 "Frekans": "{:.1f}"
             }), use_container_width=True)
 
-            if looker_url:
-                st.markdown("### 🗺️ Lokasyon Haritası (Looker Studio)")
-                st.components.v1.html(
-                    f'<iframe src="{looker_url}" width="100%" height="520" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
-                    height=540
-                )
-
             col_s1, col_s2 = st.columns([1, 4])
             with col_s1:
                 if st.button("🧹 Simülasyonu Temizle"):
                     st.session_state.sim_rows = []
                     st.rerun()
             with col_s2:
-                sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", is_arsiv=False)
+                sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", include_looker=True, is_arsiv=False)
                 st.download_button(
                     label="📥 Harita Entegreli HTML Raporu Al",
                     data=sim_html,
@@ -394,8 +387,19 @@ if st.session_state.active_tab == "simulasyon":
                     use_container_width=True
                 )
 
+        # SADECE ANLIK HESAPLAMA SEKMSİ İÇİN LOOKER STUDIO HARİTA ALANI
+        st.markdown("---")
+        st.markdown("### 🗺️ Canlı Looker Studio Harita Paneli")
+        if looker_url:
+            st.components.v1.html(
+                f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
+                height=560
+            )
+        else:
+            st.info("💡 Haritayı görüntülemek için sol yan menüden **Looker Studio Harita Embed Linki**ni giriniz.")
+
 # ==========================================
-# 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
+# 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV (HARİTASIZ)
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
     st.markdown("### 📝 Yeni Kampanya Satırı Ekle")
@@ -403,7 +407,6 @@ elif st.session_state.active_tab == "arsiv":
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
         
-        # 1. Satır: Yıl, Dönem, Marka (BİM), Kampanya (Kırtasiye), Mecra (Kentvizyon)
         k1, k2, k3, k4, k5 = st.columns([1, 1.2, 1.5, 1.5, 1.2])
         with k1:
             a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
@@ -420,7 +423,6 @@ elif st.session_state.active_tab == "arsiv":
             a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon", key="ars_mecra")
             a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
 
-        # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Ekle
         k6, k7, k8, k9, k10, k11 = st.columns([1.5, 2, 1, 1, 1, 1.2])
         with k6:
             a_il = st.selectbox("İl:", il_listesi, key="ars_il")
@@ -492,7 +494,7 @@ elif st.session_state.active_tab == "arsiv":
             maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
 
             ak1.metric("📊 Toplam Gösterim", f"{toplam_gos_a:,}")
-            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
+            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp_a:.2f}")
             ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
@@ -507,22 +509,15 @@ elif st.session_state.active_tab == "arsiv":
                 "Adet": "{:,}"
             }), use_container_width=True)
 
-            if looker_url:
-                st.markdown("### 🗺️ Lokasyon Haritası (Looker Studio)")
-                st.components.v1.html(
-                    f'<iframe src="{looker_url}" width="100%" height="520" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
-                    height=540
-                )
-
             col_a1, col_a2 = st.columns([1, 4])
             with col_a1:
                 if st.button("🧹 Arşiv Listesini Temizle"):
                     st.session_state.arsiv_rows = []
                     st.rerun()
             with col_a2:
-                arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", is_arsiv=True)
+                arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", include_looker=False, is_arsiv=True)
                 st.download_button(
-                    label="📥 Harita Entegreli HTML Raporu Al",
+                    label="📥 HTML Raporu Al",
                     data=arsiv_html,
                     file_name="OOH_Kampanya_Arsiv_Raporu.html",
                     mime="text/html",

@@ -48,42 +48,6 @@ st.markdown("""
         color: #f8fafc !important;
     }
 
-    /* Tablo Hizalama ve Tasarımı */
-    .custom-table-container {
-        width: 100%;
-        overflow-x: auto;
-        margin-top: 15px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        border: 1px solid #1f2937;
-        background-color: #0f172a;
-    }
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: center;
-        font-size: 13px;
-    }
-    .custom-table th {
-        background-color: #1e293b;
-        color: #38bdf8;
-        padding: 12px 8px;
-        border-bottom: 1px solid #334155;
-        font-weight: 700;
-        white-space: nowrap;
-        text-align: center !important;
-    }
-    .custom-table td {
-        padding: 10px 8px;
-        border-bottom: 1px solid #1e293b;
-        color: #f8fafc;
-        white-space: nowrap;
-        text-align: center !important;
-    }
-    .custom-table tr:hover {
-        background-color: rgba(56, 189, 248, 0.05);
-    }
-
     .footer-text {
         text-align: center;
         color: #64748b;
@@ -436,14 +400,14 @@ if st.session_state.active_tab == "simulasyon":
                 "İl": secilen_il,
                 "Süre (Gün)": sure_val,
                 "Periyod": format_periyod(periyod_val),
-                "Adet": adet_val,
+                "Adet": int(adet_val),
                 "Toplam Gösterim": int(toplam_gosterim),
-                "Frekans": round(dinamik_frekans, 1),
+                "Frekans": float(round(dinamik_frekans, 1)),
                 "Erişim (Kişi)": int(erisim_kisi),
                 "İl Nüfusu": int(il_nufus),
                 "TR Nüfusu": int(TR_TOTAL_NUFUS),
-                "TR Erişim %": round(erisim_pct_tr, 2),
-                "TR GRP": round(grp_tr, 2)
+                "TR Erişim %": float(round(erisim_pct_tr, 2)),
+                "TR GRP": float(round(grp_tr, 2))
             })
             st.rerun()
 
@@ -462,47 +426,22 @@ if st.session_state.active_tab == "simulasyon":
             kpi3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim}")
             kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
 
-            # Kusursuz Hizalanmış HTML Tablo (İndekssiz & Tam Ortalanmış)
-            sim_table_html = """
-            <div class="custom-table-container">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Ünite</th>
-                            <th>İl</th>
-                            <th>Süre (Gün)</th>
-                            <th>Periyod</th>
-                            <th>Adet</th>
-                            <th>Toplam Gösterim</th>
-                            <th>Frekans</th>
-                            <th>Erişim (Kişi)</th>
-                            <th>İl Nüfusu</th>
-                            <th>TR Nüfusu</th>
-                            <th>TR Erişim %</th>
-                            <th>TR GRP</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            """
-            for _, r in df_sim.iterrows():
-                sim_table_html += f"""
-                    <tr>
-                        <td>{r['Ünite']}</td>
-                        <td>{r['İl']}</td>
-                        <td>{r['Süre (Gün)']}</td>
-                        <td>{r['Periyod']}</td>
-                        <td>{r['Adet']:,}</td>
-                        <td>{r['Toplam Gösterim']:,}</td>
-                        <td>{r['Frekans']:.1f}</td>
-                        <td>{r['Erişim (Kişi)']:,}</td>
-                        <td>{r['İl Nüfusu']:,}</td>
-                        <td>{r['TR Nüfusu']:,}</td>
-                        <td>%{r['TR Erişim %']:.2f}</td>
-                        <td>{r['TR GRP']:.2f}</td>
-                    </tr>
-                """
-            sim_table_html += "</tbody></table></div>"
-            st.markdown(sim_table_html, unsafe_allow_html=True)
+            # Native & Kusursuz Streamlit Tablosu (İndekssiz ve Formatlı)
+            st.dataframe(
+                df_sim,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Toplam Gösterim": st.column_config.NumberColumn(format="%d"),
+                    "Adet": st.column_config.NumberColumn(format="%d"),
+                    "Erişim (Kişi)": st.column_config.NumberColumn(format="%d"),
+                    "İl Nüfusu": st.column_config.NumberColumn(format="%d"),
+                    "TR Nüfusu": st.column_config.NumberColumn(format="%d"),
+                    "TR Erişim %": st.column_config.NumberColumn(format="%%%.2f"),
+                    "TR GRP": st.column_config.NumberColumn(format="%.2f"),
+                    "Frekans": st.column_config.NumberColumn(format="%.1f"),
+                }
+            )
 
             col_s1, col_s2, col_s3 = st.columns([1, 1.2, 1.5])
             with col_s1:
@@ -544,14 +483,14 @@ if st.session_state.active_tab == "simulasyon":
                                 "İl": row["İl"],
                                 "Süre (Gün)": row["Süre (Gün)"],
                                 "Periyod": row["Periyod"],
-                                "Adet": row["Adet"],
-                                "Toplam Gösterim": row["Toplam Gösterim"],
-                                "Frekans": row["Frekans"],
-                                "Erişim (Kişi)": row["Erişim (Kişi)"],
-                                "İl Nüfusu": row["İl Nüfusu"],
-                                "TR Nüfusu": row["TR Nüfusu"],
-                                "TR Erişim %": row["TR Erişim %"],
-                                "TR GRP": row["TR GRP"]
+                                "Adet": int(row["Adet"]),
+                                "Toplam Gösterim": int(row["Toplam Gösterim"]),
+                                "Frekans": float(row["Frekans"]),
+                                "Erişim (Kişi)": int(row["Erişim (Kişi)"]),
+                                "İl Nüfusu": int(row["İl Nüfusu"]),
+                                "TR Nüfusu": int(row["TR Nüfusu"]),
+                                "TR Erişim %": float(row["TR Erişim %"]),
+                                "TR GRP": float(row["TR GRP"])
                             })
                         st.success(f"✅ {len(st.session_state.sim_rows)} satır arşive başarıyla aktarıldı!")
                         st.rerun()
@@ -670,14 +609,14 @@ elif st.session_state.active_tab == "arsiv":
                 "İl": a_il,
                 "Süre (Gün)": a_sure,
                 "Periyod": format_periyod(a_periyod),
-                "Adet": a_adet,
+                "Adet": int(a_adet),
                 "Toplam Gösterim": int(toplam_gosterim),
-                "Frekans": round(dinamik_frekans, 1),
+                "Frekans": float(round(dinamik_frekans, 1)),
                 "Erişim (Kişi)": int(erisim_kisi),
                 "İl Nüfusu": int(il_nufus),
                 "TR Nüfusu": int(TR_TOTAL_NUFUS),
-                "TR Erişim %": round(erisim_pct_tr, 2),
-                "TR GRP": round(grp_tr, 2)
+                "TR Erişim %": float(round(erisim_pct_tr, 2)),
+                "TR GRP": float(round(grp_tr, 2))
             })
             st.rerun()
 
@@ -697,57 +636,22 @@ elif st.session_state.active_tab == "arsiv":
             ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
-            # Kusursuz Hizalanmış HTML Tablo (İndekssiz & Tam Ortalanmış)
-            arsiv_table_html = """
-            <div class="custom-table-container">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Yıl</th>
-                            <th>Dönem</th>
-                            <th>Marka</th>
-                            <th>Kampanya</th>
-                            <th>Mecra</th>
-                            <th>Ünite</th>
-                            <th>İl</th>
-                            <th>Süre (Gün)</th>
-                            <th>Periyod</th>
-                            <th>Adet</th>
-                            <th>Toplam Gösterim</th>
-                            <th>Frekans</th>
-                            <th>Erişim (Kişi)</th>
-                            <th>İl Nüfusu</th>
-                            <th>TR Nüfusu</th>
-                            <th>TR Erişim %</th>
-                            <th>TR GRP</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            """
-            for _, r in df_arsiv.iterrows():
-                arsiv_table_html += f"""
-                    <tr>
-                        <td>{r['Yıl']}</td>
-                        <td>{r['Dönem (Ay)']}</td>
-                        <td>{r['Marka']}</td>
-                        <td>{r['Kampanya Adı']}</td>
-                        <td>{r['Mecra Adı']}</td>
-                        <td>{r['Ünite']}</td>
-                        <td>{r['İl']}</td>
-                        <td>{r['Süre (Gün)']}</td>
-                        <td>{r['Periyod']}</td>
-                        <td>{r['Adet']:,}</td>
-                        <td>{r['Toplam Gösterim']:,}</td>
-                        <td>{r['Frekans']:.1f}</td>
-                        <td>{r['Erişim (Kişi)']:,}</td>
-                        <td>{r['İl Nüfusu']:,}</td>
-                        <td>{r['TR Nüfusu']:,}</td>
-                        <td>%{r['TR Erişim %']:.2f}</td>
-                        <td>{r['TR GRP']:.2f}</td>
-                    </tr>
-                """
-            arsiv_table_html += "</tbody></table></div>"
-            st.markdown(arsiv_table_html, unsafe_allow_html=True)
+            # Native & Kusursuz Streamlit Tablosu (İndekssiz ve Formatlı)
+            st.dataframe(
+                df_arsiv,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Toplam Gösterim": st.column_config.NumberColumn(format="%d"),
+                    "Adet": st.column_config.NumberColumn(format="%d"),
+                    "Erişim (Kişi)": st.column_config.NumberColumn(format="%d"),
+                    "İl Nüfusu": st.column_config.NumberColumn(format="%d"),
+                    "TR Nüfusu": st.column_config.NumberColumn(format="%d"),
+                    "TR Erişim %": st.column_config.NumberColumn(format="%%%.2f"),
+                    "TR GRP": st.column_config.NumberColumn(format="%.2f"),
+                    "Frekans": st.column_config.NumberColumn(format="%.1f"),
+                }
+            )
 
             col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
             with col_a1:

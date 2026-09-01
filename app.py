@@ -190,7 +190,7 @@ def hesapla_kapsanan_il_sayisi(df):
 
     return min(81, toplam_il + len(standart_iller))
 
-# --- 3. DOĞRUDAN VE JET HIZINDA EXCEL MOTORU (KALICI ÖNBELLEK) ---
+# --- 3. EXCEL VERİ MOTORU ---
 @st.cache_data
 def yerel_exceli_yukle():
     try:
@@ -525,12 +525,28 @@ if st.session_state.active_tab == "simulasyon":
             table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
             st.markdown(table_markup, unsafe_allow_html=True)
 
-            col_s1, col_s2, col_s3 = st.columns([1, 1.2, 1.5])
+            col_s1, col_s2, col_s3, col_s4, col_s5 = st.columns([1, 1.2, 1, 1.2, 1.5])
             with col_s1:
-                if st.button("🧹 Planı Temizle", use_container_width=True):
+                if st.button("↩️ Son Satırı Sil", key="sim_del_last", use_container_width=True):
+                    if st.session_state.sim_rows:
+                        st.session_state.sim_rows.pop()
+                        st.rerun()
+            with col_s2:
+                with st.popover("🗑️ Seçili Satırı Sil", use_container_width=True):
+                    silinecek_sim_idx = st.selectbox(
+                        "Silinecek Satır No:",
+                        range(len(st.session_state.sim_rows)),
+                        key="sim_del_select",
+                        format_func=lambda i: f"Satır {i+1}: {st.session_state.sim_rows[i]['Ünite']} ({st.session_state.sim_rows[i]['İl']})"
+                    )
+                    if st.button("❌ Bu Satırı Sil", key="sim_del_btn", type="primary", use_container_width=True):
+                        st.session_state.sim_rows.pop(silinecek_sim_idx)
+                        st.rerun()
+            with col_s3:
+                if st.button("🧹 Tümünü Temizle", key="sim_clear_all", use_container_width=True):
                     st.session_state.sim_rows = []
                     st.rerun()
-            with col_s2:
+            with col_s4:
                 sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", include_looker=True, is_arsiv=False)
                 st.download_button(
                     label="📥 HTML Raporu Al",
@@ -539,7 +555,7 @@ if st.session_state.active_tab == "simulasyon":
                     mime="text/html",
                     use_container_width=True
                 )
-            with col_s3:
+            with col_s5:
                 with st.popover("📁 Simülasyonu Arşive Aktar", use_container_width=True):
                     st.markdown("##### 📌 Arşiv Kampanya Bilgileri")
                     aktar_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="aktar_yil")
@@ -744,12 +760,12 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
             with col_a1:
-                if st.button("↩️ Son Satırı Sil", use_container_width=True):
+                if st.button("↩️ Son Satırı Sil", key="ars_del_last", use_container_width=True):
                     if st.session_state.arsiv_rows:
                         st.session_state.arsiv_rows.pop()
                         st.rerun()
@@ -758,13 +774,14 @@ elif st.session_state.active_tab == "arsiv":
                     silinecek_idx = st.selectbox(
                         "Silinecek Satır No:",
                         range(len(st.session_state.arsiv_rows)),
+                        key="ars_del_select",
                         format_func=lambda i: f"Satır {i+1}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Ünite']} ({st.session_state.arsiv_rows[i]['İl']})"
                     )
-                    if st.button("❌ Bu Satırı Sil", type="primary", use_container_width=True):
+                    if st.button("❌ Bu Satırı Sil", key="ars_del_btn", type="primary", use_container_width=True):
                         st.session_state.arsiv_rows.pop(silinecek_idx)
                         st.rerun()
             with col_a3:
-                if st.button("🧹 Tümünü Temizle", use_container_width=True):
+                if st.button("🧹 Tümünü Temizle", key="ars_clear_all", use_container_width=True):
                     st.session_state.arsiv_rows = []
                     st.rerun()
             with col_a4:

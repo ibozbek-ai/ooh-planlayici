@@ -2,6 +2,12 @@ import streamlit as st
 import pandas as pd
 import json
 
+# ==============================================================================
+# 🔗 VARSAYILAN CANLI BAĞLANTILAR (Otomatik Açılış İçin Bağlandı)
+# ==============================================================================
+DEFAULT_SHEETS_URL = "https://docs.google.com/spreadsheets/d/16nQ0t2B8GICn4G0WW_kDo2LrkWtWmLk4/edit?usp=sharing"
+DEFAULT_LOOKER_URL = ""
+
 # Sayfa Yapılandırması
 st.set_page_config(
     page_title="OOH Medya Planlama & Simülatör",
@@ -125,7 +131,7 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. SAYI BİÇİMLENDİRME YARDIMCILARI (TR FORMAT: 1.000,00) ---
+# --- 2. SAYI BİÇİMLENDİRME YARDIMCILARI (TR FORMAT) ---
 def tr_tam_sayi(val):
     try:
         n = int(round(float(val)))
@@ -166,11 +172,20 @@ def temiz_sayi_al(val, default=0.0):
     try: return float(s)
     except: return default
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def veriyi_yukle(dosya_yolu_veya_url):
     try:
+        if not dosya_yolu_veya_url or not str(dosya_yolu_veya_url).strip():
+            dosya_yolu_veya_url = "OUTDOOR.xlsx"
+
         if "docs.google.com/spreadsheets" in str(dosya_yolu_veya_url):
-            url = dosya_yolu_veya_url.replace('/edit#gid=', '/export?format=csv&gid=').replace('/edit?usp=sharing', '/export?format=csv')
+            url = str(dosya_yolu_veya_url).strip()
+            if "/edit" in url:
+                base = url.split("/edit")[0]
+                gid = ""
+                if "gid=" in url:
+                    gid = url.split("gid=")[1].split("&")[0].split("#")[0]
+                url = f"{base}/export?format=csv" + (f"&gid={gid}" if gid else "")
             df_raw = pd.read_csv(url, header=None)
         else:
             excel_obj = pd.ExcelFile(dosya_yolu_veya_url)
@@ -203,7 +218,7 @@ def veriyi_yukle(dosya_yolu_veya_url):
                 'Ünite': unite_val,
                 'Günlük Gösterim': gost_val,
                 'Frekans': frek_val,
-                'Network Adedi': net_val,
+                'Network Adedi': int(net_val),
                 'Endeks': endeks_val
             })
 
@@ -229,7 +244,7 @@ def veriyi_yukle(dosya_yolu_veya_url):
                     if il_c and nuf_val is not None and il_c.lower() != 'nan':
                         nufus_dict[il_c] = nuf_val
 
-            if "Kullanım Süresi" in col_txt:
+            if "Kullanım Süresi" in col_txt or "Süre" in col_txt:
                 for r in range(start_row - 1, len(df_raw)):
                     u_c = str(df_raw.iloc[r, c-2] if c>=2 else df_raw.iloc[r, c-1]).strip()
                     sure_val = temiz_sayi_al(df_raw.iloc[r, c], None)
@@ -262,11 +277,15 @@ if "sim_per" not in st.session_state:
     st.session_state.sim_per = 1.0
 if "sim_sure" not in st.session_state:
     st.session_state.sim_sure = 7
+if "sim_adet_val" not in st.session_state:
+    st.session_state.sim_adet_val = 100
 
 if "ars_per" not in st.session_state:
     st.session_state.ars_per = 1.0
 if "ars_sure" not in st.session_state:
     st.session_state.ars_sure = 7
+if "ars_adet_val" not in st.session_state:
+    st.session_state.ars_adet_val = 100
 
 # --- 4. YAN PANEL (SIDEBAR) ---
 st.sidebar.markdown(f"**👤 Giriş Yapan:** `{st.session_state.username}`")
@@ -278,15 +297,20 @@ if st.sidebar.button("🚪 Çıkış Yap"):
 st.sidebar.markdown("---")
 st.sidebar.subheader("⚙️ Veri & Harita Ayarları")
 
-veri_kaynagi = st.sidebar.radio("Veri Kaynağı:", ["Yerel Excel (OUTDOOR.xlsx)", "Google Sheets (Canlı)"])
+veri_kaynagi = st.sidebar.radio("Veri Kaynağı:", ["Google Sheets (Canlı)", "Yerel Excel (OUTDOOR.xlsx)"], index=0)
 if veri_kaynagi == "Google Sheets (Canlı)":
-    sheet_url = st.sidebar.text_input("Google Sheets Linki:", "")
+    sheet_url = st.sidebar.text_input("Google Sheets Linki:", value=DEFAULT_SHEETS_URL)
     df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle(sheet_url)
 else:
     df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle("OUTDOOR.xlsx")
 
+if st.sidebar.button("🔄 Veriyi Yeniden Yükle"):
+    st.cache_data.clear()
+    st.rerun()
+
 looker_url = st.sidebar.text_input(
     "🗺️ Looker Studio Harita Embed Linki:",
+    value=DEFAULT_LOOKER_URL,
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
@@ -386,9 +410,18 @@ if st.session_state.active_tab == "simulasyon":
                 u = st.session_state.sim_unite_select
                 b = sure_dict.get(u, 7.0)
                 st.session_state.sim_sure = int(round(b * st.session_state.sim_per))
+                
+                # Seçilen ünitenin network adedini otomatik kutuya doldur
+                row_match = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == u)]
+                if not row_match.empty:
+                    st.session_state.sim_adet_input = int(row_match['Network Adedi'].values[0])
 
             secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite_select", on_change=on_sim_unite_change)
             baz_sure = sure_dict.get(secilen_unite, 7.0)
+            
+            # İlk açılışta ünitenin network adedini al
+            current_net_row = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
+            current_net_adet = int(current_net_row['Network Adedi'].values[0]) if not current_net_row.empty else 100
 
         def update_from_per():
             p = st.session_state.sim_per
@@ -418,7 +451,8 @@ if st.session_state.active_tab == "simulasyon":
             )
 
         with col_adet:
-            adet_val = st.number_input("🔢 Adet:", min_value=1, value=100, step=10, key="sim_adet_input")
+            # Üniteye ait Network Adedi varsayılan gelir, kullanıcı elle değiştirebilir
+            adet_val = st.number_input("🔢 Adet:", min_value=1, value=current_net_adet, step=1, key="sim_adet_input")
 
         periyod_val = st.session_state.sim_per
         sure_val = st.session_state.sim_sure
@@ -472,7 +506,6 @@ if st.session_state.active_tab == "simulasyon":
             kpi3.metric("🌐 Maks. TR Erişimi", f"%{tr_ondalik(maks_erisim, 1)}")
             kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
 
-            # TAM ORTALANMIŞ & VİRGÜLLÜ GÖRÜNÜM TABLOSU
             rows_html = "".join([
                 f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>"
                 for _, r in df_sim.iterrows()
@@ -581,9 +614,17 @@ elif st.session_state.active_tab == "arsiv":
                 u = st.session_state.ars_unite_select
                 b = sure_dict.get(u, 7.0)
                 st.session_state.ars_sure = int(round(b * st.session_state.ars_per))
+                
+                # Seçilen ünitenin network adedini otomatik kutuya doldur
+                row_match_a = df_gost[(df_gost['İl'] == a_il) & (df_gost['Ünite'] == u)]
+                if not row_match_a.empty:
+                    st.session_state.ars_adet_input = int(row_match_a['Network Adedi'].values[0])
 
             a_unite = st.selectbox("Ünite:", a_uniteler, key="ars_unite_select", on_change=on_ars_unite_change)
             baz_sure_a = sure_dict.get(a_unite, 7.0)
+            
+            current_net_row_a = df_gost[(df_gost['İl'] == a_il) & (df_gost['Ünite'] == a_unite)]
+            current_net_adet_a = int(current_net_row_a['Network Adedi'].values[0]) if not current_net_row_a.empty else 100
 
         def update_from_ars_per():
             p = st.session_state.ars_per
@@ -611,7 +652,8 @@ elif st.session_state.active_tab == "arsiv":
                 on_change=update_from_ars_sure
             )
         with k10:
-            a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet_input")
+            # Üniteye ait Network Adedi varsayılan gelir, kullanıcı elle değiştirebilir
+            a_adet = st.number_input("Adet:", min_value=1, value=current_net_adet_a, step=1, key="ars_adet_input")
         with k11:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
@@ -674,13 +716,12 @@ elif st.session_state.active_tab == "arsiv":
             ak3.metric("🌐 Maks. TR Erişimi", f"%{tr_ondalik(maks_erisim_a, 1)}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
-            # TAM ORTALANMIŞ & VİRGÜLLÜ ARŞİV TABLOSU
             rows_arsiv_html = "".join([
                 f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>"
                 for _, r in df_arsiv.iterrows()
             ])
             
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])

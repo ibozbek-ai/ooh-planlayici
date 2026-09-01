@@ -186,6 +186,18 @@ if "sim_rows" not in st.session_state:
 if "arsiv_rows" not in st.session_state:
     st.session_state.arsiv_rows = []
 
+# Simülatör State Başlangıcı
+if "sim_per" not in st.session_state:
+    st.session_state.sim_per = 1.0
+if "sim_sure" not in st.session_state:
+    st.session_state.sim_sure = 7
+
+# Arşiv State Başlangıcı
+if "ars_per" not in st.session_state:
+    st.session_state.ars_per = 1.0
+if "ars_sure" not in st.session_state:
+    st.session_state.ars_sure = 7
+
 # --- 4. YAN PANEL (SIDEBAR) ---
 st.sidebar.markdown(f"**👤 Giriş Yapan:** `{st.session_state.username}`")
 if st.sidebar.button("🚪 Çıkış Yap"):
@@ -296,61 +308,56 @@ if st.session_state.active_tab == "simulasyon":
     if df_gost is not None and not df_gost.empty:
         st.markdown("### 📝 Yeni Kampanya Simülasyon Planı Oluştur")
 
-        if "sim_per_val" not in st.session_state:
-            st.session_state.sim_per_val = 1.0
-        if "sim_sure_val" not in st.session_state:
-            st.session_state.sim_sure_val = 7
-
-        c1, c2, c3, c4, c5 = st.columns([2, 2, 1, 1, 1])
-        with c1:
+        col_il, col_unite, col_per, col_sure, col_adet = st.columns([2, 2, 1, 1, 1])
+        
+        with col_il:
             il_listesi = sorted(list(set(df_gost['İl'].tolist())))
-            secilen_il = st.selectbox("📍 İl Seçin:", il_listesi, key="sim_il")
-        with c2:
+            secilen_il = st.selectbox("📍 İl Seçin:", il_listesi, key="sim_il_select")
+
+        with col_unite:
             uniteler = sorted(list(set(df_gost[df_gost['İl'] == secilen_il]['Ünite'].tolist())))
             
-            def sim_unite_degisti():
-                u = st.session_state.sim_unite
+            def on_sim_unite_change():
+                u = st.session_state.sim_unite_select
                 b = sure_dict.get(u, 7.0)
-                st.session_state.sim_sure_val = int(round(b * st.session_state.sim_per_val))
+                st.session_state.sim_sure = int(round(b * st.session_state.sim_per))
 
-            secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite", on_change=sim_unite_degisti)
+            secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite_select", on_change=on_sim_unite_change)
             baz_sure = sure_dict.get(secilen_unite, 7.0)
 
-        # Çift yönlü bağımsız callback'ler
-        def on_sim_per_change():
-            p = st.session_state.sim_per_key
-            st.session_state.sim_per_val = p
-            st.session_state.sim_sure_val = int(round(baz_sure * p))
+        # Çift yönlü kesin senkronizasyon
+        def update_from_per():
+            p = st.session_state.sim_per
+            st.session_state.sim_sure = int(round(baz_sure * p))
 
-        def on_sim_sure_change():
-            s = st.session_state.sim_sure_key
-            st.session_state.sim_sure_val = s
-            st.session_state.sim_per_val = round(s / baz_sure, 2) if baz_sure > 0 else 1.0
+        def update_from_sure():
+            s = st.session_state.sim_sure
+            st.session_state.sim_per = round(s / baz_sure, 2) if baz_sure > 0 else 1.0
 
-        with c3:
+        with col_per:
             st.number_input(
                 "⏱️ Periyod:",
                 min_value=0.1,
                 max_value=20.0,
-                value=float(st.session_state.sim_per_val),
                 step=0.1,
-                key="sim_per_key",
-                on_change=on_sim_per_change
+                key="sim_per",
+                on_change=update_from_per
             )
-        with c4:
+
+        with col_sure:
             st.number_input(
                 "📅 Süre (Gün):",
                 min_value=1,
-                value=int(st.session_state.sim_sure_val),
                 step=1,
-                key="sim_sure_key",
-                on_change=on_sim_sure_change
+                key="sim_sure",
+                on_change=update_from_sure
             )
-        with c5:
-            adet_val = st.number_input("🔢 Adet:", min_value=1, value=100, step=10, key="sim_adet")
 
-        periyod_val = st.session_state.sim_per_val
-        sure_val = st.session_state.sim_sure_val
+        with col_adet:
+            adet_val = st.number_input("🔢 Adet:", min_value=1, value=100, step=10, key="sim_adet_input")
+
+        periyod_val = st.session_state.sim_per
+        sure_val = st.session_state.sim_sure
 
         if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True):
             m_gost = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
@@ -425,7 +432,7 @@ if st.session_state.active_tab == "simulasyon":
                     use_container_width=True
                 )
 
-        # SADECE ANLIK HESAPLAMA SEKMESİNDE HARİTA ALANI
+        # SADECE ANLIK HESAPLAMA SEKMESİNDE HARİTA
         st.markdown("---")
         st.markdown("### 🗺️ Canlı Looker Studio Harita Paneli")
         if looker_url:
@@ -444,11 +451,6 @@ elif st.session_state.active_tab == "arsiv":
     
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
-        
-        if "ars_per_val" not in st.session_state:
-            st.session_state.ars_per_val = 1.0
-        if "ars_sure_val" not in st.session_state:
-            st.session_state.ars_sure_val = 7
 
         k1, k2, k3, k4, k5 = st.columns([1, 1.2, 1.5, 1.5, 1.2])
         with k1:
@@ -468,55 +470,51 @@ elif st.session_state.active_tab == "arsiv":
 
         k6, k7, k8, k9, k10, k11 = st.columns([1.5, 2, 1, 1, 1, 1.2])
         with k6:
-            a_il = st.selectbox("İl:", il_listesi, key="ars_il")
+            a_il = st.selectbox("İl:", il_listesi, key="ars_il_select")
         with k7:
             a_uniteler = sorted(list(set(df_gost[df_gost['İl'] == a_il]['Ünite'].tolist())))
             
-            def ars_unite_degisti():
-                u = st.session_state.ars_unite
+            def on_ars_unite_change():
+                u = st.session_state.ars_unite_select
                 b = sure_dict.get(u, 7.0)
-                st.session_state.ars_sure_val = int(round(b * st.session_state.ars_per_val))
+                st.session_state.ars_sure = int(round(b * st.session_state.ars_per))
 
-            a_unite = st.selectbox("Ünite:", a_uniteler, key="ars_unite", on_change=ars_unite_degisti)
+            a_unite = st.selectbox("Ünite:", a_uniteler, key="ars_unite_select", on_change=on_ars_unite_change)
             baz_sure_a = sure_dict.get(a_unite, 7.0)
 
-        def on_ars_per_change():
-            p = st.session_state.ars_per_key
-            st.session_state.ars_per_val = p
-            st.session_state.ars_sure_val = int(round(baz_sure_a * p))
+        def update_from_ars_per():
+            p = st.session_state.ars_per
+            st.session_state.ars_sure = int(round(baz_sure_a * p))
 
-        def on_ars_sure_change():
-            s = st.session_state.ars_sure_key
-            st.session_state.ars_sure_val = s
-            st.session_state.ars_per_val = round(s / baz_sure_a, 2) if baz_sure_a > 0 else 1.0
+        def update_from_ars_sure():
+            s = st.session_state.ars_sure
+            st.session_state.ars_per = round(s / baz_sure_a, 2) if baz_sure_a > 0 else 1.0
 
         with k8:
             st.number_input(
                 "Periyod:",
                 min_value=0.1,
                 max_value=20.0,
-                value=float(st.session_state.ars_per_val),
                 step=0.1,
-                key="ars_per_key",
-                on_change=on_ars_per_change
+                key="ars_per",
+                on_change=update_from_ars_per
             )
         with k9:
             st.number_input(
                 "Süre:",
                 min_value=1,
-                value=int(st.session_state.ars_sure_val),
                 step=1,
-                key="ars_sure_key",
-                on_change=on_ars_sure_change
+                key="ars_sure",
+                on_change=update_from_ars_sure
             )
         with k10:
-            a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet")
+            a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet_input")
         with k11:
             st.markdown("<br>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
 
-        a_periyod = st.session_state.ars_per_val
-        a_sure = st.session_state.ars_sure_val
+        a_periyod = st.session_state.ars_per
+        a_sure = st.session_state.ars_sure
 
         if ekle_btn:
             m_gost = df_gost[(df_gost['İl'] == a_il) & (df_gost['Ünite'] == a_unite)]

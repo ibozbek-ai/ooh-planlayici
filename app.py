@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import json
 
-# Sayfa Yapılandırması
+# --- SAYFA YAPILANDIRMASI ---
 st.set_page_config(
     page_title="OOH Medya Planlama & Simülatör",
     page_icon="⚡",
@@ -12,36 +12,118 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS & TEMA ---
+# --- CSS & ULTRA MODERN DARK TEMA ---
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    * {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+    
     .stApp {
-        background-color: #0b0f19;
+        background: radial-gradient(circle at top right, #0f172a, #030712 85%);
         color: #f8fafc;
     }
-    .stButton>button {
-        border-radius: 6px;
+    
+    /* Üst Başlık & Sekme Tasarımı */
+    .main-title {
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 5px;
+    }
+    
+    /* Kart / Panel Konteynerleri */
+    .glass-card {
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+    }
+    
+    /* KPI Kart Tasarımları */
+    .kpi-wrapper {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin: 20px 0;
+    }
+    
+    .kpi-card {
+        background: rgba(17, 24, 39, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 16px 20px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(56, 189, 248, 0.3);
+    }
+    
+    .kpi-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
         font-weight: 700;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
-    div[data-testid="stForm"] {
-        background-color: #111827;
-        border: 1px solid #1f2937;
+    
+    .kpi-value {
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    
+    /* Buton Tasarımları */
+    .stButton>button {
         border-radius: 8px;
-        padding: 15px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        transition: all 0.2s ease;
+        border: none;
     }
+    
+    .stButton>button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+    }
+    
+    /* Form Elemanları & Inputlar */
+    div[data-baseweb="input"], div[data-baseweb="select"] {
+        background-color: #0b0f19 !important;
+        border-radius: 8px !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+    
+    /* Footer */
     .footer-text {
         text-align: center;
-        color: #64748b;
-        font-size: 13px;
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid #1e293b;
-        letter-spacing: 0.5px;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 50px;
+        padding: 24px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        letter-spacing: 0.6px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 1. KULLANICI GİRİŞ SİSTEMİ ---
+# --- 1. GİRİŞ KONTROLÜ (AUTH) ---
 KULLANICI_ADI = "ibozbek"
 KULLANICI_SIFRE = "ibozbek"
 
@@ -51,14 +133,15 @@ if "logged_in" not in st.session_state:
 
 def login_form():
     st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 1.1, 1])
-    with col2:
-        st.markdown("<h2 style='text-align: center; color: #38bdf8;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 14px;'>Medya Planlama ve Lokasyon Portalı</p>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns([1, 1.1, 1])
+    with c2:
+        st.markdown("<div class='glass-card' style='text-align: center;'>", unsafe_allow_html=True)
+        st.markdown("<h2 class='main-title'>⚡ OOH PLANLAMA STÜDYOSU</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8; font-size: 13px; margin-bottom: 20px;'>Medya Planlama ve Lokasyon Analitiği Portalı</p>", unsafe_allow_html=True)
         with st.form("login_box"):
             user = st.text_input("👤 Kullanıcı Adı:")
             pwd = st.text_input("🔑 Şifre:", type="password")
-            submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True)
+            submit = st.form_submit_button("🚀 Güvenli Giriş Yap", use_container_width=True)
             if submit:
                 if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
                     st.session_state.logged_in = True
@@ -66,6 +149,7 @@ def login_form():
                     st.rerun()
                 else:
                     st.error("Kullanıcı adı veya şifre hatalı!")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 if not st.session_state.logged_in:
     login_form()
@@ -176,7 +260,7 @@ def veriyi_yukle(dosya_yolu_veya_url):
         st.error(f"Veri yükleme hatası: {e}")
         return None, {}, {}, 86920168
 
-# --- 3. SESSION STATE ---
+# --- 3. SESSION STATE AYARLARI ---
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "simulasyon"
 
@@ -186,41 +270,40 @@ if "sim_rows" not in st.session_state:
 if "arsiv_rows" not in st.session_state:
     st.session_state.arsiv_rows = []
 
-# Simülatör State Başlangıcı
 if "sim_per" not in st.session_state:
     st.session_state.sim_per = 1.0
 if "sim_sure" not in st.session_state:
     st.session_state.sim_sure = 7
 
-# Arşiv State Başlangıcı
 if "ars_per" not in st.session_state:
     st.session_state.ars_per = 1.0
 if "ars_sure" not in st.session_state:
     st.session_state.ars_sure = 7
 
 # --- 4. YAN PANEL (SIDEBAR) ---
-st.sidebar.markdown(f"**👤 Giriş Yapan:** `{st.session_state.username}`")
-if st.sidebar.button("🚪 Çıkış Yap"):
-    st.session_state.logged_in = False
-    st.session_state.username = ""
-    st.rerun()
+with st.sidebar:
+    st.markdown(f"### 👤 `{st.session_state.username}`")
+    if st.button("🚪 Oturumu Kapat", use_container_width=True):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.rerun()
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("⚙️ Veri & Harita Ayarları")
+    st.markdown("---")
+    st.markdown("#### ⚙️ Yapılandırma & Kaynak")
+    
+    veri_kaynagi = st.radio("Veri Kaynağı Modu:", ["Yerel Excel (OUTDOOR.xlsx)", "Google Sheets (Canlı)"])
+    if veri_kaynagi == "Google Sheets (Canlı)":
+        sheet_url = st.text_input("Google Sheets Linki:", "")
+        df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle(sheet_url)
+    else:
+        df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle("OUTDOOR.xlsx")
 
-veri_kaynagi = st.sidebar.radio("Veri Kaynağı:", ["Yerel Excel (OUTDOOR.xlsx)", "Google Sheets (Canlı)"])
-if veri_kaynagi == "Google Sheets (Canlı)":
-    sheet_url = st.sidebar.text_input("Google Sheets Linki:", "")
-    df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle(sheet_url)
-else:
-    df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = veriyi_yukle("OUTDOOR.xlsx")
+    looker_url = st.text_input(
+        "🗺️ Looker Harita Linki:",
+        placeholder="https://lookerstudio.google.com/embed/..."
+    )
 
-looker_url = st.sidebar.text_input(
-    "🗺️ Looker Studio Harita Embed Linki:",
-    placeholder="https://lookerstudio.google.com/embed/reporting/..."
-)
-
-# --- 5. RAPOR OLUŞTURMA YARDIMCISI ---
+# --- 5. RAPOR OLUŞTURUCU (HTML EXPORT) ---
 def generate_html_report(df_to_export, report_title, include_looker=False, is_arsiv=False):
     if is_arsiv:
         table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
@@ -244,8 +327,8 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
     looker_section = ""
     if include_looker and looker_url:
         looker_section = f"""
-        <div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;">
-            <h3 style="color: #38bdf8; margin-bottom: 15px;">🗺️ Kampanya Harita ve Lokasyon Paneli</h3>
+        <div style="margin-top: 35px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+            <h3 style="color: #38bdf8; margin-bottom: 15px; font-weight: 700;">🗺️ Kampanya Konumlandırma & Harita Analizi</h3>
             <iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>
         </div>
         """
@@ -256,59 +339,67 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
     <meta charset="UTF-8">
     <title>{report_title}</title>
     <style>
-        body {{ background-color: #090d16; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; line-height: 1.5; }}
-        .kpi-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }}
-        .kpi-card {{ background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px; text-align: center; }}
-        table {{ width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; margin-top: 20px; }}
-        th {{ background: #1e293b; color: #38bdf8; padding: 12px; border: 1px solid #1f293d; }}
-        td {{ padding: 10px; border: 1px solid #1f293d; color: #cbd5e1; }}
+        body {{ background-color: #030712; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; line-height: 1.6; }}
+        .header {{ margin-bottom: 30px; }}
+        .kpi-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }}
+        .kpi-card {{ background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; }}
+        .kpi-title {{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; }}
+        .kpi-val {{ font-size: 26px; font-weight: 800; }}
+        table {{ width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; margin-top: 20px; background: #0b0f19; border-radius: 8px; overflow: hidden; }}
+        th {{ background: #1e293b; color: #38bdf8; padding: 14px; border: 1px solid rgba(255,255,255,0.05); font-weight: 700; }}
+        td {{ padding: 12px; border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }}
         tr:nth-child(even) {{ background: rgba(255,255,255,0.02); }}
-        .footer-note {{ text-align: center; color: #64748b; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
+        .footer {{ text-align: center; color: #475569; font-size: 12px; margin-top: 50px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); }}
     </style>
 </head>
 <body>
-    <h1 style="color: #f1f5f9;">📊 {report_title}</h1>
+    <div class="header">
+        <h1 style="color: #f8fafc; margin: 0; font-size: 28px;">📊 {report_title}</h1>
+        <p style="color: #64748b; margin-top: 5px; font-size: 14px;">OOH Medya Planlama & Performans Dağılım Özeti</p>
+    </div>
     <div class="kpi-grid">
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{toplam_gos:,}</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{toplam_grp:.2f}</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">KAPSASANAN İL</div><div style="font-size: 24px; font-weight: bold; color: #c084fc;">{kapsanan_il} İl</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{maks_erisim}</div></div>
+        <div class="kpi-card"><div class="kpi-title">TOPLAM GÖSTERİM</div><div class="kpi-val" style="color: #10b981;">{toplam_gos:,}</div></div>
+        <div class="kpi-card"><div class="kpi-title">TOPLAM TR GRP</div><div class="kpi-val" style="color: #38bdf8;">{toplam_grp:.2f}</div></div>
+        <div class="kpi-card"><div class="kpi-title">KAPSASANAN İL</div><div class="kpi-val" style="color: #c084fc;">{kapsanan_il} İl</div></div>
+        <div class="kpi-card"><div class="kpi-title">MAKS. TR ERİŞİMİ</div><div class="kpi-val" style="color: #f59e0b;">%{maks_erisim}</div></div>
     </div>
     <table>
         <thead><tr>{table_headers}</tr></thead>
         <tbody>{table_rows_html}</tbody>
     </table>
     {looker_section}
-    <div class="footer-note">📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>
+    <div class="footer">📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>
 </body>
 </html>"""
 
-# --- 6. ÜST GEÇİŞ BUTONLARI ---
-st.title("⚡ OOH MEDYA PLANLAMA & SİMÜLASYON MERKEZİ")
+# --- 6. ANA EKRAN & GEÇİŞ PANELİ ---
+st.markdown("<h1 class='main-title'>⚡ OOH MEDYA PLANLAMA & SİMÜLASYON MERKEZİ</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color: #64748b; font-size: 14px; margin-bottom: 20px;'>Açıkhava Reklam Alanları Anlık Performans ve Arşiv Yönetim Konsolu</p>", unsafe_allow_html=True)
 
-col_btn1, col_btn2 = st.columns(2)
-with col_btn1:
+nav_col1, nav_col2 = st.columns(2)
+with nav_col1:
     btn_type1 = "primary" if st.session_state.active_tab == "simulasyon" else "secondary"
     if st.button("📊 Anlık Hesaplama & Simülatör", type=btn_type1, use_container_width=True):
         st.session_state.active_tab = "simulasyon"
         st.rerun()
 
-with col_btn2:
+with nav_col2:
     btn_type2 = "primary" if st.session_state.active_tab == "arsiv" else "secondary"
     if st.button("📁 Kampanya Yönetimi & Yıllık Arşiv", type=btn_type2, use_container_width=True):
         st.session_state.active_tab = "arsiv"
         st.rerun()
 
-st.markdown("---")
+st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
 # ==========================================
 # 1. SEKME: ANLIK HESAPLAMA & SİMÜLATÖR
 # ==========================================
 if st.session_state.active_tab == "simulasyon":
     if df_gost is not None and not df_gost.empty:
-        st.markdown("### 📝 Yeni Kampanya Simülasyon Planı Oluştur")
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #38bdf8; margin-bottom: 18px; font-weight: 700;'>📝 Yeni Kampanya Simülasyon Planı Oluştur</h4>", unsafe_allow_html=True)
 
-        col_il, col_unite, col_per, col_sure, col_adet = st.columns([2, 2, 1, 1, 1])
+        col_il, col_unite, col_per, col_sure, col_adet = st.columns([2.2, 2.2, 1.1, 1.1, 1.1])
         
         with col_il:
             il_listesi = sorted(list(set(df_gost['İl'].tolist())))
@@ -325,7 +416,6 @@ if st.session_state.active_tab == "simulasyon":
             secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite_select", on_change=on_sim_unite_change)
             baz_sure = sure_dict.get(secilen_unite, 7.0)
 
-        # Çift yönlü kesin senkronizasyon
         def update_from_per():
             p = st.session_state.sim_per
             st.session_state.sim_sure = int(round(baz_sure * p))
@@ -359,7 +449,8 @@ if st.session_state.active_tab == "simulasyon":
         periyod_val = st.session_state.sim_per
         sure_val = st.session_state.sim_sure
 
-        if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True):
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True, type="primary"):
             m_gost = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
             gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
             baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
@@ -391,21 +482,40 @@ if st.session_state.active_tab == "simulasyon":
                 "TR Erişim %": round(erisim_pct_tr, 2),
                 "TR GRP": round(grp_tr, 2)
             })
+            st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if st.session_state.sim_rows:
             df_sim = pd.DataFrame(st.session_state.sim_rows)
-            st.markdown("---")
-            kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+            
             toplam_gos = df_sim["Toplam Gösterim"].sum()
             toplam_grp = round(df_sim["TR GRP"].sum(), 2)
             kapsanan_il = df_sim["İl"].nunique()
             kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_sim["İl"].unique())
             maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
 
-            kpi1.metric("📊 Toplam Gösterim", f"{toplam_gos:,}")
-            kpi2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
-            kpi3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim}")
-            kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
+            # Özel Grid KPI Kartları
+            st.markdown(f"""
+            <div class="kpi-wrapper">
+                <div class="kpi-card" style="border-left: 3px solid #10b981;">
+                    <div class="kpi-title" style="color: #10b981;">📊 TOPLAM GÖSTERİM</div>
+                    <div class="kpi-value" style="color: #10b981;">{toplam_gos:,}</div>
+                </div>
+                <div class="kpi-card" style="border-left: 3px solid #38bdf8;">
+                    <div class="kpi-title" style="color: #38bdf8;">🇹🇷 TOPLAM TR GRP</div>
+                    <div class="kpi-value" style="color: #38bdf8;">{toplam_grp:.2f}</div>
+                </div>
+                <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
+                    <div class="kpi-title" style="color: #f59e0b;">🌐 MAKS. TR ERİŞİMİ</div>
+                    <div class="kpi-value" style="color: #f59e0b;">%{maks_erisim}</div>
+                </div>
+                <div class="kpi-card" style="border-left: 3px solid #c084fc;">
+                    <div class="kpi-title" style="color: #c084fc;">📍 KAPSAYAN İL SAYISI</div>
+                    <div class="kpi-value" style="color: #c084fc;">{kapsanan_il} İl</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             st.dataframe(df_sim.style.format({
                 "Toplam Gösterim": "{:,}",
@@ -419,7 +529,7 @@ if st.session_state.active_tab == "simulasyon":
 
             col_s1, col_s2 = st.columns([1, 4])
             with col_s1:
-                if st.button("🧹 Simülasyonu Temizle"):
+                if st.button("🧹 Planı Temizle", use_container_width=True):
                     st.session_state.sim_rows = []
                     st.rerun()
             with col_s2:
@@ -432,25 +542,28 @@ if st.session_state.active_tab == "simulasyon":
                     use_container_width=True
                 )
 
-        # SADECE ANLIK HESAPLAMA SEKMESİNDE HARİTA
-        st.markdown("---")
-        st.markdown("### 🗺️ Canlı Looker Studio Harita Paneli")
+        # Looker Haritası
+        st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #38bdf8; margin-bottom: 15px; font-weight: 700;'>🗺️ Canlı Looker Studio Harita Paneli</h4>", unsafe_allow_html=True)
         if looker_url:
             st.components.v1.html(
-                f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
-                height=560
+                f'<iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
+                height=580
             )
         else:
             st.info("💡 Haritayı görüntülemek için sol yan menüden **Looker Studio Harita Embed Linki**ni giriniz.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
 # 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
-    st.markdown("### 📝 Yeni Kampanya Satırı Ekle")
-    
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
+        
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #c084fc; margin-bottom: 18px; font-weight: 700;'>📝 Yeni Kampanya Satırı Ekle (Manuel Arşiv)</h4>", unsafe_allow_html=True)
 
         k1, k2, k3, k4, k5 = st.columns([1, 1.2, 1.5, 1.5, 1.2])
         with k1:
@@ -510,7 +623,7 @@ elif st.session_state.active_tab == "arsiv":
         with k10:
             a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet_input")
         with k11:
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
 
         a_periyod = st.session_state.ars_per
@@ -553,23 +666,39 @@ elif st.session_state.active_tab == "arsiv":
                 "TR Erişim %": round(erisim_pct_tr, 2),
                 "TR GRP": round(grp_tr, 2)
             })
-            st.success(f"✅ `{a_marka} - {a_kampanya}` satırı başarıyla eklendi!")
+            st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if st.session_state.arsiv_rows:
             df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
-            st.markdown("---")
             
-            ak1, ak2, ak3, ak4 = st.columns(4)
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
             toplam_grp_a = round(df_arsiv["TR GRP"].sum(), 2)
             kapsanan_il_a = df_arsiv["İl"].nunique()
             kapsanan_nufus_a = sum(nufus_dict.get(il, 719000) for il in df_arsiv["İl"].unique())
             maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
 
-            ak1.metric("📊 Toplam Gösterim", f"{toplam_gos_a:,}")
-            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp_a:.2f}")
-            ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
-            ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
+            st.markdown(f"""
+            <div class="kpi-wrapper">
+                <div class="kpi-card" style="border-left: 3px solid #10b981;">
+                    <div class="kpi-title" style="color: #10b981;">📊 TOPLAM GÖSTERİM</div>
+                    <div class="kpi-value" style="color: #10b981;">{toplam_gos_a:,}</div>
+                </div>
+                <div class="kpi-card" style="border-left: 3px solid #38bdf8;">
+                    <div class="kpi-title" style="color: #38bdf8;">🇹🇷 TOPLAM TR GRP</div>
+                    <div class="kpi-value" style="color: #38bdf8;">{toplam_grp_a:.2f}</div>
+                </div>
+                <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
+                    <div class="kpi-title" style="color: #f59e0b;">🌐 MAKS. TR ERİŞİMİ</div>
+                    <div class="kpi-value" style="color: #f59e0b;">%{maks_erisim_a}</div>
+                </div>
+                <div class="kpi-card" style="border-left: 3px solid #c084fc;">
+                    <div class="kpi-title" style="color: #c084fc;">📍 KAPSAYAN İL SAYISI</div>
+                    <div class="kpi-value" style="color: #c084fc;">{kapsanan_il_a} İl</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             st.dataframe(df_arsiv.style.format({
                 "Toplam Gösterim": "{:,}",
@@ -584,7 +713,7 @@ elif st.session_state.active_tab == "arsiv":
 
             col_a1, col_a2 = st.columns([1, 4])
             with col_a1:
-                if st.button("🧹 Arşiv Listesini Temizle"):
+                if st.button("🧹 Arşivi Temizle", use_container_width=True):
                     st.session_state.arsiv_rows = []
                     st.rerun()
             with col_a2:

@@ -12,20 +12,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS & TEMA ---
+# --- CSS & ARAYÜZ STİLİ (EXE TEMASI) ---
 st.markdown("""
 <style>
     .stApp {
         background-color: #0b0f19;
         color: #f8fafc;
     }
-    .metric-box {
+    .panel-card {
         background: #111827;
         border: 1px solid #1f2937;
-        border-radius: 10px;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+    .metric-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .metric-card {
+        background: #131b2e;
+        border: 1px solid #1f293d;
+        border-radius: 8px;
         padding: 15px;
         text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        flex: 1;
     }
     .stButton>button {
         border-radius: 8px;
@@ -34,7 +47,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 1. KULLANICI GİRİŞ SİSTEMİ (AUTH) ---
+# --- 1. KULLANICI GİRİŞ SİSTEMİ ---
 KULLANICI_ADI = "ibozbek"
 KULLANICI_SIFRE = "ibozbek"
 
@@ -47,11 +60,11 @@ def login_form():
     col1, col2, col3 = st.columns([1, 1.1, 1])
     with col2:
         st.markdown("<h2 style='text-align: center; color: #38bdf8;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 14px;'>Medya Planlama ve Lokasyon Yönetim Portalı</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 14px;'>Medya Planlama ve Lokasyon Portalı</p>", unsafe_allow_html=True)
         with st.form("login_box"):
             user = st.text_input("👤 Kullanıcı Adı:")
             pwd = st.text_input("🔑 Şifre:", type="password")
-            submit = st.form_submit_button("🚀 Güvenli Giriş Yap", use_container_width=True)
+            submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True)
             if submit:
                 if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
                     st.session_state.logged_in = True
@@ -64,7 +77,7 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. VERİ YÜKLEME MOTORU ---
+# --- 2. VERİ MOTORU ---
 def temiz_sayi_al(val, default=0.0):
     if pd.isna(val): return default
     if isinstance(val, (int, float)): return float(val)
@@ -181,7 +194,7 @@ if st.sidebar.button("🚪 Çıkış Yap"):
     st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("⚙️ Canlı Veri Kaynağı")
+st.sidebar.subheader("⚙️ Veri & Harita Ayarları")
 
 veri_kaynagi = st.sidebar.radio("Veri Kaynağı:", ["Yerel Excel (OUTDOOR.xlsx)", "Google Sheets (Canlı)"])
 if veri_kaynagi == "Google Sheets (Canlı)":
@@ -195,44 +208,47 @@ looker_url = st.sidebar.text_input(
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
-# --- 5. ÜST SEKMELER (TABS) ---
-tab_sim, tab_gecmis = st.tabs(["📊 Yeni Kampanya Simülatörü", "📁 Geçmiş Kampanya & Plan Analizi"])
+# --- 5. ANA EKRAN (EXE DÜZENİ: İKİ YAN YANA PANEL) ---
+if df_gost is not None and not df_gost.empty:
+    st.title("⚡ OOH Medya Planlama & Simülatör")
+    
+    col_sol, col_sag = st.columns([1, 1], gap="large")
 
-# ==========================================
-# SEKME 1: YENİ KAMPANYA SİMÜLATÖRÜ
-# ==========================================
-with tab_sim:
-    if df_gost is not None and not df_gost.empty:
-        col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 1])
+    # ==========================================
+    # SOL PANEL: MANUEL SİMÜLASYON GİRİŞİ
+    # ==========================================
+    with col_sol:
+        st.markdown("### 📝 Yeni Kampanya Simülasyonu")
+        st.markdown("<p style='color: #94a3b8; font-size: 13px;'>Birim bazlı kampanya parametrelerini belirleyip plana ekleyin.</p>", unsafe_allow_html=True)
         
-        with col1:
+        c1, c2 = st.columns(2)
+        with c1:
             il_listesi = sorted(list(set(df_gost['İl'].tolist())))
-            secilen_il = st.selectbox("📍 İl:", il_listesi, key="sim_il")
-        
-        with col2:
+            secilen_il = st.selectbox("📍 İl Seçin:", il_listesi, key="sim_il")
+        with c2:
             uniteler = sorted(list(set(df_gost[df_gost['İl'] == secilen_il]['Ünite'].tolist())))
-            secilen_unite = st.selectbox("🎯 Ünite:", uniteler, key="sim_unite")
+            secilen_unite = st.selectbox("🎯 Ünite Seçin:", uniteler, key="sim_unite")
             baz_sure = sure_dict.get(secilen_unite, 7.0)
 
-        with col3:
+        c3, c4, c5 = st.columns(3)
+        with c3:
             periyod_val = st.number_input("⏱️ Periyod:", min_value=0.5, max_value=20.0, value=1.0, step=0.5, key="sim_periyod")
             hesaplanan_sure = int(round(baz_sure * periyod_val))
-
-        with col4:
+        with c4:
             sure_val = st.number_input("📅 Süre (Gün):", min_value=1, value=hesaplanan_sure, key="sim_sure")
             if sure_val != hesaplanan_sure:
                 periyod_val = round(sure_val / baz_sure, 2) if baz_sure > 0 else 1.0
-
-        with col5:
+        with c5:
             adet_val = st.number_input("🔢 Adet:", min_value=1, value=100, step=10, key="sim_adet")
 
-        if st.button("➕ Simülasyon Planına Ekle", use_container_width=True):
+        if st.button("➕ Simülasyon Satırını Ekle", use_container_width=True):
             m_gost = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
             gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
             baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
             network_adedi = float(m_gost['Network Adedi'].values[0]) if not m_gost.empty else 100.0
             endeks = float(m_gost['Endeks'].values[0]) if not m_gost.empty else 1.0
 
+            # Dinamik Frekans Formülü
             if network_adedi > 0 and adet_val > 0 and periyod_val > 0:
                 dinamik_frekans = baz_frekans * ((adet_val / network_adedi) ** 0.55) * endeks * (periyod_val ** 0.80)
             else:
@@ -259,55 +275,129 @@ with tab_sim:
                 "TR GRP": round(grp_tr, 2)
             })
 
-        if st.session_state.plan_rows:
-            df_plan = pd.DataFrame(st.session_state.plan_rows)
-            
-            st.markdown("---")
-            kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-            toplam_gos = df_plan["Toplam Gösterim"].sum()
-            toplam_grp = round(df_plan["TR GRP"].sum(), 2)
-            kapsanan_il = df_plan["İl"].nunique()
-            kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_plan["İl"].unique())
-            maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
+    # ==========================================
+    # SAĞ PANEL: GEÇMİŞ KAMPANYA DOSYA GİRİŞİ
+    # ==========================================
+    with col_sag:
+        st.markdown("### 📂 Geçmiş Kampanya Dosyası Girişi")
+        st.markdown("<p style='color: #94a3b8; font-size: 13px;'>Daha önce hazırlanan Excel/CSV planını yükleyip sisteme aktarın.</p>", unsafe_allow_html=True)
+        
+        uploaded_file = st.file_uploader("Kampanya Dosyasını Yükleyin (Excel / CSV):", type=["xlsx", "xls", "csv"])
+        
+        if uploaded_file is not None:
+            if st.button("📥 Dosyadaki Verileri Plana Aktar", use_container_width=True):
+                try:
+                    df_up = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
+                    
+                    # Sütun Eşleştirme Motoru
+                    c_il = next((c for c in df_up.columns if "il" in c.lower() or "şehir" in c.lower()), None)
+                    c_unite = next((c for c in df_up.columns if "ünite" in c.lower() or "unite" in c.lower() or "mecra" in c.lower()), None)
+                    c_adet = next((c for c in df_up.columns if "adet" in c.lower() or "sayı" in c.lower() or "miktar" in c.lower()), None)
+                    c_sure = next((c for c in df_up.columns if "süre" in c.lower() or "gün" in c.lower()), None)
+                    c_per = next((c for c in df_up.columns if "periyod" in c.lower() or "dönem" in c.lower()), None)
 
-            kpi1.metric("📊 Toplam Gösterim", f"{toplam_gos:,}")
-            kpi2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
-            kpi3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim}")
-            kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
+                    aktarilan_sayac = 0
+                    for _, r in df_up.iterrows():
+                        il_v = str(r[c_il]).strip() if c_il else "İstanbul"
+                        unite_v = str(r[c_unite]).strip() if c_unite else "Durak Raket CLP"
+                        adet_v = int(temiz_sayi_al(r[c_adet], 100)) if c_adet else 100
+                        sure_v = int(temiz_sayi_al(r[c_sure], 7)) if c_sure else 7
+                        per_v = float(temiz_sayi_al(r[c_per], 1.0)) if c_per else 1.0
 
-            st.dataframe(df_plan.style.format({
-                "Toplam Gösterim": "{:,}",
-                "Erişim (Kişi)": "{:,}",
-                "İl Nüfusu": "{:,}",
-                "TR Nüfusu": "{:,}",
-                "TR Erişim %": "%{:.2f}",
-                "TR GRP": "{:.2f}",
-                "Frekans": "{:.1f}"
-            }), use_container_width=True)
+                        m_gost = df_gost[(df_gost['İl'] == il_v) & (df_gost['Ünite'] == unite_v)]
+                        gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
+                        baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
+                        network_adedi = float(m_gost['Network Adedi'].values[0]) if not m_gost.empty else 100.0
+                        endeks = float(m_gost['Endeks'].values[0]) if not m_gost.empty else 1.0
 
+                        if network_adedi > 0 and adet_v > 0 and per_v > 0:
+                            dinamik_frekans = baz_frekans * ((adet_v / network_adedi) ** 0.55) * endeks * (per_v ** 0.80)
+                        else:
+                            dinamik_frekans = 0.0
+
+                        il_nufus = float(nufus_dict.get(il_v, nufus_dict.get("Anadolu İlleri", 719000)))
+                        toplam_gosterim = gunluk_gost * sure_v * adet_v
+                        erisim_kisi = (toplam_gosterim / dinamik_frekans) if dinamik_frekans > 0 else 0
+                        erisim_pct_tr = (erisim_kisi / TR_TOTAL_NUFUS) * 100
+                        grp_tr = (toplam_gosterim / TR_TOTAL_NUFUS) * 100
+
+                        st.session_state.plan_rows.append({
+                            "Ünite": unite_v,
+                            "İl": il_v,
+                            "Süre (Gün)": sure_v,
+                            "Periyod": format_periyod(per_v),
+                            "Adet": adet_v,
+                            "Toplam Gösterim": int(toplam_gosterim),
+                            "Frekans": round(dinamik_frekans, 1),
+                            "Erişim (Kişi)": int(erisim_kisi),
+                            "İl Nüfusu": int(il_nufus),
+                            "TR Nüfusu": int(TR_TOTAL_NUFUS),
+                            "TR Erişim %": round(erisim_pct_tr, 2),
+                            "TR GRP": round(grp_tr, 2)
+                        })
+                        aktarilan_sayac += 1
+
+                    st.success(f"✅ {aktarilan_sayac} adet satır başarıyla plana aktarıldı!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Aktarım hatası: {e}")
+
+    # ==========================================
+    # ALT BÖLÜM: BİRLEŞİK PLAN TABLOSU & KPI'LAR
+    # ==========================================
+    if st.session_state.plan_rows:
+        df_plan = pd.DataFrame(st.session_state.plan_rows)
+        
+        st.markdown("---")
+        st.markdown("### 📊 Aktif Medya Planı ve Performans Özeti")
+
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+        toplam_gos = df_plan["Toplam Gösterim"].sum()
+        toplam_grp = round(df_plan["TR GRP"].sum(), 2)
+        kapsanan_il = df_plan["İl"].nunique()
+        kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_plan["İl"].unique())
+        maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
+
+        kpi1.metric("📊 Toplam Gösterim", f"{toplam_gos:,}")
+        kpi2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
+        kpi3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim}")
+        kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
+
+        st.dataframe(df_plan.style.format({
+            "Toplam Gösterim": "{:,}",
+            "Erişim (Kişi)": "{:,}",
+            "İl Nüfusu": "{:,}",
+            "TR Nüfusu": "{:,}",
+            "TR Erişim %": "%{:.2f}",
+            "TR GRP": "{:.2f}",
+            "Frekans": "{:.1f}"
+        }), use_container_width=True)
+
+        # Canlı Looker Studio Haritası
+        if looker_url:
+            st.markdown("### 🗺️ Lokasyon Haritası (Looker Studio)")
+            st.components.v1.html(
+                f'<iframe src="{looker_url}" width="100%" height="520" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
+                height=540
+            )
+
+        # HTML Raporu
+        def create_full_html_report(df_to_export):
+            table_rows_html = "".join([
+                f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{r['Adet']}</td><td>{r['Toplam Gösterim']:,}</td><td>{r['Frekans']}</td><td>{r['Erişim (Kişi)']:,}</td><td>{r['İl Nüfusu']:,}</td><td>{r['TR Nüfusu']:,}</td><td>%{r['TR Erişim %']:.2f}</td><td>{r['TR GRP']:.2f}</td></tr>"
+                for _, r in df_to_export.iterrows()
+            ])
+
+            looker_html_section = ""
             if looker_url:
-                st.markdown("### 🗺️ Canlı Looker Studio Harita Paneli")
-                st.components.v1.html(
-                    f'<iframe src="{looker_url}" width="100%" height="520" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
-                    height=540
-                )
+                looker_html_section = f"""
+                <div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;">
+                    <h3 style="color: #38bdf8; margin-bottom: 15px;">🗺️ Kampanya Harita ve Lokasyon Pinleme Paneli</h3>
+                    <iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>
+                </div>
+                """
 
-            def create_full_html_report(df_to_export):
-                table_rows_html = "".join([
-                    f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{r['Adet']}</td><td>{r['Toplam Gösterim']:,}</td><td>{r['Frekans']}</td><td>{r['Erişim (Kişi)']:,}</td><td>{r['İl Nüfusu']:,}</td><td>{r['TR Nüfusu']:,}</td><td>%{r['TR Erişim %']:.2f}</td><td>{r['TR GRP']:.2f}</td></tr>"
-                    for _, r in df_to_export.iterrows()
-                ])
-
-                looker_html_section = ""
-                if looker_url:
-                    looker_html_section = f"""
-                    <div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;">
-                        <h3 style="color: #38bdf8; margin-bottom: 15px;">🗺️ Kampanya Harita ve Lokasyon Pinleme Paneli</h3>
-                        <iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>
-                    </div>
-                    """
-
-                return f"""<!DOCTYPE html>
+            return f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -338,62 +428,16 @@ with tab_sim:
 </body>
 </html>"""
 
-            col_b1, col_b2 = st.columns([1, 4])
-            with col_b1:
-                if st.button("🧹 Planı Temizle"):
-                    st.session_state.plan_rows = []
-                    st.rerun()
-            with col_b2:
-                html_data = create_full_html_report(df_plan)
-                st.download_button(
-                    label="📥 Harita Entegreli HTML Raporunu İndir",
-                    data=html_data,
-                    file_name="OOH_Simulasyon_Raporu.html",
-                    mime="text/html"
-                )
-
-# ==========================================
-# SEKME 2: GEÇMİŞ KAMPANYA & RAPOR ANALİZİ
-# ==========================================
-with tab_gecmis:
-    st.subheader("📂 Geçmiş Kampanya Dosyası Yükle & Analiz Et")
-    uploaded_file = st.file_uploader("Önceden hazırlanmış Excel veya CSV plan dosyasını seçin:", type=["xlsx", "xls", "csv"])
-
-    if uploaded_file is not None:
-        try:
-            if uploaded_file.name.endswith(".csv"):
-                df_past = pd.read_csv(uploaded_file)
-            else:
-                df_past = pd.read_excel(uploaded_file)
-
-            st.success(f"✅ `{uploaded_file.name}` başarıyla yüklendi! ({len(df_past)} satır)")
-            st.dataframe(df_past, use_container_width=True)
-
-            # Geçmiş Kampanya KPI Hesaplamaları
-            gos_col = next((c for c in df_past.columns if "gösterim" in c.lower() or "impression" in c.lower()), None)
-            grp_col = next((c for c in df_past.columns if "grp" in c.lower()), None)
-            il_col = next((c for c in df_past.columns if "il" in c.lower() or "şehir" in c.lower() or "city" in c.lower()), None)
-
-            st.markdown("---")
-            st.markdown("### 📌 Kampanya Performans Özeti")
-            pkpi1, pkpi2, pkpi3 = st.columns(3)
-            
-            if gos_col:
-                pkpi1.metric("📊 Toplam Gösterim", f"{df_past[gos_col].sum():,}")
-            if grp_col:
-                pkpi2.metric("🇹🇷 Toplam GRP", f"{df_past[grp_col].sum():.2f}")
-            if il_col:
-                pkpi3.metric("📍 Kapsanan İl Sayısı", f"{df_past[il_col].nunique()} İl")
-
-            # Looker Studio Haritası (Geçmiş kampanya için de gösterim)
-            if looker_url:
-                st.markdown("### 🗺️ Kampanya Konum Haritası (Looker Studio)")
-                st.components.v1.html(
-                    f'<iframe src="{looker_url}" width="100%" height="520" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
-                    height=540
-                )
-
-        except Exception as e:
-            st.error(f"Dosya okunurken bir hata oluştu: {e}")
-    else:
-        st.info("💡 Müşteriye sunduğun veya arşivindeki herhangi bir Excel/CSV medya planını buraya yükleyerek özet metrikleri ve harita konumunu anında görüntüleyebilirsin.")
+        col_b1, col_b2 = st.columns([1, 4])
+        with col_b1:
+            if st.button("🧹 Planı Temizle"):
+                st.session_state.plan_rows = []
+                st.rerun()
+        with col_b2:
+            html_data = create_full_html_report(df_plan)
+            st.download_button(
+                label="📥 Harita Entegreli HTML Raporunu İndir",
+                data=html_data,
+                file_name="OOH_Medya_Raporu.html",
+                mime="text/html"
+            )

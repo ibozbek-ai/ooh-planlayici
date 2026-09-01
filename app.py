@@ -317,4 +317,215 @@ if st.session_state.active_tab == "simulasyon":
         if st.button("➕ Simülasyon Satırını Plana Ekle", use_container_width=True):
             m_gost = df_gost[(df_gost['İl'] == secilen_il) & (df_gost['Ünite'] == secilen_unite)]
             gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
-            baz_frekans = float(m_gost
+            baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
+            network_adedi = float(m_gost['Network Adedi'].values[0]) if not m_gost.empty else 100.0
+            endeks = float(m_gost['Endeks'].values[0]) if not m_gost.empty else 1.0
+
+            if network_adedi > 0 and adet_val > 0 and periyod_val > 0:
+                dinamik_frekans = baz_frekans * ((adet_val / network_adedi) ** 0.55) * endeks * (periyod_val ** 0.80)
+            else:
+                dinamik_frekans = 0.0
+
+            il_nufus = float(nufus_dict.get(secilen_il, nufus_dict.get("Anadolu İlleri", 719000)))
+            toplam_gosterim = gunluk_gost * sure_val * adet_val
+            erisim_kisi = (toplam_gosterim / dinamik_frekans) if dinamik_frekans > 0 else 0
+            erisim_pct_tr = (erisim_kisi / TR_TOTAL_NUFUS) * 100
+            grp_tr = (toplam_gosterim / TR_TOTAL_NUFUS) * 100
+
+            st.session_state.sim_rows.append({
+                "Ünite": secilen_unite,
+                "İl": secilen_il,
+                "Süre (Gün)": sure_val,
+                "Periyod": format_periyod(periyod_val),
+                "Adet": adet_val,
+                "Toplam Gösterim": int(toplam_gosterim),
+                "Frekans": round(dinamik_frekans, 1),
+                "Erişim (Kişi)": int(erisim_kisi),
+                "İl Nüfusu": int(il_nufus),
+                "TR Nüfusu": int(TR_TOTAL_NUFUS),
+                "TR Erişim %": round(erisim_pct_tr, 2),
+                "TR GRP": round(grp_tr, 2)
+            })
+
+        if st.session_state.sim_rows:
+            df_sim = pd.DataFrame(st.session_state.sim_rows)
+            st.markdown("---")
+            kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+            toplam_gos = df_sim["Toplam Gösterim"].sum()
+            toplam_grp = round(df_sim["TR GRP"].sum(), 2)
+            kapsanan_il = df_sim["İl"].nunique()
+            kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_sim["İl"].unique())
+            maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
+
+            kpi1.metric("📊 Toplam Gösterim", f"{toplam_gos:,}")
+            kpi2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
+            kpi3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim}")
+            kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
+
+            st.dataframe(df_sim.style.format({
+                "Toplam Gösterim": "{:,}",
+                "Erişim (Kişi)": "{:,}",
+                "İl Nüfusu": "{:,}",
+                "TR Nüfusu": "{:,}",
+                "TR Erişim %": "%{:.2f}",
+                "TR GRP": "{:.2f}",
+                "Frekans": "{:.1f}"
+            }), use_container_width=True)
+
+            if looker_url:
+                st.markdown("### 🗺️ Lokasyon Haritası (Looker Studio)")
+                st.components.v1.html(
+                    f'<iframe src="{looker_url}" width="100%" height="520" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
+                    height=540
+                )
+
+            col_s1, col_s2 = st.columns([1, 4])
+            with col_s1:
+                if st.button("🧹 Simülasyonu Temizle"):
+                    st.session_state.sim_rows = []
+                    st.rerun()
+            with col_s2:
+                sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", is_arsiv=False)
+                st.download_button(
+                    label="📥 Harita Entegreli HTML Raporu Al",
+                    data=sim_html,
+                    file_name="OOH_Simulasyon_Raporu.html",
+                    mime="text/html",
+                    use_container_width=True
+                )
+
+# ==========================================
+# 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
+# ==========================================
+elif st.session_state.active_tab == "arsiv":
+    st.markdown("### 📝 Yeni Kampanya Satırı Ekle")
+    
+    if df_gost is not None and not df_gost.empty:
+        il_listesi = sorted(list(set(df_gost['İl'].tolist())))
+        
+        k1, k2, k3, k4, k5 = st.columns([1, 1.2, 1.5, 1.5, 1.2])
+        with k1:
+            a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
+        with k2:
+            aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+            a_donem = st.selectbox("Dönem:", aylar, index=0, key="ars_donem")
+        with k3:
+            a_marka_in = st.text_input("Marka:", placeholder="Örn: Vodafone", key="ars_marka")
+            a_marka = a_marka_in.strip() if a_marka_in.strip() else "Marka"
+        with k4:
+            a_kampanya_in = st.text_input("Kampanya:", placeholder="Örn: Yaz Kampanyası", key="ars_kampanya")
+            a_kampanya = a_kampanya_in.strip() if a_kampanya_in.strip() else "Kampanya Adı"
+        with k5:
+            a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Ströer", key="ars_mecra")
+            a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Ströer"
+
+        k6, k7, k8, k9, k10, k11 = st.columns([1.5, 2, 1, 1, 1, 1.2])
+        with k6:
+            a_il = st.selectbox("İl:", il_listesi, key="ars_il")
+        with k7:
+            a_uniteler = sorted(list(set(df_gost[df_gost['İl'] == a_il]['Ünite'].tolist())))
+            a_unite = st.selectbox("Ünite:", a_uniteler, key="ars_unite")
+            baz_sure_a = sure_dict.get(a_unite, 7.0)
+        with k8:
+            a_periyod = st.number_input("Periyod:", min_value=0.5, max_value=20.0, value=1.0, step=0.5, key="ars_per")
+            hesap_sure_a = int(round(baz_sure_a * a_periyod))
+        with k9:
+            a_sure = st.number_input("Süre:", min_value=1, value=hesap_sure_a, key="ars_sure")
+            if a_sure != hesap_sure_a:
+                a_periyod = round(a_sure / baz_sure_a, 2) if baz_sure_a > 0 else 1.0
+        with k10:
+            a_adet = st.number_input("Adet:", min_value=1, value=100, step=10, key="ars_adet")
+        with k11:
+            st.markdown("<br>", unsafe_allow_html=True)
+            ekle_btn = st.button("➕ Ekle", use_container_width=True, type="primary")
+
+        if ekle_btn:
+            m_gost = df_gost[(df_gost['İl'] == a_il) & (df_gost['Ünite'] == a_unite)]
+            gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
+            baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
+            network_adedi = float(m_gost['Network Adedi'].values[0]) if not m_gost.empty else 100.0
+            endeks = float(m_gost['Endeks'].values[0]) if not m_gost.empty else 1.0
+
+            if network_adedi > 0 and a_adet > 0 and a_periyod > 0:
+                dinamik_frekans = baz_frekans * ((a_adet / network_adedi) ** 0.55) * endeks * (a_periyod ** 0.80)
+            else:
+                dinamik_frekans = 0.0
+
+            il_nufus = float(nufus_dict.get(a_il, nufus_dict.get("Anadolu İlleri", 719000)))
+            toplam_gosterim = gunluk_gost * a_sure * a_adet
+            erisim_kisi = (toplam_gosterim / dinamik_frekans) if dinamik_frekans > 0 else 0
+            erisim_pct_tr = (erisim_kisi / TR_TOTAL_NUFUS) * 100
+            grp_tr = (toplam_gosterim / TR_TOTAL_NUFUS) * 100
+
+            st.session_state.arsiv_rows.append({
+                "Yıl": int(a_yil),
+                "Dönem (Ay)": a_donem,
+                "Marka": a_marka,
+                "Kampanya Adı": a_kampanya,
+                "Mecra Adı": a_mecra,
+                "Ünite": a_unite,
+                "İl": a_il,
+                "Süre (Gün)": a_sure,
+                "Periyod": format_periyod(a_periyod),
+                "Adet": a_adet,
+                "Toplam Gösterim": int(toplam_gosterim),
+                "Frekans": round(dinamik_frekans, 1),
+                "Erişim (Kişi)": int(erisim_kisi),
+                "İl Nüfusu": int(il_nufus),
+                "TR Nüfusu": int(TR_TOTAL_NUFUS),
+                "TR Erişim %": round(erisim_pct_tr, 2),
+                "TR GRP": round(grp_tr, 2)
+            })
+            st.success(f"✅ `{a_marka} - {a_kampanya}` satırı başarıyla eklendi!")
+
+        if st.session_state.arsiv_rows:
+            df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
+            st.markdown("---")
+            
+            ak1, ak2, ak3, ak4 = st.columns(4)
+            toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
+            toplam_grp_a = round(df_arsiv["TR GRP"].sum(), 2)
+            kapsanan_il_a = df_arsiv["İl"].nunique()
+            kapsanan_nufus_a = sum(nufus_dict.get(il, 719000) for il in df_arsiv["İl"].unique())
+            maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
+
+            ak1.metric("📊 Toplam Gösterim", f"{toplam_gos_a:,}")
+            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
+            ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
+            ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
+
+            st.dataframe(df_arsiv.style.format({
+                "Toplam Gösterim": "{:,}",
+                "Erişim (Kişi)": "{:,}",
+                "İl Nüfusu": "{:,}",
+                "TR Nüfusu": "{:,}",
+                "TR Erişim %": "%{:.2f}",
+                "TR GRP": "{:.2f}",
+                "Frekans": "{:.1f}",
+                "Adet": "{:,}"
+            }), use_container_width=True)
+
+            if looker_url:
+                st.markdown("### 🗺️ Lokasyon Haritası (Looker Studio)")
+                st.components.v1.html(
+                    f'<iframe src="{looker_url}" width="100%" height="520" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>',
+                    height=540
+                )
+
+            col_a1, col_a2 = st.columns([1, 4])
+            with col_a1:
+                if st.button("🧹 Arşiv Listesini Temizle"):
+                    st.session_state.arsiv_rows = []
+                    st.rerun()
+            with col_a2:
+                arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", is_arsiv=True)
+                st.download_button(
+                    label="📥 Harita Entegreli HTML Raporu Al",
+                    data=arsiv_html,
+                    file_name="OOH_Kampanya_Arsiv_Raporu.html",
+                    mime="text/html",
+                    use_container_width=True
+                )
+
+# --- 7. DİPNOT (FOOTER) ---
+st.markdown("<div class='footer-text'>📌 CAFAS verileri dikkate alınarak hesaplanmıştır.</div>", unsafe_allow_html=True)

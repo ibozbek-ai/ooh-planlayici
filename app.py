@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import json
 
 # Sayfa Yapılandırması
@@ -12,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS & SADE KOYU TEMA ---
+# --- CSS & TEMİZ KOYU TEMA ---
 st.markdown("""
 <style>
     .stApp {
@@ -46,6 +44,43 @@ st.markdown("""
         font-size: 24px !important;
         font-weight: 700 !important;
         color: #f8fafc !important;
+    }
+
+    /* KUSURSUZ HİZALANMIŞ TABLO TASARIMI */
+    .table-responsive-box {
+        width: 100%;
+        overflow-x: auto;
+        margin: 15px 0 25px 0;
+        border: 1px solid #1f2937;
+        border-radius: 8px;
+        background-color: #0e1526;
+    }
+    .custom-ooh-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        letter-spacing: 0.2px;
+    }
+    .custom-ooh-table th {
+        background-color: #162035;
+        color: #38bdf8;
+        padding: 14px 10px;
+        text-align: center !important;
+        vertical-align: middle;
+        font-weight: 700;
+        border-bottom: 2px solid #1f293d;
+        white-space: nowrap;
+    }
+    .custom-ooh-table td {
+        padding: 12px 10px;
+        text-align: center !important;
+        vertical-align: middle;
+        color: #e2e8f0;
+        border-bottom: 1px solid #1a243b;
+        white-space: nowrap;
+    }
+    .custom-ooh-table tbody tr:hover {
+        background-color: rgba(56, 189, 248, 0.04);
     }
 
     .footer-text {
@@ -90,7 +125,31 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. VERİ MOTORU ---
+# --- 2. SAYI BİÇİMLENDİRME YARDIMCILARI (TR FORMAT: 1.000,00) ---
+def tr_tam_sayi(val):
+    try:
+        n = int(round(float(val)))
+        return f"{n:,}".replace(",", ".")
+    except:
+        return str(val)
+
+def tr_ondalik(val, basamak=2):
+    try:
+        f = float(val)
+        fmt = f"{f:,.{basamak}f}"
+        return fmt.replace(",", "X").replace(".", ",").replace("X", ".")
+    except:
+        return str(val)
+
+def format_periyod(val):
+    try:
+        f_val = float(val)
+        if f_val.is_integer():
+            return str(int(f_val))
+        return tr_ondalik(f_val, 2)
+    except:
+        return str(val)
+
 def temiz_sayi_al(val, default=0.0):
     if pd.isna(val): return default
     if isinstance(val, (int, float)): return float(val)
@@ -106,12 +165,6 @@ def temiz_sayi_al(val, default=0.0):
             s = parts[0] + parts[1]
     try: return float(s)
     except: return default
-
-def format_periyod(val):
-    try:
-        f_val = float(val)
-        return str(int(f_val)) if f_val.is_integer() else f"{f_val:.2f}"
-    except: return str(val)
 
 @st.cache_data(ttl=60)
 def veriyi_yukle(dosya_yolu_veya_url):
@@ -205,13 +258,11 @@ if "sim_rows" not in st.session_state:
 if "arsiv_rows" not in st.session_state:
     st.session_state.arsiv_rows = []
 
-# Simülasyon State
 if "sim_per" not in st.session_state:
     st.session_state.sim_per = 1.0
 if "sim_sure" not in st.session_state:
     st.session_state.sim_sure = 7
 
-# Arşiv State
 if "ars_per" not in st.session_state:
     st.session_state.ars_per = 1.0
 if "ars_sure" not in st.session_state:
@@ -242,17 +293,17 @@ looker_url = st.sidebar.text_input(
 # --- 5. RAPOR OLUŞTURMA YARDIMCISI ---
 def generate_html_report(df_to_export, report_title, include_looker=False, is_arsiv=False):
     if is_arsiv:
-        table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
-        table_rows_html = "".join([
-            f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{r['Adet']}</td><td>{r['Toplam Gösterim']:,}</td><td>{r['Frekans']}</td><td>{r['Erişim (Kişi)']:,}</td><td>{r['İl Nüfusu']:,}</td><td>{r['TR Nüfusu']:,}</td><td>%{r['TR Erişim %']:.2f}</td><td>{r['TR GRP']:.2f}</td></tr>"
-            for _, r in df_to_export.iterrows()
-        ])
+        table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
+        rows_list = []
+        for _, r in df_to_export.iterrows():
+            rows_list.append(f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>")
+        table_rows_html = "".join(rows_list)
     else:
-        table_headers = "<th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
-        table_rows_html = "".join([
-            f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{r['Adet']}</td><td>{r['Toplam Gösterim']:,}</td><td>{r['Frekans']}</td><td>{r['Erişim (Kişi)']:,}</td><td>{r['İl Nüfusu']:,}</td><td>{r['TR Nüfusu']:,}</td><td>%{r['TR Erişim %']:.2f}</td><td>{r['TR GRP']:.2f}</td></tr>"
-            for _, r in df_to_export.iterrows()
-        ])
+        table_headers = "<th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
+        rows_list = []
+        for _, r in df_to_export.iterrows():
+            rows_list.append(f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>")
+        table_rows_html = "".join(rows_list)
 
     toplam_gos = df_to_export["Toplam Gösterim"].sum()
     toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
@@ -262,12 +313,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 
     looker_section = ""
     if include_looker and looker_url:
-        looker_section = f"""
-        <div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;">
-            <h3 style="color: #38bdf8; margin-bottom: 15px;">🗺️ Kampanya Harita ve Lokasyon Paneli</h3>
-            <iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe>
-        </div>
-        """
+        looker_section = f"""<div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;"><h3 style="color: #38bdf8; margin-bottom: 15px;">🗺️ Kampanya Harita ve Lokasyon Paneli</h3><iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe></div>"""
 
     return f"""<!DOCTYPE html>
 <html lang="tr">
@@ -275,12 +321,12 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
     <meta charset="UTF-8">
     <title>{report_title}</title>
     <style>
-        body {{ background-color: #090d16; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; line-height: 1.5; }}
+        body {{ background-color: #090d16; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 30px; line-height: 1.5; }}
         .kpi-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }}
         .kpi-card {{ background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px; text-align: center; }}
         table {{ width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; margin-top: 20px; }}
-        th {{ background: #1e293b; color: #38bdf8; padding: 12px; border: 1px solid #1f293d; }}
-        td {{ padding: 10px; border: 1px solid #1f293d; color: #cbd5e1; }}
+        th {{ background: #1e293b; color: #38bdf8; padding: 12px; border: 1px solid #1f293d; text-align: center; }}
+        td {{ padding: 10px; border: 1px solid #1f293d; color: #cbd5e1; text-align: center; }}
         tr:nth-child(even) {{ background: rgba(255,255,255,0.02); }}
         .footer-note {{ text-align: center; color: #64748b; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
     </style>
@@ -288,10 +334,10 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 <body>
     <h1 style="color: #f1f5f9;">📊 {report_title}</h1>
     <div class="kpi-grid">
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{toplam_gos:,}</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{toplam_grp:.2f}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{tr_tam_sayi(toplam_gos)}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{tr_ondalik(toplam_grp, 2)}</div></div>
         <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">KAPSASANAN İL</div><div style="font-size: 24px; font-weight: bold; color: #c084fc;">{kapsanan_il} İl</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{maks_erisim}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{tr_ondalik(maks_erisim, 1)}</div></div>
     </div>
     <table>
         <thead><tr>{table_headers}</tr></thead>
@@ -398,7 +444,7 @@ if st.session_state.active_tab == "simulasyon":
             st.session_state.sim_rows.append({
                 "Ünite": secilen_unite,
                 "İl": secilen_il,
-                "Süre (Gün)": sure_val,
+                "Süre (Gün)": int(sure_val),
                 "Periyod": format_periyod(periyod_val),
                 "Adet": int(adet_val),
                 "Toplam Gösterim": int(toplam_gosterim),
@@ -421,27 +467,19 @@ if st.session_state.active_tab == "simulasyon":
             kapsanan_nufus = sum(nufus_dict.get(il, 719000) for il in df_sim["İl"].unique())
             maks_erisim = round((kapsanan_nufus / TR_TOTAL_NUFUS) * 100, 1)
 
-            kpi1.metric("📊 Toplam Gösterim", f"{toplam_gos:,}")
-            kpi2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp:.2f}")
-            kpi3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim}")
+            kpi1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos))
+            kpi2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp, 2))
+            kpi3.metric("🌐 Maks. TR Erişimi", f"%{tr_ondalik(maks_erisim, 1)}")
             kpi4.metric("📍 Kapsanan İl Sayısı", f"{kapsanan_il} İl")
 
-            # Native & Kusursuz Streamlit Tablosu (İndekssiz ve Formatlı)
-            st.dataframe(
-                df_sim,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Toplam Gösterim": st.column_config.NumberColumn(format="%d"),
-                    "Adet": st.column_config.NumberColumn(format="%d"),
-                    "Erişim (Kişi)": st.column_config.NumberColumn(format="%d"),
-                    "İl Nüfusu": st.column_config.NumberColumn(format="%d"),
-                    "TR Nüfusu": st.column_config.NumberColumn(format="%d"),
-                    "TR Erişim %": st.column_config.NumberColumn(format="%%%.2f"),
-                    "TR GRP": st.column_config.NumberColumn(format="%.2f"),
-                    "Frekans": st.column_config.NumberColumn(format="%.1f"),
-                }
-            )
+            # TAM ORTALANMIŞ & VİRGÜLLÜ GÖRÜNÜM TABLOSU
+            rows_html = "".join([
+                f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>"
+                for _, r in df_sim.iterrows()
+            ])
+            
+            table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
+            st.markdown(table_markup, unsafe_allow_html=True)
 
             col_s1, col_s2, col_s3 = st.columns([1, 1.2, 1.5])
             with col_s1:
@@ -607,7 +645,7 @@ elif st.session_state.active_tab == "arsiv":
                 "Mecra Adı": a_mecra,
                 "Ünite": a_unite,
                 "İl": a_il,
-                "Süre (Gün)": a_sure,
+                "Süre (Gün)": int(a_sure),
                 "Periyod": format_periyod(a_periyod),
                 "Adet": int(a_adet),
                 "Toplam Gösterim": int(toplam_gosterim),
@@ -631,27 +669,19 @@ elif st.session_state.active_tab == "arsiv":
             kapsanan_nufus_a = sum(nufus_dict.get(il, 719000) for il in df_arsiv["İl"].unique())
             maks_erisim_a = round((kapsanan_nufus_a / TR_TOTAL_NUFUS) * 100, 1)
 
-            ak1.metric("📊 Toplam Gösterim", f"{toplam_gos_a:,}")
-            ak2.metric("🇹🇷 Toplam TR GRP", f"{toplam_grp_a:.2f}")
-            ak3.metric("🌐 Maks. TR Erişimi", f"%{maks_erisim_a}")
+            ak1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos_a))
+            ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp_a, 2))
+            ak3.metric("🌐 Maks. TR Erişimi", f"%{tr_ondalik(maks_erisim_a, 1)}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
-            # Native & Kusursuz Streamlit Tablosu (İndekssiz ve Formatlı)
-            st.dataframe(
-                df_arsiv,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Toplam Gösterim": st.column_config.NumberColumn(format="%d"),
-                    "Adet": st.column_config.NumberColumn(format="%d"),
-                    "Erişim (Kişi)": st.column_config.NumberColumn(format="%d"),
-                    "İl Nüfusu": st.column_config.NumberColumn(format="%d"),
-                    "TR Nüfusu": st.column_config.NumberColumn(format="%d"),
-                    "TR Erişim %": st.column_config.NumberColumn(format="%%%.2f"),
-                    "TR GRP": st.column_config.NumberColumn(format="%.2f"),
-                    "Frekans": st.column_config.NumberColumn(format="%.1f"),
-                }
-            )
+            # TAM ORTALANMIŞ & VİRGÜLLÜ ARŞİV TABLOSU
+            rows_arsiv_html = "".join([
+                f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>"
+                for _, r in df_arsiv.iterrows()
+            ])
+            
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
+            st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
             with col_a1:

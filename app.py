@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import io
 import json
 
 # Sayfa Yapılandırması
@@ -44,6 +45,17 @@ st.markdown("""
         font-size: 24px !important;
         font-weight: 700 !important;
         color: #f8fafc !important;
+    }
+
+    /* Giriş Kartı Düzenlemesi */
+    .login-container {
+        max-width: 420px;
+        margin: 80px auto 0 auto;
+        background-color: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 30px 25px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
 
     .table-responsive-box {
@@ -103,15 +115,17 @@ if "logged_in" not in st.session_state:
     st.session_state.username = ""
 
 def login_form():
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 1.1, 1])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        st.markdown("<h2 style='text-align: center; color: #38bdf8;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 14px;'>Medya Planlama ve Lokasyon Portalı</p>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #38bdf8; margin-bottom: 0px;'>⚡ OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 13px; margin-bottom: 25px;'>Medya Planlama ve Lokasyon Portalı</p>", unsafe_allow_html=True)
+        
         with st.form("login_box"):
-            user = st.text_input("👤 Kullanıcı Adı:")
-            pwd = st.text_input("🔑 Şifre:", type="password")
-            submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True)
+            user = st.text_input("👤 Kullanıcı Adı:", placeholder="Kullanıcı adınızı girin")
+            pwd = st.text_input("🔑 Şifre:", type="password", placeholder="••••••••")
+            st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+            submit = st.form_submit_button("🚀 Giriş Yap", use_container_width=True, type="primary")
             if submit:
                 if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
                     st.session_state.logged_in = True
@@ -358,7 +372,28 @@ looker_url = st.sidebar.text_input(
     placeholder="https://lookerstudio.google.com/embed/reporting/..."
 )
 
-# --- 6. RAPOR OLUŞTURMA YARDIMCISI ---
+# --- 6. RAPOR OLUŞTURMA YARDIMCILARI (HTML & EXCEL) ---
+def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=False):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        toplam_gos = df_to_export["Toplam Gösterim"].sum()
+        toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
+        kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_to_export, nufus_dict, TR_TOTAL_NUFUS)
+
+        summary_df = pd.DataFrame([
+            {"Metrik": "Rapor Adı", "Değer": report_title},
+            {"Metrik": "Toplam Gösterim", "Değer": int(toplam_gos)},
+            {"Metrik": "Toplam TR GRP", "Değer": float(toplam_grp)},
+            {"Metrik": "Kapsanan İl Sayısı", "Değer": f"{kapsanan_il} İl"},
+            {"Metrik": "Maks. TR Erişimi", "Değer": f"%{maks_erisim}"},
+            {"Metrik": "Looker Harita Linki", "Değer": looker_link if looker_link else "Belirtilmedi"}
+        ])
+        
+        summary_df.to_excel(writer, sheet_name='Özet & KPI', index=False)
+        df_to_export.to_excel(writer, sheet_name='Plan Detayı', index=False)
+    
+    return output.getvalue()
+
 def generate_html_report(df_to_export, report_title, include_looker=False, is_arsiv=False):
     if is_arsiv:
         table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
@@ -565,7 +600,7 @@ if st.session_state.active_tab == "simulasyon":
             table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
             st.markdown(table_markup, unsafe_allow_html=True)
 
-            col_s1, col_s2, col_s3, col_s4, col_s5 = st.columns([1, 1.2, 1, 1.2, 1.5])
+            col_s1, col_s2, col_s3, col_s4, col_s5, col_s6 = st.columns([1, 1.2, 1, 1.2, 1.2, 1.5])
             with col_s1:
                 if st.button("↩️ Son Satırı Sil", key="sim_del_last", use_container_width=True):
                     if st.session_state.sim_rows:
@@ -589,14 +624,23 @@ if st.session_state.active_tab == "simulasyon":
             with col_s4:
                 sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", include_looker=True, is_arsiv=False)
                 st.download_button(
-                    label="📥 HTML Raporu Al",
+                    label="📄 HTML Raporu Al",
                     data=sim_html,
                     file_name="OOH_Simulasyon_Raporu.html",
                     mime="text/html",
                     use_container_width=True
                 )
             with col_s5:
-                with st.popover("📁 Simülasyonu Arşive Aktar", use_container_width=True):
+                sim_excel = generate_excel_report(df_sim, "OOH Medya Simülasyon Raporu", looker_link=looker_url, is_arsiv=False)
+                st.download_button(
+                    label="📊 Excel Raporu Al",
+                    data=sim_excel,
+                    file_name="OOH_Simulasyon_Raporu.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+            with col_s6:
+                with st.popover("📁 Arşive Aktar", use_container_width=True):
                     st.markdown("##### 📌 Genel Kampanya Bilgileri")
                     aktar_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="aktar_yil")
                     aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
@@ -813,7 +857,7 @@ elif st.session_state.active_tab == "arsiv":
             table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
-            col_a1, col_a2, col_a3, col_a4 = st.columns([1, 1.2, 1, 1.5])
+            col_a1, col_a2, col_a3, col_a4, col_a5 = st.columns([1, 1.2, 1, 1.2, 1.2])
             with col_a1:
                 if st.button("↩️ Son Satırı Sil", key="ars_del_last", use_container_width=True):
                     if st.session_state.arsiv_rows:
@@ -837,10 +881,19 @@ elif st.session_state.active_tab == "arsiv":
             with col_a4:
                 arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", include_looker=False, is_arsiv=True)
                 st.download_button(
-                    label="📥 HTML Raporu Al",
+                    label="📄 HTML Raporu Al",
                     data=arsiv_html,
                     file_name="OOH_Kampanya_Arsiv_Raporu.html",
                     mime="text/html",
+                    use_container_width=True
+                )
+            with col_a5:
+                arsiv_excel = generate_excel_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", looker_link=looker_url, is_arsiv=True)
+                st.download_button(
+                    label="📊 Excel Raporu Al",
+                    data=arsiv_excel,
+                    file_name="OOH_Kampanya_Arsiv_Raporu.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True
                 )
 

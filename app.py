@@ -22,12 +22,10 @@ st.markdown("""
         font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
-    /* İkon İzolasyonu */
     span[data-testid="stIconMaterial"], .material-symbols-rounded, [class*="material-symbols"] {
         font-family: 'Material Symbols Rounded', 'Material Icons' !important;
     }
 
-    /* Ferah Arka Plan */
     .stApp {
         background: radial-gradient(circle at 50% -10%, #1a294d 0%, #0d1629 50%, #070b14 100%) !important;
         color: #f8fafc !important;
@@ -39,7 +37,6 @@ st.markdown("""
         border-right: 1px solid rgba(56, 189, 248, 0.15) !important;
     }
 
-    /* Üst Başlık */
     .app-header {
         display: flex;
         align-items: center;
@@ -58,7 +55,6 @@ st.markdown("""
         margin: 0;
     }
 
-    /* Form Etiketleri */
     div[data-testid="stWidgetLabel"] p {
         font-size: 14.5px !important;
         font-weight: 600 !important;
@@ -66,7 +62,6 @@ st.markdown("""
         margin-bottom: 6px !important;
     }
 
-    /* Girdi Kutuları */
     div[data-baseweb="input"], div[data-baseweb="select"] {
         border-radius: 10px !important;
         background-color: #131f3b !important;
@@ -84,7 +79,6 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* BUTONLAR - GENEL TABAN */
     .stButton>button, div[data-testid="stPopover"]>button {
         border-radius: 10px !important;
         font-weight: 700 !important;
@@ -95,13 +89,11 @@ st.markdown("""
         white-space: nowrap !important;
     }
 
-    /* BUTON HOVER */
     .stButton>button:hover, div[data-testid="stPopover"]>button:hover {
         transform: translateY(-3px) scale(1.01) !important;
         cursor: pointer !important;
     }
 
-    /* 1. ÜST SEKME SEÇİM BUTONLARI */
     .tab-btn-active > button {
         background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
         color: #ffffff !important;
@@ -124,7 +116,6 @@ st.markdown("""
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
     }
 
-    /* 2. EKLE BUTONLARI (Zümrüt Yeşili) */
     .action-add-btn > button {
         background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
         color: #ffffff !important;
@@ -138,7 +129,6 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* 3. İKİNCİL / YÖNETİM BUTONLARI */
     button[kind="secondary"], div[data-testid="stPopover"]>button {
         background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
         color: #e2e8f0 !important;
@@ -150,7 +140,6 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* KPI Metric Kartları */
     div[data-testid="stMetric"] {
         background: linear-gradient(145deg, rgba(26, 38, 68, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%) !important;
         border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
@@ -173,7 +162,6 @@ st.markdown("""
         letter-spacing: -0.5px;
     }
 
-    /* Giriş Formu */
     div[data-testid="stForm"] {
         max-width: 480px !important;
         margin: 50px auto 0 auto !important;
@@ -184,7 +172,6 @@ st.markdown("""
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.15) !important;
     }
 
-    /* Tablo Tasarımı */
     .table-responsive-box {
         width: 100%;
         overflow-x: auto;
@@ -221,6 +208,16 @@ st.markdown("""
     }
     .custom-ooh-table tbody tr:hover {
         background-color: rgba(56, 189, 248, 0.08);
+    }
+
+    /* TOPLAM SATIRI ÖZEL STİLİ */
+    .custom-ooh-table tfoot tr td {
+        background: linear-gradient(180deg, #162444 0%, #101c36 100%) !important;
+        color: #38bdf8 !important;
+        font-weight: 800 !important;
+        font-size: 14.5px !important;
+        border-top: 2px solid #38bdf8 !important;
+        border-bottom: none !important;
     }
 
     .corporate-footer {
@@ -533,6 +530,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
     if "TR Erişim %" in df_excel.columns:
         df_excel["TR Erişim %"] = df_excel["TR Erişim %"] / 100.0
 
+    toplam_adet = int(df_to_export["Adet"].sum())
     toplam_gos = int(df_to_export["Toplam Gösterim"].sum())
     toplam_grp = float(round(df_to_export["TR GRP"].sum(), 2))
     kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_to_export, nufus_dict, TR_TOTAL_NUFUS)
@@ -541,6 +539,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         summary_df = pd.DataFrame([
             {"Metrik": "Rapor Başlığı", "Değer": report_title},
             {"Metrik": "Geliştirici & Sistem", "Değer": "İbrahim Özbek Arslan | OOH Planlama Stüdyosu"},
+            {"Metrik": "Toplam Adet", "Değer": toplam_adet},
             {"Metrik": "Toplam Gösterim", "Değer": toplam_gos},
             {"Metrik": "Toplam TR GRP", "Değer": toplam_grp},
             {"Metrik": "Kapsanan İl Sayısı", "Değer": f"{kapsanan_il} İl"},
@@ -554,6 +553,8 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         wb = writer.book
         header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
         header_font = Font(name="Calibri", size=11, bold=True, color="38BDF8")
+        total_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+        total_font = Font(name="Calibri", size=11, bold=True, color="38BDF8")
         center_align = Alignment(horizontal="center", vertical="center")
         left_align = Alignment(horizontal="left", vertical="center")
         thin_border = Border(
@@ -561,6 +562,12 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             right=Side(style='thin', color='CBD5E1'),
             top=Side(style='thin', color='CBD5E1'),
             bottom=Side(style='thin', color='CBD5E1')
+        )
+        total_border = Border(
+            top=Side(style='medium', color='38BDF8'),
+            bottom=Side(style='double', color='38BDF8'),
+            left=Side(style='thin', color='CBD5E1'),
+            right=Side(style='thin', color='CBD5E1')
         )
         
         ws_sum = wb['Özet KPI']
@@ -574,8 +581,9 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             cell.alignment = center_align
             
         ws_sum["B3"].number_format = '#,##0'
-        ws_sum["B4"].number_format = '#,##0.00'
-        ws_sum["B6"].number_format = '0.0%'
+        ws_sum["B4"].number_format = '#,##0'
+        ws_sum["B5"].number_format = '#,##0.00'
+        ws_sum["B7"].number_format = '0.0%'
         
         ws_plan = wb['Medya Planı']
         for col in ws_plan.columns:
@@ -589,7 +597,8 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             cell.alignment = center_align
             
         col_names = [cell.value for cell in ws_plan[1]]
-        for row in range(2, ws_plan.max_row + 1):
+        last_row = ws_plan.max_row
+        for row in range(2, last_row + 1):
             for col_idx, col_name in enumerate(col_names, start=1):
                 cell = ws_plan.cell(row=row, column=col_idx)
                 if col_name in ["Adet", "Toplam Gösterim", "Erişim (Kişi)", "İl Nüfusu", "TR Nüfusu"]:
@@ -598,6 +607,25 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
                     cell.number_format = '#,##0.00'
                 elif col_name in ["TR Erişim %"]:
                     cell.number_format = '0.00%'
+
+        # TABLO ALTINA TOPLAM SATIRI EKLEME (EXCEL)
+        tot_row = last_row + 1
+        ws_plan.cell(row=tot_row, column=1, value="GENEL TOPLAM")
+        for col_idx, col_name in enumerate(col_names, start=1):
+            cell = ws_plan.cell(row=tot_row, column=col_idx)
+            cell.fill = total_fill
+            cell.font = total_font
+            cell.border = total_border
+            cell.alignment = center_align
+            if col_name == "Adet":
+                cell.value = toplam_adet
+                cell.number_format = '#,##0'
+            elif col_name == "Toplam Gösterim":
+                cell.value = toplam_gos
+                cell.number_format = '#,##0'
+            elif col_name == "TR GRP":
+                cell.value = toplam_grp
+                cell.number_format = '#,##0.00'
 
         for ws in [ws_sum, ws_plan]:
             for col in ws.columns:
@@ -608,22 +636,25 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
     return output.getvalue()
 
 def generate_html_report(df_to_export, report_title, include_looker=False, is_arsiv=False):
+    toplam_adet = df_to_export["Adet"].sum()
+    toplam_gos = df_to_export["Toplam Gösterim"].sum()
+    toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
+    kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_to_export, nufus_dict, TR_TOTAL_NUFUS)
+
     if is_arsiv:
         table_headers = "<th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
         rows_list = []
         for _, r in df_to_export.iterrows():
             rows_list.append(f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>")
         table_rows_html = "".join(rows_list)
+        footer_html = f"<tfoot><tr><td colspan='9' style='text-align:right; padding-right:15px;'>GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet)}</td><td>{tr_tam_sayi(toplam_gos)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp, 2)}</td></tr></tfoot>"
     else:
         table_headers = "<th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th>"
         rows_list = []
         for _, r in df_to_export.iterrows():
             rows_list.append(f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>")
         table_rows_html = "".join(rows_list)
-
-    toplam_gos = df_to_export["Toplam Gösterim"].sum()
-    toplam_grp = round(df_to_export["TR GRP"].sum(), 2)
-    kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_to_export, nufus_dict, TR_TOTAL_NUFUS)
+        footer_html = f"<tfoot><tr><td colspan='4' style='text-align:right; padding-right:15px;'>GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet)}</td><td>{tr_tam_sayi(toplam_gos)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp, 2)}</td></tr></tfoot>"
 
     looker_section = ""
     if include_looker and looker_url:
@@ -642,6 +673,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
         th {{ background: #1e293b; color: #38bdf8; padding: 12px; border: 1px solid #1f293d; text-align: center; }}
         td {{ padding: 10px; border: 1px solid #1f293d; color: #cbd5e1; text-align: center; }}
         tr:nth-child(even) {{ background: rgba(255,255,255,0.02); }}
+        tfoot td {{ background: #152238; color: #38bdf8; font-weight: bold; border-top: 2px solid #38bdf8; }}
         .footer-note {{ text-align: center; color: #94a3b8; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
     </style>
 </head>
@@ -656,6 +688,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
     <table>
         <thead><tr>{table_headers}</tr></thead>
         <tbody>{table_rows_html}</tbody>
+        {footer_html}
     </table>
     {looker_section}
     <div class="footer-note">📌 CAFAS verileri dikkate alınarak geliştirilmiştir.</div>
@@ -669,7 +702,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# SEKME GEÇİŞ BUTONLARI (Aktif ve Pasif Sınıflarıyla Ayrıştırıldı)
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
     btn1_class = "tab-btn-active" if st.session_state.active_tab == "simulasyon" else "tab-btn-inactive"
@@ -767,7 +799,6 @@ if st.session_state.active_tab == "simulasyon":
         periyod_val = st.session_state.sim_per
         sure_val = st.session_state.sim_sure
 
-        # ÖZEL ZÜMRÜT YEŞİLİ EKLE BUTONU
         st.markdown('<div class="action-add-btn">', unsafe_allow_html=True)
         ekle_tiklandi = st.button("➕ Simülasyon Satırını Plana Ekle", key="sim_add_row_btn", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -810,6 +841,7 @@ if st.session_state.active_tab == "simulasyon":
             df_sim = pd.DataFrame(st.session_state.sim_rows)
             st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+            toplam_adet = df_sim["Adet"].sum()
             toplam_gos = df_sim["Toplam Gösterim"].sum()
             toplam_grp = round(df_sim["TR GRP"].sum(), 2)
             kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_sim, nufus_dict, TR_TOTAL_NUFUS)
@@ -824,7 +856,8 @@ if st.session_state.active_tab == "simulasyon":
                 for _, r in df_sim.iterrows()
             ])
             
-            table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
+            # Uygulama içi Tabloya Toplam Satırı Eklendi
+            table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody><tfoot><tr><td colspan="4" style="text-align:right; padding-right:15px;">GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet)}</td><td>{tr_tam_sayi(toplam_gos)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp, 2)}</td></tr></tfoot></table></div>"""
             st.markdown(table_markup, unsafe_allow_html=True)
 
             col_s1, col_s2, col_s3, col_s4, col_s5, col_s6 = st.columns([1, 1.2, 1, 1.2, 1.2, 1.5])
@@ -1069,6 +1102,7 @@ elif st.session_state.active_tab == "arsiv":
             st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
             
             ak1, ak2, ak3, ak4 = st.columns(4)
+            toplam_adet_a = df_arsiv["Adet"].sum()
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
             toplam_grp_a = round(df_arsiv["TR GRP"].sum(), 2)
             kapsanan_il_a, maks_erisim_a = hesapla_net_kapsama_metrikleri(df_arsiv, nufus_dict, TR_TOTAL_NUFUS)
@@ -1083,8 +1117,8 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            # Hata Düzeltildi: rows_arsiv_html doğru çağrılıyor
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
+            # Uygulama içi Arşiv Tablosuna Toplam Satırı Eklendi
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody><tfoot><tr><td colspan="9" style="text-align:right; padding-right:15px;">GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet_a)}</td><td>{tr_tam_sayi(toplam_gos_a)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp_a, 2)}</td></tr></tfoot></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4, col_a5 = st.columns([1, 1.2, 1, 1.2, 1.2])

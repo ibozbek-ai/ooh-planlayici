@@ -210,15 +210,6 @@ st.markdown("""
         background-color: rgba(56, 189, 248, 0.08);
     }
 
-    .custom-ooh-table tfoot tr td {
-        background: linear-gradient(180deg, #162444 0%, #101c36 100%) !important;
-        color: #38bdf8 !important;
-        font-weight: 800 !important;
-        font-size: 14.5px !important;
-        border-top: 2px solid #38bdf8 !important;
-        border-bottom: none !important;
-    }
-
     .corporate-footer {
         text-align: center;
         color: #64748b;
@@ -527,7 +518,6 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
     output = io.BytesIO()
     df_excel = df_to_export.copy()
     
-    # TR Erişim % kolonundaki değerleri kesin olarak float sayıya dönüştür
     if "TR Erişim %" in df_excel.columns:
         df_excel["TR Erişim %"] = df_excel["TR Erişim %"].apply(lambda v: temiz_sayi_al(v, 0.0) / 100.0)
 
@@ -584,7 +574,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         ws_sum["B3"].number_format = '#,##0'
         ws_sum["B4"].number_format = '#,##0'
         ws_sum["B5"].number_format = '#,##0.00'
-        ws_sum["B7"].number_format = '0.0%'  # Maks. TR Erişimi Yüzde Formatı
+        ws_sum["B7"].number_format = '0.0%'
         
         ws_plan = wb['Medya Planı']
         for col in ws_plan.columns:
@@ -609,6 +599,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
                 elif col_name in ["TR Erişim %"]:
                     cell.number_format = '0.00%'
 
+        # EXCEL RAPORU İÇİN TOPLAM SATIRI
         tot_row = last_row + 1
         ws_plan.cell(row=tot_row, column=1, value="GENEL TOPLAM")
         for col_idx, col_name in enumerate(col_names, start=1):
@@ -841,7 +832,6 @@ if st.session_state.active_tab == "simulasyon":
             df_sim = pd.DataFrame(st.session_state.sim_rows)
             st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-            toplam_adet = df_sim["Adet"].sum()
             toplam_gos = df_sim["Toplam Gösterim"].sum()
             toplam_grp = round(df_sim["TR GRP"].sum(), 2)
             kapsanan_il, maks_erisim = hesapla_net_kapsama_metrikleri(df_sim, nufus_dict, TR_TOTAL_NUFUS)
@@ -856,7 +846,8 @@ if st.session_state.active_tab == "simulasyon":
                 for _, r in df_sim.iterrows()
             ])
             
-            table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody><tfoot><tr><td colspan="4" style="text-align:right; padding-right:15px;">GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet)}</td><td>{tr_tam_sayi(toplam_gos)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp, 2)}</td></tr></tfoot></table></div>"""
+            # ARAYÜZDEN TOPLAM SATIRI KALDIRILDI
+            table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
             st.markdown(table_markup, unsafe_allow_html=True)
 
             col_s1, col_s2, col_s3, col_s4, col_s5, col_s6 = st.columns([1, 1.2, 1, 1.2, 1.2, 1.5])
@@ -1090,7 +1081,6 @@ elif st.session_state.active_tab == "arsiv":
             st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
             
             ak1, ak2, ak3, ak4 = st.columns(4)
-            toplam_adet_a = df_arsiv["Adet"].sum()
             toplam_gos_a = df_arsiv["Toplam Gösterim"].sum()
             toplam_grp_a = round(df_arsiv["TR GRP"].sum(), 2)
             kapsanan_il_a, maks_erisim_a = hesapla_net_kapsama_metrikleri(df_arsiv, nufus_dict, TR_TOTAL_NUFUS)
@@ -1105,7 +1095,8 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody><tfoot><tr><td colspan="9" style="text-align:right; padding-right:15px;">GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet_a)}</td><td>{tr_tam_sayi(toplam_gos_a)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp_a, 2)}</td></tr></tfoot></table></div>"""
+            # ARAYÜZDEN TOPLAM SATIRI KALDIRILDI
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4, col_a5 = st.columns([1, 1.2, 1, 1.2, 1.2])

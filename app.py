@@ -518,7 +518,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
     output = io.BytesIO()
     df_excel = df_to_export.copy()
     
-    # TR Erişim % kolonunu oran (float) yap
+    # TR Erişim % kolonundaki değerleri kesin olarak oran (float 0.xx) yap
     if "TR Erişim %" in df_excel.columns:
         df_excel["TR Erişim %"] = df_excel["TR Erişim %"].apply(lambda v: temiz_sayi_al(v, 0.0) / 100.0)
 
@@ -533,14 +533,14 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
 
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         summary_df = pd.DataFrame([
-            {"Metrik": "Rapor Başlığı", "Değer": report_title},
+            {"Metrik": "Rapor Başlığı", "Değer": str(report_title)},
             {"Metrik": "Geliştirici & Sistem", "Değer": "İbrahim Özbek Arslan | OOH Planlama Stüdyosu"},
             {"Metrik": "Toplam Adet", "Değer": toplam_adet},
             {"Metrik": "Toplam Gösterim", "Değer": toplam_gos},
             {"Metrik": "Toplam TR GRP", "Değer": toplam_grp},
             {"Metrik": "Kapsanan İl Sayısı", "Değer": f"{kapsanan_il} İl"},
-            {"Metrik": "Maks. TR Erişimi", "Değer": float(maks_erisim / 100.0)},
-            {"Metrik": "Looker Studio Harita Linki", "Değer": looker_link if looker_link else "Belirtilmedi"}
+            {"Metrik": "Maks. TR Erişimi", "Değer": float(round(maks_erisim / 100.0, 4))},
+            {"Metrik": "Looker Studio Harita Linki", "Değer": str(looker_link) if looker_link else "Belirtilmedi"}
         ])
         
         summary_df.to_excel(writer, sheet_name='Özet KPI', index=False)
@@ -548,14 +548,14 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         
         wb = writer.book
 
-        # --- İÇ AÇICI, ÖZEL SAFİR & BUZ MAVİSİ EXCEL TEMASI ---
-        header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid") # Koyu Arduvaz / Gece Safiri
-        header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8") # Parlak Neon Buz Mavisi
+        # Özel Safir & Koyu Tema Biçimleri
+        header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+        header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
 
-        total_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid") # Vurgulu Koyu Lacivert
+        total_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
         total_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
 
-        alt_row_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid") # Ferah hafif kırık beyaz satır
+        alt_row_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
         regular_font = Font(name="Segoe UI", size=10, color="0F172A")
 
         center_align = Alignment(horizontal="center", vertical="center")
@@ -574,35 +574,42 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             right=Side(style='thin', color='CBD5E1')
         )
         
-        # 1. Sayfa: Özet KPI
+        # 1. Sayfa: Özet KPI (Hassas Hücre Eşleme)
         ws_sum = wb['Özet KPI']
         for row_idx, row in enumerate(ws_sum.iter_rows(), start=1):
             for cell in row:
                 cell.border = thin_border
                 cell.font = regular_font
                 cell.alignment = left_align
-                if row_idx % 2 == 0:
+                if row_idx > 1 and row_idx % 2 == 0:
                     cell.fill = alt_row_fill
 
         for cell in ws_sum[1]:
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = center_align
-            
-        ws_sum["B3"].number_format = '#,##0'
-        ws_sum["B4"].number_format = '#,##0'
-        ws_sum["B5"].number_format = '#,##0.00'
-        ws_sum["B7"].number_format = '0.0%'  # Maks. TR Erişimi Yüzde Formatı
+
+        # Dinamik Satır Taraması ile Kesin Biçimlendirme
+        for r in range(2, ws_sum.max_row + 1):
+            lbl = str(ws_sum.cell(row=r, column=1).value or '').strip()
+            val_cell = ws_sum.cell(row=r, column=2)
+            if lbl == "Toplam Adet":
+                val_cell.number_format = '#,##0'
+            elif lbl == "Toplam Gösterim":
+                val_cell.number_format = '#,##0'
+            elif lbl == "Toplam TR GRP":
+                val_cell.number_format = '#,##0.00'
+            elif lbl == "Maks. TR Erişimi":
+                val_cell.value = float(round(maks_erisim / 100.0, 4))
+                val_cell.number_format = '0.0%'  # Doğrudan %41,9 görünmesini sağlar
         
         # 2. Sayfa: Medya Planı
         ws_plan = wb['Medya Planı']
         col_names = [cell.value for cell in ws_plan[1]]
         last_row = ws_plan.max_row
 
-        # Kolon harflerini dinamik yakala (GRP, Bütçe, CPR)
         grp_col_letter = get_column_letter(col_names.index("TR GRP") + 1)
         butce_col_letter = get_column_letter(col_names.index("Toplam Bütçe (TL)") + 1)
-        cpr_col_letter = get_column_letter(col_names.index("CPR (TL)") + 1)
 
         for row in range(2, last_row + 1):
             is_alt = (row % 2 == 0)

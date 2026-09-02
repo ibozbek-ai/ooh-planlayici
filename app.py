@@ -547,12 +547,20 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         df_excel.to_excel(writer, sheet_name='Medya Planı', index=False)
         
         wb = writer.book
-        header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
-        header_font = Font(name="Calibri", size=11, bold=True, color="38BDF8")
-        total_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
-        total_font = Font(name="Calibri", size=11, bold=True, color="38BDF8")
+
+        # --- İÇ AÇICI, ÖZEL SAFİR & BUZ MAVİSİ EXCEL TEMASI ---
+        header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid") # Koyu Arduvaz / Gece Safiri
+        header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8") # Parlak Neon Buz Mavisi
+
+        total_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid") # Vurgulu Koyu Lacivert
+        total_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
+
+        alt_row_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid") # Ferah hafif kırık beyaz satır
+        regular_font = Font(name="Segoe UI", size=10, color="0F172A")
+
         center_align = Alignment(horizontal="center", vertical="center")
         left_align = Alignment(horizontal="left", vertical="center")
+        
         thin_border = Border(
             left=Side(style='thin', color='CBD5E1'),
             right=Side(style='thin', color='CBD5E1'),
@@ -566,11 +574,16 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             right=Side(style='thin', color='CBD5E1')
         )
         
+        # 1. Sayfa: Özet KPI
         ws_sum = wb['Özet KPI']
-        for col in ws_sum.columns:
-            for cell in col:
+        for row_idx, row in enumerate(ws_sum.iter_rows(), start=1):
+            for cell in row:
                 cell.border = thin_border
+                cell.font = regular_font
                 cell.alignment = left_align
+                if row_idx % 2 == 0:
+                    cell.fill = alt_row_fill
+
         for cell in ws_sum[1]:
             cell.fill = header_fill
             cell.font = header_font
@@ -579,19 +592,10 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         ws_sum["B3"].number_format = '#,##0'
         ws_sum["B4"].number_format = '#,##0'
         ws_sum["B5"].number_format = '#,##0.00'
-        ws_sum["B7"].number_format = '0.0%'
+        ws_sum["B7"].number_format = '0.0%'  # Maks. TR Erişimi Yüzde Formatı
         
+        # 2. Sayfa: Medya Planı
         ws_plan = wb['Medya Planı']
-        for col in ws_plan.columns:
-            for cell in col:
-                cell.border = thin_border
-                cell.alignment = center_align
-                
-        for cell in ws_plan[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = center_align
-            
         col_names = [cell.value for cell in ws_plan[1]]
         last_row = ws_plan.max_row
 
@@ -601,8 +605,15 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         cpr_col_letter = get_column_letter(col_names.index("CPR (TL)") + 1)
 
         for row in range(2, last_row + 1):
+            is_alt = (row % 2 == 0)
             for col_idx, col_name in enumerate(col_names, start=1):
                 cell = ws_plan.cell(row=row, column=col_idx)
+                cell.border = thin_border
+                cell.font = regular_font
+                cell.alignment = center_align
+                if is_alt:
+                    cell.fill = alt_row_fill
+
                 if col_name in ["Adet", "Toplam Gösterim", "Erişim (Kişi)", "İl Nüfusu", "TR Nüfusu"]:
                     cell.number_format = '#,##0'
                 elif col_name in ["Frekans", "TR GRP"]:
@@ -612,9 +623,14 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
                 elif col_name == "Toplam Bütçe (TL)":
                     cell.number_format = '#,##0 ₺'
                 elif col_name == "CPR (TL)":
-                    # Canlı Excel Formülü: Toplam Bütçe / GRP
                     cell.value = f'=IFERROR({butce_col_letter}{row}/{grp_col_letter}{row}, 0)'
                     cell.number_format = '#,##0.00 ₺'
+
+        # Başlık Satırı Stili
+        for cell in ws_plan[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
 
         # EXCEL RAPORU İÇİN GENEL TOPLAM SATIRI
         tot_row = last_row + 1
@@ -638,7 +654,6 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
                 cell.value = f'=SUM({butce_col_letter}2:{butce_col_letter}{last_row})'
                 cell.number_format = '#,##0 ₺'
             elif col_name == "CPR (TL)":
-                # Toplam Bütçe / Toplam GRP formülü
                 cell.value = f'=IFERROR({butce_col_letter}{tot_row}/{grp_col_letter}{tot_row}, 0)'
                 cell.number_format = '#,##0.00 ₺'
 

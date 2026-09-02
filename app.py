@@ -210,7 +210,6 @@ st.markdown("""
         background-color: rgba(56, 189, 248, 0.08);
     }
 
-    /* TOPLAM SATIRI ÖZEL STİLİ */
     .custom-ooh-table tfoot tr td {
         background: linear-gradient(180deg, #162444 0%, #101c36 100%) !important;
         color: #38bdf8 !important;
@@ -527,8 +526,10 @@ st.sidebar.caption("⚡ **Geliştirici:** İbrahim Özbek Arslan")
 def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=False):
     output = io.BytesIO()
     df_excel = df_to_export.copy()
+    
+    # TR Erişim % kolonundaki değerleri kesin olarak float sayıya dönüştür
     if "TR Erişim %" in df_excel.columns:
-        df_excel["TR Erişim %"] = df_excel["TR Erişim %"] / 100.0
+        df_excel["TR Erişim %"] = df_excel["TR Erişim %"].apply(lambda v: temiz_sayi_al(v, 0.0) / 100.0)
 
     toplam_adet = int(df_to_export["Adet"].sum())
     toplam_gos = int(df_to_export["Toplam Gösterim"].sum())
@@ -583,7 +584,7 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         ws_sum["B3"].number_format = '#,##0'
         ws_sum["B4"].number_format = '#,##0'
         ws_sum["B5"].number_format = '#,##0.00'
-        ws_sum["B7"].number_format = '0.0%'
+        ws_sum["B7"].number_format = '0.0%'  # Maks. TR Erişimi Yüzde Formatı
         
         ws_plan = wb['Medya Planı']
         for col in ws_plan.columns:
@@ -608,7 +609,6 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
                 elif col_name in ["TR Erişim %"]:
                     cell.number_format = '0.00%'
 
-        # TABLO ALTINA TOPLAM SATIRI EKLEME (EXCEL)
         tot_row = last_row + 1
         ws_plan.cell(row=tot_row, column=1, value="GENEL TOPLAM")
         for col_idx, col_name in enumerate(col_names, start=1):
@@ -856,7 +856,6 @@ if st.session_state.active_tab == "simulasyon":
                 for _, r in df_sim.iterrows()
             ])
             
-            # Uygulama içi Tabloya Toplam Satırı Eklendi
             table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody><tfoot><tr><td colspan="4" style="text-align:right; padding-right:15px;">GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet)}</td><td>{tr_tam_sayi(toplam_gos)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp, 2)}</td></tr></tfoot></table></div>"""
             st.markdown(table_markup, unsafe_allow_html=True)
 
@@ -882,7 +881,7 @@ if st.session_state.active_tab == "simulasyon":
                     st.session_state.sim_rows = []
                     st.rerun()
             with col_s4:
-                sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", include_looker=True, is_arsiv=False)
+                sim_html = generate_html_report(df_sim, "OOH Medya Simülasyon Raporu", include_looker=False, is_arsiv=False)
                 st.download_button(
                     label="📄 HTML Raporu Al",
                     data=sim_html,
@@ -948,17 +947,6 @@ if st.session_state.active_tab == "simulasyon":
                             })
                         st.success(f"✅ {len(st.session_state.sim_rows)} satır kendi mecralarıyla arşive aktarıldı!")
                         st.rerun()
-
-        # Harita Paneli
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>🗺️ CANLI LOOKER STUDIO HARİTA PANELİ</h4>", unsafe_allow_html=True)
-        if looker_url:
-            st.components.v1.html(
-                f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
-                height=560
-            )
-        else:
-            st.info("💡 Haritayı görüntülemek için sol yan menüden **Looker Studio Harita Linki**ni giriniz.")
 
 # ==========================================
 # 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV
@@ -1117,7 +1105,6 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            # Uygulama içi Arşiv Tablosuna Toplam Satırı Eklendi
             table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody><tfoot><tr><td colspan="9" style="text-align:right; padding-right:15px;">GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet_a)}</td><td>{tr_tam_sayi(toplam_gos_a)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp_a, 2)}</td></tr></tfoot></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
@@ -1143,7 +1130,7 @@ elif st.session_state.active_tab == "arsiv":
                     st.session_state.arsiv_rows = []
                     st.rerun()
             with col_a4:
-                arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", include_looker=False, is_arsiv=True)
+                arsiv_html = generate_html_report(df_arsiv, "OOH Kampanya Arşiv & Yönetim Raporu", include_looker=True, is_arsiv=True)
                 st.download_button(
                     label="📄 HTML Raporu Al",
                     data=arsiv_html,
@@ -1160,6 +1147,17 @@ elif st.session_state.active_tab == "arsiv":
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True
                 )
+
+        # HARİTA PANELİ ARŞİVDE
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>🗺️ GERÇEKLEŞEN KAMPANYA LOKASYONLARI & HARİTA PANELİ</h4>", unsafe_allow_html=True)
+        if looker_url:
+            st.components.v1.html(
+                f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
+                height=560
+            )
+        else:
+            st.info("💡 Arşiv haritasını görüntülemek için sol yan menüden **Looker Studio Harita Linki**ni giriniz.")
 
 # --- 8. KURUMSAL DİPNOT (FOOTER) ---
 st.markdown("<div class='corporate-footer'>📌 CAFAS verileri dikkate alınarak geliştirilmiştir.</div>", unsafe_allow_html=True)

@@ -518,8 +518,13 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
     output = io.BytesIO()
     df_excel = df_to_export.copy()
     
+    # TR Erişim % kolonunu oran (float) yap
     if "TR Erişim %" in df_excel.columns:
         df_excel["TR Erişim %"] = df_excel["TR Erişim %"].apply(lambda v: temiz_sayi_al(v, 0.0) / 100.0)
+
+    # SADECE EXCEL İÇİN: En sağa Toplam Bütçe ve CPR kolonlarını ekle
+    df_excel["Toplam Bütçe (TL)"] = None
+    df_excel["CPR (TL)"] = None
 
     toplam_adet = int(df_to_export["Adet"].sum())
     toplam_gos = int(df_to_export["Toplam Gösterim"].sum())
@@ -589,6 +594,12 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             
         col_names = [cell.value for cell in ws_plan[1]]
         last_row = ws_plan.max_row
+
+        # Kolon harflerini dinamik yakala (GRP, Bütçe, CPR)
+        grp_col_letter = get_column_letter(col_names.index("TR GRP") + 1)
+        butce_col_letter = get_column_letter(col_names.index("Toplam Bütçe (TL)") + 1)
+        cpr_col_letter = get_column_letter(col_names.index("CPR (TL)") + 1)
+
         for row in range(2, last_row + 1):
             for col_idx, col_name in enumerate(col_names, start=1):
                 cell = ws_plan.cell(row=row, column=col_idx)
@@ -598,8 +609,14 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
                     cell.number_format = '#,##0.00'
                 elif col_name in ["TR Erişim %"]:
                     cell.number_format = '0.00%'
+                elif col_name == "Toplam Bütçe (TL)":
+                    cell.number_format = '#,##0 ₺'
+                elif col_name == "CPR (TL)":
+                    # Canlı Excel Formülü: Toplam Bütçe / GRP
+                    cell.value = f'=IFERROR({butce_col_letter}{row}/{grp_col_letter}{row}, 0)'
+                    cell.number_format = '#,##0.00 ₺'
 
-        # EXCEL RAPORU İÇİN TOPLAM SATIRI
+        # EXCEL RAPORU İÇİN GENEL TOPLAM SATIRI
         tot_row = last_row + 1
         ws_plan.cell(row=tot_row, column=1, value="GENEL TOPLAM")
         for col_idx, col_name in enumerate(col_names, start=1):
@@ -617,12 +634,19 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
             elif col_name == "TR GRP":
                 cell.value = toplam_grp
                 cell.number_format = '#,##0.00'
+            elif col_name == "Toplam Bütçe (TL)":
+                cell.value = f'=SUM({butce_col_letter}2:{butce_col_letter}{last_row})'
+                cell.number_format = '#,##0 ₺'
+            elif col_name == "CPR (TL)":
+                # Toplam Bütçe / Toplam GRP formülü
+                cell.value = f'=IFERROR({butce_col_letter}{tot_row}/{grp_col_letter}{tot_row}, 0)'
+                cell.number_format = '#,##0.00 ₺'
 
         for ws in [ws_sum, ws_plan]:
             for col in ws.columns:
                 max_len = max(len(str(cell.value or '')) for cell in col)
                 col_letter = get_column_letter(col[0].column)
-                ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+                ws.column_dimensions[col_letter].width = max(max_len + 4, 13)
 
     return output.getvalue()
 
@@ -846,7 +870,6 @@ if st.session_state.active_tab == "simulasyon":
                 for _, r in df_sim.iterrows()
             ])
             
-            # ARAYÜZDEN TOPLAM SATIRI KALDIRILDI
             table_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
             st.markdown(table_markup, unsafe_allow_html=True)
 
@@ -1095,7 +1118,6 @@ elif st.session_state.active_tab == "arsiv":
                 for _, r in df_arsiv.iterrows()
             ])
             
-            # ARAYÜZDEN TOPLAM SATIRI KALDIRILDI
             table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 

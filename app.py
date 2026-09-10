@@ -153,36 +153,16 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* NETWORK İNDİRME KARTI */
-    .network-download-card {
-        background: linear-gradient(145deg, #13203d 0%, #0c152b 100%);
-        border: 1.5px solid rgba(56, 189, 248, 0.25);
-        border-radius: 14px;
-        padding: 18px 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-    }
-    .network-download-card h4 {
-        color: #38bdf8;
-        margin: 0 0 6px 0;
-        font-size: 17px;
-        font-weight: 700;
-    }
-    .network-download-card p {
-        color: #94a3b8;
-        font-size: 13.5px;
-        margin: 0 0 14px 0;
-    }
-
-    button[kind="secondary"], div[data-testid="stPopover"]>button {
-        background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
-        color: #e2e8f0 !important;
-        border: 1.5px solid #334155 !important;
-    }
-    button[kind="secondary"]:hover, div[data-testid="stPopover"]>button:hover {
-        border-color: #38bdf8 !important;
-        box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25) !important;
-        color: #ffffff !important;
+    /* NETWORK SATIRI KART STİLİ */
+    .net-item-card {
+        background: linear-gradient(145deg, #131f3b 0%, #0d162a 100%);
+        border: 1.5px solid rgba(56, 189, 248, 0.2);
+        border-radius: 12px;
+        padding: 12px 18px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
     div[data-testid="stMetric"] {
@@ -799,41 +779,44 @@ def fetch_all_gsheet_networks():
             for sheet_name in excel_file.sheet_names:
                 df = pd.read_excel(excel_file, sheet_name=sheet_name)
                 network_dict[sheet_name] = df
-            return network_dict, xlsx_bytes
+            return network_dict
     except Exception as e:
-        return {}, None
+        return {}
 
-def generate_network_excel(df_net, net_title):
+def generate_custom_multi_network_excel(selected_networks_dict):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df_net.to_excel(writer, sheet_name=str(net_title)[:31], index=False)
-        wb = writer.book
-        ws = wb.active
-        
-        header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
-        header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
-        thin_border = Border(
-            left=Side(style='thin', color='CBD5E1'),
-            right=Side(style='thin', color='CBD5E1'),
-            top=Side(style='thin', color='CBD5E1'),
-            bottom=Side(style='thin', color='CBD5E1')
-        )
-        
-        for cell in ws[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
+        for sheet_name, df_sheet in selected_networks_dict.items():
+            valid_sheet_title = str(sheet_name)[:31].replace(":", "").replace("/", "").replace("\\", "").replace("?", "").replace("*", "")
+            df_sheet.to_excel(writer, sheet_name=valid_sheet_title, index=False)
             
-        for row in ws.iter_rows(min_row=2):
-            for cell in row:
-                cell.border = thin_border
+            wb = writer.book
+            ws = wb[valid_sheet_title]
+            
+            header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+            header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
+            thin_border = Border(
+                left=Side(style='thin', color='CBD5E1'),
+                right=Side(style='thin', color='CBD5E1'),
+                top=Side(style='thin', color='CBD5E1'),
+                bottom=Side(style='thin', color='CBD5E1')
+            )
+            
+            for cell in ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
                 cell.alignment = Alignment(horizontal="center", vertical="center")
                 
-        for col in ws.columns:
-            max_len = max(len(str(cell.value or '')) for cell in col)
-            col_letter = get_column_letter(col[0].column)
-            ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
-            
+            for row in ws.iter_rows(min_row=2):
+                for cell in row:
+                    cell.border = thin_border
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                    
+            for col in ws.columns:
+                max_len = max(len(str(cell.value or '')) for cell in col)
+                col_letter = get_column_letter(col[0].column)
+                ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+                
     return output.getvalue()
 
 # --- 10. ÜST MENÜ & BAŞLIK ---
@@ -843,7 +826,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 4 SEKMELİ YENİ NAVİGASYON
 col_btn1, col_btn2, col_btn3, col_btn4 = st.columns(4)
 with col_btn1:
     btn1_class = "tab-btn-active" if st.session_state.active_tab == "simulasyon" else "tab-btn-inactive"
@@ -1408,82 +1390,90 @@ elif st.session_state.active_tab == "markalar":
             st.warning(f"📌 {secilen_marka} markasına ait henüz arşivlenmiş bir kampanya kaydı bulunamadı. 'Kampanya Yönetimi & Arşiv' sekmesinden bu markayı seçerek kampanya ekleyebilirsiniz.")
 
 # ==========================================
-# 4. SEKME: ÖRNEK LİSTELER (NETWORK BAZLI İNDİRME)
+# 4. SEKME: ÖRNEK LİSTELER (KUTUCUKLU TİKLEME & İNDİRME)
 # ==========================================
 elif st.session_state.active_tab == "ornekler":
     st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 8px;'>📑 ÖRNEK LİSTELER & NETWORK ENVANTERİ</h4>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #cbd5e1; font-size: 14.5px; margin-bottom: 24px;'>Aşağıdaki network listelerinden dilediğinizi doğrudan özel biçimlendirilmiş <strong>Excel (.xlsx)</strong> veya <strong>CSV</strong> formatında tek tıkla indirebilirsiniz:</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #cbd5e1; font-size: 14.5px; margin-bottom: 20px;'>İndirmek istediğiniz Network'lerin solundaki kutucukları işaretleyip tek tıkla Excel formatında indirebilirsiniz:</p>", unsafe_allow_html=True)
 
-    networks_dict, full_xlsx_bytes = fetch_all_gsheet_networks()
+    networks_dict = fetch_all_gsheet_networks()
 
     if not networks_dict:
-        st.warning("⚠️ E-Tablo verisi şu anda doğrudan okunamadı. Aşağıdaki butonla tüm dosyayı indirebilirsiniz:")
-        if full_xlsx_bytes:
-            st.download_button(
-                label="📊 Tüm Örnek Listeleri İndir (.xlsx)",
-                data=full_xlsx_bytes,
-                file_name="OOH_Master_Ornek_Listeler.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                type="primary"
-            )
-        else:
-            st.link_button("🌐 Google Sheets Üzerinden Aç ve İndir", GSHEET_XLSX_URL, use_container_width=True)
+        st.warning("⚠️ E-Tablo verisi şu anda doğrudan okunamadı. Google Sheets bağlantısını kontrol ediniz:")
+        st.link_button("🌐 Google Sheets Üzerinden Aç ve İndir", GSHEET_XLSX_URL, use_container_width=True)
     else:
-        # Üstte tüm çalışma kitabını tek seferde indirme opsiyonu
-        col_top1, col_top2 = st.columns([3, 1])
-        with col_top1:
-            st.markdown(f"<span style='color:#38bdf8; font-weight:700; font-size:16px;'>⚡ Toplam {len(networks_dict)} Farklı Network / Sayfa Mevcut</span>", unsafe_allow_html=True)
-        with col_top2:
-            if full_xlsx_bytes:
+        # Hızlı Seçim Aksiyonları
+        col_act1, col_act2, col_act3 = st.columns([1.5, 1.5, 3])
+        with col_act1:
+            if st.button("☑️ Tümünü Seç", use_container_width=True):
+                for k in networks_dict.keys():
+                    st.session_state[f"chk_{k}"] = True
+                st.rerun()
+        with col_act2:
+            if st.button("⬜ Seçimleri Temizle", use_container_width=True):
+                for k in networks_dict.keys():
+                    st.session_state[f"chk_{k}"] = False
+                st.rerun()
+
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+        # Kutucuklu Seçim Listesi
+        secilen_networkler = {}
+        
+        for sheet_name, df_sheet in networks_dict.items():
+            chk_key = f"chk_{sheet_name}"
+            if chk_key not in st.session_state:
+                st.session_state[chk_key] = False
+
+            row_c1, row_c2 = st.columns([4, 1.5])
+            
+            with row_c1:
+                is_checked = st.checkbox(
+                    f"📡 **{sheet_name}**  *( {len(df_sheet)} Satır Envanter • {len(df_sheet.columns)} Sütun )*",
+                    key=chk_key,
+                    value=st.session_state[chk_key]
+                )
+                if is_checked:
+                    secilen_networkler[sheet_name] = df_sheet
+
+            with row_c2:
+                # Tekil Excel İndirme Butonu
+                single_excel = generate_custom_multi_network_excel({sheet_name: df_sheet})
                 st.download_button(
-                    label="📦 Tüm Kitabı İndir (.xlsx)",
-                    data=full_xlsx_bytes,
-                    file_name="OOH_Tum_Network_Listeleri.xlsx",
+                    label=f"📥 Tek İndir",
+                    data=single_excel,
+                    file_name=f"{sheet_name}_Listesi.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key=f"dl_single_{sheet_name}",
                     use_container_width=True
                 )
 
-        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+        st.markdown("---")
+        
+        # Seçilenlerin Toplu İndirme Alanı
+        col_down1, col_down2 = st.columns([3, 2])
+        with col_down1:
+            st.markdown(f"##### 📦 Seçilen Network Sayısı: `{len(secilen_networkler)}` / `{len(networks_dict)}`")
+            if not secilen_networkler:
+                st.caption("İndirmek istediğiniz networklerin solundaki kutucukları işaretleyiniz.")
+            else:
+                secili_adlar = ", ".join(list(secilen_networkler.keys())[:4])
+                if len(secilen_networkler) > 4:
+                    secili_adlar += f" ve {len(secilen_networkler)-4} diğer..."
+                st.caption(f"Hazırlanan Sayfalar: **{secili_adlar}**")
 
-        # Networkleri 2'li sütun kartları halinde diz
-        net_cols = st.columns(2)
-        for idx, (sheet_name, df_sheet) in enumerate(networks_dict.items()):
-            col = net_cols[idx % 2]
-            satir_sayisi = len(df_sheet)
-            kolon_sayisi = len(df_sheet.columns)
-            
-            with col:
-                st.markdown(f"""
-                <div class="network-download-card">
-                    <h4>📡 {sheet_name}</h4>
-                    <p>Toplam <strong>{satir_sayisi} Satır Envanter</strong> • {kolon_sayisi} Sütun Veri</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # İndirme Butonları (Excel & CSV)
-                btn_c1, btn_c2 = st.columns(2)
-                
-                with btn_c1:
-                    excel_bytes = generate_network_excel(df_sheet, sheet_name)
-                    st.download_button(
-                        label=f"📊 Excel İndir (.xlsx)",
-                        data=excel_bytes,
-                        file_name=f"{sheet_name}_Envanter_Listesi.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        key=f"dl_xlsx_{sheet_name}",
-                        use_container_width=True
-                    )
-                with btn_c2:
-                    csv_bytes = df_sheet.to_csv(index=False).encode('utf-8-sig')
-                    st.download_button(
-                        label=f"📄 CSV İndir (.csv)",
-                        data=csv_bytes,
-                        file_name=f"{sheet_name}_Envanter_Listesi.csv",
-                        mime="text/csv",
-                        key=f"dl_csv_{sheet_name}",
-                        use_container_width=True
-                    )
-                st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        with col_down2:
+            if secilen_networkler:
+                multi_excel_bytes = generate_custom_multi_network_excel(secilen_networkler)
+                dosya_adi = "Secilen_Networkler_Medya_Plani.xlsx" if len(secilen_networkler) > 1 else f"{list(secilen_networkler.keys())[0]}_Listesi.xlsx"
+                st.download_button(
+                    label="🚀 Seçilenleri Excel (.xlsx) İndir",
+                    data=multi_excel_bytes,
+                    file_name=dosya_adi,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True
+                )
 
 # --- 11. KURUMSAL DİPNOT (FOOTER) ---
 st.markdown("<div class='corporate-footer'>📌 CAFAS verileri dikkate alınarak geliştirilmiştir.</div>", unsafe_allow_html=True)

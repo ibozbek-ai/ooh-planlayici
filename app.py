@@ -129,13 +129,13 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* MÜŞTERİ KLASÖR KARTLARI */
+    /* MÜŞTERİ LOGOLU KLASÖR KARTLARI */
     .brand-folder-btn > button {
         background: linear-gradient(145deg, #13203d 0%, #0c1426 100%) !important;
-        color: #38bdf8 !important;
+        color: #f8fafc !important;
         border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 14px !important;
-        height: 76px !important;
+        border-radius: 16px !important;
+        height: 110px !important;
         font-size: 15px !important;
         font-weight: 700 !important;
         display: flex !important;
@@ -143,13 +143,15 @@ st.markdown("""
         justify-content: center !important;
         box-shadow: 0 8px 20px rgba(0,0,0,0.35) !important;
         white-space: pre-line !important;
-        line-height: 1.3 !important;
+        line-height: 1.35 !important;
+        padding: 10px !important;
     }
     .brand-folder-btn > button:hover {
         background: linear-gradient(145deg, #1c2e56 0%, #101c36 100%) !important;
         border-color: #38bdf8 !important;
-        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35) !important;
-        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 28px rgba(56, 189, 248, 0.35) !important;
+        transform: translateY(-4px) !important;
+        color: #38bdf8 !important;
     }
 
     button[kind="secondary"], div[data-testid="stPopover"]>button {
@@ -278,20 +280,52 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. SABİT MÜŞTERİ PORTFÖY LİSTESİ (GÖRSELDEKİ 38 MARKA) ---
-MASTER_BRANDS_DICT = {
-    "BİM": 2007, "Casper": 2007, "Hayat": 2010, "Kumtel": 2010,
-    "Muratbey": 2012, "Namet": 2012, "Maret": 2012, "Kale": 2015,
-    "File Market": 2015, "Kervan": 2015, "Kastamonu Entegre": 2015,
-    "Biota": 2016, "Daikin": 2016, "Brita": 2017, "Doğanlar Holding": 2017,
-    "Paribu": 2018, "Koton": 2018, "Geberit": 2025, "Yolcu360": 2018,
-    "Weber": 2018, "Saint-Gobain": 2018, "Pasifik Holding": 2019,
-    "Turna.com": 2019, "Herbalife": 2020, "Kopaş Kozmetik": 2021,
-    "HD Holding": 2021, "Yataş": 2022, "Burgan Bank": 2022,
-    "Milhans": 2022, "Çizmeci Time": 2023, "Hayat Finans": 2023,
-    "Demant": 2023, "Siemens": 2023, "Pozitif": 2023,
-    "Gloria Jean's": 2024, "Karnaval": 2024, "Bosch": 2025,
-    "De'Longhi": 2025, "Braun": 2025, "Humm": 2025, "Evolvia": 2025
+# --- 2. 40 MÜŞTERİ MARKASI (HD HOLDING AYRILDI, YILLAR KALKTI, LOGO İKONLARI EKLENDİ) ---
+MASTER_BRANDS_ICONS = {
+    "BİM": "🔴 BİM",
+    "Casper": "💻 Casper",
+    "Hayat": "🌿 Hayat",
+    "Kumtel": "⚡ Kumtel",
+    "Muratbey": "🧀 Muratbey",
+    "Namet": "🥩 Namet",
+    "Maret": "🍖 Maret",
+    "Kale": "🧱 Kale",
+    "File Market": "🛒 File",
+    "Kervan": "🍬 Kervan",
+    "Kastamonu Entegre": "🌲 Kastamonu",
+    "Biota": "🧴 Biota",
+    "Daikin": "❄️ Daikin",
+    "Brita": "💧 Brita",
+    "Doğanlar Holding": "🏛️ Doğanlar",
+    "Paribu": "🪙 Paribu",
+    "Koton": "👗 Koton",
+    "Geberit": "🚿 Geberit",
+    "Yolcu360": "🚗 Yolcu360",
+    "Weber": "🧱 Weber",
+    "Saint-Gobain": "🏗️ Saint-Gobain",
+    "Pasifik Holding": "🏢 Pasifik",
+    "Turna.com": "✈️ Turna.com",
+    "Herbalife": "🌱 Herbalife",
+    "Kopaş Kozmetik": "💄 Kopaş",
+    "KFC": "🍗 KFC",
+    "Makarnam": "🍝 Makarnam",
+    "Pidem": "🥟 Pidem",
+    "HD İskender": "🥩 HD İskender",
+    "Yataş": "🛏️ Yataş",
+    "Burgan Bank": "🏦 Burgan Bank",
+    "Milhans": "🥜 Milhans",
+    "Çizmeci Time": "🍫 Çizmeci Time",
+    "Hayat Finans": "💳 Hayat Finans",
+    "Demant": "🦻 Demant",
+    "Siemens": "⚙️ Siemens",
+    "Pozitif": "✨ Pozitif",
+    "Gloria Jean's": "☕ Gloria Jean's",
+    "Karnaval": "📻 Karnaval",
+    "Bosch": "🔧 Bosch",
+    "De'Longhi": "☕ De'Longhi",
+    "Braun": "🪒 Braun",
+    "Humm": "🍪 Humm",
+    "Evolvia": "🍼 Evolvia"
 }
 
 # --- 3. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
@@ -983,10 +1017,9 @@ if st.session_state.active_tab == "simulasyon":
                     aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
                     aktar_donem = st.selectbox("Dönem:", aylar, index=0, key="aktar_donem")
                     
-                    # 38 Markalık Master Liste Seçimi veya Serbest Giriş
-                    tum_master_markalar = list(MASTER_BRANDS_DICT.keys())
+                    tum_master_markalar = list(MASTER_BRANDS_ICONS.keys())
                     aktar_marka = st.selectbox("Marka:", tum_master_markalar, key="aktar_marka_select")
-                    aktar_kampanya = st.text_input("Kampanya Adı:", placeholder="Örn: Kırtasiye", key="aktar_kampanya")
+                    aktar_kampanya = st.text_input("Kampanya Adı:", placeholder="Örn: Kırtasiye / Menü Kampanyası", key="aktar_kampanya")
 
                     st.markdown("---")
                     st.markdown("##### 🏢 Satır Bazlı Mecra Eşleştirmesi")
@@ -1003,7 +1036,7 @@ if st.session_state.active_tab == "simulasyon":
 
                     if st.button("✅ Arşive Gönder", use_container_width=True, type="primary"):
                         m_isim = aktar_marka.strip() if aktar_marka.strip() else "BİM"
-                        k_isim = aktar_kampanya.strip() if aktar_kampanya.strip() else "Kırtasiye"
+                        k_isim = aktar_kampanya.strip() if aktar_kampanya.strip() else "Genel Kampanya"
 
                         for idx, row in enumerate(st.session_state.sim_rows):
                             c_isim = mecra_girdileri[idx]
@@ -1045,11 +1078,11 @@ elif st.session_state.active_tab == "arsiv":
             aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
             a_donem = st.selectbox("Dönem:", aylar, index=0, key="ars_donem")
         with k3:
-            tum_master_markalar = list(MASTER_BRANDS_DICT.keys())
+            tum_master_markalar = list(MASTER_BRANDS_ICONS.keys())
             a_marka = st.selectbox("Marka:", tum_master_markalar, key="ars_marka_select")
         with k4:
-            a_kampanya_in = st.text_input("Kampanya:", placeholder="Örn: Kırtasiye", key="ars_kampanya")
-            a_kampanya = a_kampanya_in.strip() if a_kampanya_in.strip() else "Kırtasiye"
+            a_kampanya_in = st.text_input("Kampanya:", placeholder="Örn: Menü / Tanıtım Kampanyası", key="ars_kampanya")
+            a_kampanya = a_kampanya_in.strip() if a_kampanya_in.strip() else "Genel Kampanya"
         with k5:
             a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon / Donanım Medya", key="ars_mecra")
             a_mecra = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
@@ -1240,44 +1273,41 @@ elif st.session_state.active_tab == "arsiv":
 # 3. SEKME: MARKALARIMIZ & KLASÖR GEZGİNİ
 # ==========================================
 elif st.session_state.active_tab == "markalar":
-    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>🏢 MÜŞTERİ PORTFÖYÜ & GEÇMİŞ KAMPANYA KLASÖRLERİ</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>🏢 MÜŞTERİ PORTFÖYÜ & KAMPANYA KLASÖRLERİ</h4>", unsafe_allow_html=True)
 
     df_arsiv_all = pd.DataFrame(st.session_state.arsiv_rows) if st.session_state.arsiv_rows else pd.DataFrame()
 
-    # 1. DURUM: HİÇBİR MARKA KLASÖRÜNE GİRİLMEDİYSE (ANA KLASÖR LİSTESİ)
+    # 1. DURUM: ANA MARKA KLASÖR LİSTESİ
     if st.session_state.selected_brand_folder is None:
         
-        # Arama / Filtre Kutusu
-        search_query = st.text_input("🔍 Müşteri / Marka Ara:", placeholder="Marka adı yazın... (örn: BİM, Brita, Yataş)", key="brand_search_box")
+        search_query = st.text_input("🔍 Müşteri / Marka Ara:", placeholder="Marka adı arayın... (örn: KFC, Pidem, BİM, Brita, Yataş)", key="brand_search_box")
         
-        # Master Liste ve Arşivde varsa eklenen diğer markalar
         kayitli_arsiv_markalari = set(df_arsiv_all["Marka"].dropna().astype(str).tolist()) if not df_arsiv_all.empty else set()
-        tum_markalar_listesi = sorted(list(set(list(MASTER_BRANDS_DICT.keys()) + list(kayitli_arsiv_markalari))))
+        tum_markalar_listesi = sorted(list(set(list(MASTER_BRANDS_ICONS.keys()) + list(kayitli_arsiv_markalari))))
 
         if search_query:
             tum_markalar_listesi = [m for m in tum_markalar_listesi if search_query.lower() in m.lower()]
 
-        st.markdown(f"<p style='color: #94a3b8; font-size: 14px; margin-bottom: 20px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kayıtlı müşteri listeleniyor. Kampanya geçmişini görmek istediğiniz markanın klasörüne tıklayın:</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #94a3b8; font-size: 14px; margin-bottom: 20px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kurumsal müşteri listeleniyor. Kampanya geçmişini görmek istediğiniz markanın klasörüne tıklayın:</p>", unsafe_allow_html=True)
 
-        # 4'lü Sütun Düzeninde Klasör Kartları
         cols = st.columns(4)
         for idx, marka in enumerate(tum_markalar_listesi):
             col = cols[idx % 4]
-            baslangic_yili = MASTER_BRANDS_DICT.get(marka, "2026")
+            marka_gorsel_adi = MASTER_BRANDS_ICONS.get(marka, f"📁 {marka}")
             kampanya_sayisi = len(df_arsiv_all[df_arsiv_all["Marka"] == marka]) if not df_arsiv_all.empty else 0
             
             with col:
                 st.markdown('<div class="brand-folder-btn">', unsafe_allow_html=True)
-                btn_label = f"📁 {marka}\n({baslangic_yili} • {kampanya_sayisi} Kampanya)"
+                btn_label = f"📁 {marka_gorsel_adi}\n({kampanya_sayisi} Kampanya Kaydı)"
                 if st.button(btn_label, key=f"bfolder_{marka}", use_container_width=True):
                     st.session_state.selected_brand_folder = marka
                     st.rerun()
                 st.markdown('</div><div style="height: 12px;"></div>', unsafe_allow_html=True)
 
-    # 2. DURUM: BİR MARKA KLASÖRÜNÜN İÇİNDEYSEK
+    # 2. DURUM: KLASÖR İÇİNE GİRİLDİĞİNDE
     else:
         secilen_marka = st.session_state.selected_brand_folder
-        baslangic_yili = MASTER_BRANDS_DICT.get(secilen_marka, "2026")
+        marka_gorsel_adi = MASTER_BRANDS_ICONS.get(secilen_marka, f"📁 {secilen_marka}")
 
         col_back, col_title = st.columns([1.8, 5])
         with col_back:
@@ -1285,9 +1315,8 @@ elif st.session_state.active_tab == "markalar":
                 st.session_state.selected_brand_folder = None
                 st.rerun()
         with col_title:
-            st.markdown(f"<h3 style='color: #38bdf8; margin: 2px 0 0 0; font-weight: 800;'>📁 {secilen_marka} <span style='color:#94a3b8; font-size:16px; font-weight:500;'>(Portföy Giriş: {baslangic_yili})</span></h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #38bdf8; margin: 2px 0 0 0; font-weight: 800;'>📁 {marka_gorsel_adi} Portföyü</h3>", unsafe_allow_html=True)
 
-        # Markanın Arşiv Kayıtlarını Filtrele
         if not df_arsiv_all.empty and secilen_marka in df_arsiv_all["Marka"].values:
             df_marka = df_arsiv_all[df_arsiv_all["Marka"] == secilen_marka]
             kampanyalar = ["Tüm Kampanyalar"] + sorted(list(set(df_marka["Kampanya Adı"].dropna().astype(str).tolist())))

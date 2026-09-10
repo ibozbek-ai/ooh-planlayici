@@ -153,16 +153,15 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* NETWORK SATIRI KART STİLİ */
-    .net-item-card {
-        background: linear-gradient(145deg, #131f3b 0%, #0d162a 100%);
-        border: 1.5px solid rgba(56, 189, 248, 0.2);
-        border-radius: 12px;
-        padding: 12px 18px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    button[kind="secondary"], div[data-testid="stPopover"]>button {
+        background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
+        color: #e2e8f0 !important;
+        border: 1.5px solid #334155 !important;
+    }
+    button[kind="secondary"]:hover, div[data-testid="stPopover"]>button:hover {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25) !important;
+        color: #ffffff !important;
     }
 
     div[data-testid="stMetric"] {
@@ -766,29 +765,61 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 </body>
 </html>"""
 
-# --- 9. GOOGLE SHEETS SAYFALARINI / NETWORKLERİNİ ÇEKME MOTORU ---
+# --- 9. GOOGLE SHEETS SÜTUN TABANLI NETWORK AYRIŞTIRMA MOTORU ---
 @st.cache_data(ttl=300)
-def fetch_all_gsheet_networks():
+def fetch_and_split_networks():
     try:
         req = urllib.request.Request(GSHEET_XLSX_URL, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as resp:
             xlsx_bytes = resp.read()
             excel_file = pd.ExcelFile(io.BytesIO(xlsx_bytes))
             
-            network_dict = {}
-            for sheet_name in excel_file.sheet_names:
-                df = pd.read_excel(excel_file, sheet_name=sheet_name)
-                network_dict[sheet_name] = df
-            return network_dict
+            # İlk sayfayı al (Sayfa1)
+            sheet_name = excel_file.sheet_names[0]
+            df_full = pd.read_excel(excel_file, sheet_name=sheet_name)
+            
+            # Sütun isimlerini temizle
+            df_full.columns = [str(c).strip() for c in df_full.columns]
+            
+            # Network veya Mecra barındıran sütunu tespit et
+            target_col = None
+            for col in df_full.columns:
+                c_low = col.lower()
+                if "network" in c_low or "mecra" in c_low or "paket" in c_low or "grup" in c_low:
+                    target_col = col
+                    break
+            
+            # Eğer bulunamazsa ünite sütununa bak, o da yoksa 1. veya 2. sütunu al
+            if not target_col:
+                for col in df_full.columns:
+                    if "ünite" in col.lower() or "unite" in col.lower():
+                        target_col = col
+                        break
+            if not target_col and len(df_full.columns) > 1:
+                target_col = df_full.columns[0]
+                
+            networks_dict = {}
+            if target_col:
+                unique_nets = df_full[target_col].dropna().unique()
+                for net in unique_nets:
+                    net_str = str(net).strip()
+                    if net_str and net_str.lower() not in ['nan', 'none', '', 'toplam']:
+                        sub_df = df_full[df_full[target_col] == net].copy()
+                        networks_dict[net_str] = sub_df
+            else:
+                networks_dict["Tüm Envanter"] = df_full
+                
+            return networks_dict, target_col
     except Exception as e:
-        return {}
+        return {}, None
 
 def generate_custom_multi_network_excel(selected_networks_dict):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        for sheet_name, df_sheet in selected_networks_dict.items():
-            valid_sheet_title = str(sheet_name)[:31].replace(":", "").replace("/", "").replace("\\", "").replace("?", "").replace("*", "")
-            df_sheet.to_excel(writer, sheet_name=valid_sheet_title, index=False)
+        for net_name, df_net in selected_networks_dict.items():
+            valid_sheet_title = str(net_name)[:31].replace(":", "").replace("/", "").replace("\\", "").replace("?", "").replace("*", "").replace("[", "").replace("]", "")
+            if not valid_sheet_title: valid_sheet_title = "Network"
+            df_net.to_excel(writer, sheet_name=valid_sheet_title, index=False)
             
             wb = writer.book
             ws = wb[valid_sheet_title]
@@ -1396,7 +1427,7 @@ elif st.session_state.active_tab == "ornekler":
     st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 8px;'>📑 ÖRNEK LİSTELER & NETWORK ENVANTERİ</h4>", unsafe_allow_html=True)
     st.markdown("<p style='color: #cbd5e1; font-size: 14.5px; margin-bottom: 20px;'>İndirmek istediğiniz Network'lerin solundaki kutucukları işaretleyip tek tıkla Excel formatında indirebilirsiniz:</p>", unsafe_allow_html=True)
 
-    networks_dict = fetch_all_gsheet_networks()
+    networks_dict, network_col_name = fetch_and_split_networks()
 
     if not networks_dict:
         st.warning("⚠️ E-Tablo verisi şu anda doğrudan okunamadı. Google Sheets bağlantısını kontrol ediniz:")
@@ -1420,8 +1451,8 @@ elif st.session_state.active_tab == "ornekler":
         # Kutucuklu Seçim Listesi
         secilen_networkler = {}
         
-        for sheet_name, df_sheet in networks_dict.items():
-            chk_key = f"chk_{sheet_name}"
+        for net_name, df_net in networks_dict.items():
+            chk_key = f"chk_{net_name}"
             if chk_key not in st.session_state:
                 st.session_state[chk_key] = False
 
@@ -1429,22 +1460,22 @@ elif st.session_state.active_tab == "ornekler":
             
             with row_c1:
                 is_checked = st.checkbox(
-                    f"📡 **{sheet_name}**  *( {len(df_sheet)} Satır Envanter • {len(df_sheet.columns)} Sütun )*",
+                    f"📡 **{net_name}**  *( {len(df_net)} Satır Envanter • {len(df_net.columns)} Sütun )*",
                     key=chk_key,
                     value=st.session_state[chk_key]
                 )
                 if is_checked:
-                    secilen_networkler[sheet_name] = df_sheet
+                    secilen_networkler[net_name] = df_net
 
             with row_c2:
                 # Tekil Excel İndirme Butonu
-                single_excel = generate_custom_multi_network_excel({sheet_name: df_sheet})
+                single_excel = generate_custom_multi_network_excel({net_name: df_net})
                 st.download_button(
                     label=f"📥 Tek İndir",
                     data=single_excel,
-                    file_name=f"{sheet_name}_Listesi.xlsx",
+                    file_name=f"{net_name}_Envanter_Listesi.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    key=f"dl_single_{sheet_name}",
+                    key=f"dl_single_{net_name}",
                     use_container_width=True
                 )
 

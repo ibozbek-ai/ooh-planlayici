@@ -129,40 +129,28 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* BEYAZ KART ŞIK MARKA LOGO KARTLARI */
-    .brand-logo-card {
-        background: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 14px;
-        padding: 10px 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 68px;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-        margin-bottom: 6px;
-    }
-    .brand-logo-card img {
-        max-height: 48px;
-        max-width: 100%;
-        object-fit: contain;
-    }
-
-    .brand-open-btn > button {
-        height: 38px !important;
-        font-size: 13.5px !important;
-        font-weight: 700 !important;
-        border-radius: 9px !important;
-        background: linear-gradient(145deg, #13203d 0%, #0d1529 100%) !important;
+    /* MARKA KLASÖR BUTONU TASARIMI */
+    .brand-folder-btn > button {
+        background: linear-gradient(145deg, #13203d 0%, #0c1426 100%) !important;
         color: #38bdf8 !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
+        border-radius: 14px !important;
+        height: 78px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.35) !important;
+        white-space: pre-line !important;
+        line-height: 1.35 !important;
     }
-    .brand-open-btn > button:hover {
-        background: linear-gradient(145deg, #1d4ed8 0%, #0284c7 100%) !important;
-        color: #ffffff !important;
+    .brand-folder-btn > button:hover {
+        background: linear-gradient(145deg, #1c2e56 0%, #101c36 100%) !important;
         border-color: #38bdf8 !important;
-        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4) !important;
-        transform: translateY(-2px) !important;
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35) !important;
+        transform: translateY(-3px) !important;
+        color: #ffffff !important;
     }
 
     button[kind="secondary"], div[data-testid="stPopover"]>button {
@@ -291,53 +279,15 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. 41 MÜŞTERİ MARKASI & GERÇEK LOGO URL HARİTASI ---
-MASTER_BRANDS_LOGOS = {
-    "BİM": "https://upload.wikimedia.org/wikipedia/commons/9/91/B%C4%B0M_logo.svg",
-    "Casper": "https://upload.wikimedia.org/wikipedia/commons/9/99/Casper_logo.svg",
-    "Hayat": "https://upload.wikimedia.org/wikipedia/tr/6/69/Hayat_Kimya_logo.png",
-    "Kumtel": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Kumtel_logo.svg",
-    "Muratbey": "https://www.muratbey.com/Content/Images/muratbey-logo.png",
-    "Namet": "https://namet.com.tr/assets/images/logo.png",
-    "Maret": "https://maret.com.tr/images/logo.png",
-    "Kale": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Kale_Grubu_logo.svg",
-    "File Market": "https://upload.wikimedia.org/wikipedia/commons/e/ec/File_Market_logo.png",
-    "Kervan": "https://kervangida.com/wp-content/uploads/2021/04/kervan-logo-1.png",
-    "Kastamonu Entegre": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Kastamonu_Entegre_Logo.svg",
-    "Biota": "https://biota.com.tr/assets/img/logo.png",
-    "Daikin": "https://upload.wikimedia.org/wikipedia/commons/9/94/Daikin_logo.svg",
-    "Brita": "https://upload.wikimedia.org/wikipedia/commons/1/15/Brita_logo.svg",
-    "Doğanlar Holding": "https://upload.wikimedia.org/wikipedia/tr/9/9f/Do%C4%9Fanlar_Holding_logo.png",
-    "Paribu": "https://upload.wikimedia.org/wikipedia/commons/8/87/Paribu_logo.svg",
-    "Koton": "https://upload.wikimedia.org/wikipedia/commons/2/23/Koton_logo.svg",
-    "Geberit": "https://upload.wikimedia.org/wikipedia/commons/3/30/Geberit_logo.svg",
-    "Yolcu360": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Yolcu360_Logo.svg",
-    "Weber": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Weber_Stephen_Products_logo.svg",
-    "Saint-Gobain": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Saint-Gobain_Logo.svg",
-    "Pasifik Holding": "https://pasifikholding.com.tr/assets/img/logo.svg",
-    "Turna.com": "https://upload.wikimedia.org/wikipedia/tr/b/b3/Turna.com_logo.png",
-    "Herbalife": "https://upload.wikimedia.org/wikipedia/commons/6/64/Herbalife_Nutrition_logo.svg",
-    "Kopaş Kozmetik": "https://kopas.com.tr/wp-content/themes/kopas/assets/images/logo.png",
-    "KFC": "https://upload.wikimedia.org/wikipedia/sco/b/bf/KFC_logo.svg",
-    "Makarnam": "https://makarnam.com/wp-content/uploads/2022/07/makarnam-logo.png",
-    "Pidem": "https://www.pidem.com.tr/assets/images/pidem-logo.svg",
-    "HD İskender": "https://hdiskender.com/wp-content/uploads/2021/04/hd-iskender-logo.png",
-    "Yataş": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Yatas_logo.svg",
-    "Burgan Bank": "https://upload.wikimedia.org/wikipedia/commons/8/85/Burgan_Bank_Logo.svg",
-    "Milhans": "https://milhans.com.tr/assets/images/logo.png",
-    "Çizmeci Time": "https://cizmecitime.com/wp-content/uploads/2021/04/cizmeci-time-logo.png",
-    "Hayat Finans": "https://www.hayatfinans.com.tr/assets/images/logo.svg",
-    "Demant": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Demant_Logo.svg",
-    "Siemens": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Siemens-logo.svg",
-    "Pozitif": "https://pozitif.com/images/pozitif-logo.png",
-    "Gloria Jean's": "https://upload.wikimedia.org/wikipedia/en/3/32/Gloria_Jean%27s_Coffees_logo.svg",
-    "Karnaval": "https://karnaval.com/images/karnaval_logo.svg",
-    "Bosch": "https://upload.wikimedia.org/wikipedia/commons/1/16/Bosch-Logo.svg",
-    "De'Longhi": "https://upload.wikimedia.org/wikipedia/commons/e/ea/De%27Longhi_logo.svg",
-    "Braun": "https://upload.wikimedia.org/wikipedia/commons/3/38/Braun_Logo.svg",
-    "Humm": "https://hummorganic.com/cdn/shop/files/humm-logo.png",
-    "Evolvia": "https://evolvia.com.tr/wp-content/uploads/2021/04/evolvia-nutripro-logo.png"
-}
+# --- 2. 44 MÜŞTERİ MARKASI LİSTESİ (HD HOLDING AYRILMIŞ, SADE KLASÖR İSİMLERİ) ---
+MASTER_BRANDS = [
+    "BİM", "Casper", "Hayat", "Kumtel", "Muratbey", "Namet", "Maret", "Kale",
+    "File Market", "Kervan", "Kastamonu Entegre", "Biota", "Daikin", "Brita", "Doğanlar Holding",
+    "Paribu", "Koton", "Geberit", "Yolcu360", "Weber", "Saint-Gobain", "Pasifik Holding",
+    "Turna.com", "Herbalife", "Kopaş Kozmetik", "KFC", "Makarnam", "Pidem", "HD İskender",
+    "Yataş", "Burgan Bank", "Milhans", "Çizmeci Time", "Hayat Finans", "Demant", "Siemens",
+    "Pozitif", "Gloria Jean's", "Karnaval", "Bosch", "De'Longhi", "Braun", "Humm", "Evolvia"
+]
 
 # --- 3. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
 def tr_tam_sayi(val):
@@ -1028,8 +978,7 @@ if st.session_state.active_tab == "simulasyon":
                     aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
                     aktar_donem = st.selectbox("Dönem:", aylar, index=0, key="aktar_donem")
                     
-                    tum_master_markalar = list(MASTER_BRANDS_LOGOS.keys())
-                    aktar_marka = st.selectbox("Marka:", tum_master_markalar, key="aktar_marka_select")
+                    aktar_marka = st.selectbox("Marka:", MASTER_BRANDS, key="aktar_marka_select")
                     aktar_kampanya = st.text_input("Kampanya Adı:", placeholder="Örn: Menü / Tanıtım Kampanyası", key="aktar_kampanya")
 
                     st.markdown("---")
@@ -1089,8 +1038,7 @@ elif st.session_state.active_tab == "arsiv":
             aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
             a_donem = st.selectbox("Dönem:", aylar, index=0, key="ars_donem")
         with k3:
-            tum_master_markalar = list(MASTER_BRANDS_LOGOS.keys())
-            a_marka = st.selectbox("Marka:", tum_master_markalar, key="ars_marka_select")
+            a_marka = st.selectbox("Marka:", MASTER_BRANDS, key="ars_marka_select")
         with k4:
             a_kampanya_in = st.text_input("Kampanya:", placeholder="Örn: Menü / Tanıtım Kampanyası", key="ars_kampanya")
             a_kampanya = a_kampanya_in.strip() if a_kampanya_in.strip() else "Genel Kampanya"
@@ -1281,70 +1229,50 @@ elif st.session_state.active_tab == "arsiv":
             st.info("💡 Arşiv haritasını görüntülemek için sol yan menüden **Looker Studio Harita Linki**ni giriniz.")
 
 # ==========================================
-# 3. SEKME: MARKALARIMIZ & LOGOLU KLASÖRLER
+# 3. SEKME: MARKALARIMIZ & KLASÖR GEZGİNİ
 # ==========================================
 elif st.session_state.active_tab == "markalar":
     st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>🏢 MÜŞTERİ PORTFÖYÜ & KAMPANYA KLASÖRLERİ</h4>", unsafe_allow_html=True)
 
     df_arsiv_all = pd.DataFrame(st.session_state.arsiv_rows) if st.session_state.arsiv_rows else pd.DataFrame()
 
-    # 1. DURUM: TÜM MARKA LOGO KLASÖRLERİ
+    # 1. DURUM: TÜM MARKA KLASÖRLERİ (GRID LİSTESİ)
     if st.session_state.selected_brand_folder is None:
         
         search_query = st.text_input("🔍 Müşteri / Marka Ara:", placeholder="Marka adı arayın... (örn: KFC, Pidem, BİM, Brita, Yataş)", key="brand_search_box")
         
         kayitli_arsiv_markalari = set(df_arsiv_all["Marka"].dropna().astype(str).tolist()) if not df_arsiv_all.empty else set()
-        tum_markalar_listesi = sorted(list(set(list(MASTER_BRANDS_LOGOS.keys()) + list(kayitli_arsiv_markalari))))
+        tum_markalar_listesi = sorted(list(set(MASTER_BRANDS + list(kayitli_arsiv_markalari))))
 
         if search_query:
             tum_markalar_listesi = [m for m in tum_markalar_listesi if search_query.lower() in m.lower()]
 
-        st.markdown(f"<p style='color: #94a3b8; font-size: 14px; margin-bottom: 22px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kurumsal müşteri listeleniyor. Kampanya detaylarını görmek için markanın klasörünü açın:</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #94a3b8; font-size: 14px; margin-bottom: 22px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kurumsal müşteri listeleniyor. Kampanya geçmişini görmek istediğiniz klasöre tıklayın:</p>", unsafe_allow_html=True)
 
         cols = st.columns(4)
         for idx, marka in enumerate(tum_markalar_listesi):
             col = cols[idx % 4]
-            logo_url = MASTER_BRANDS_LOGOS.get(marka, "")
             kampanya_sayisi = len(df_arsiv_all[df_arsiv_all["Marka"] == marka]) if not df_arsiv_all.empty else 0
             
             with col:
-                # Şık Beyaz Kart İçinde Logo
-                if logo_url:
-                    st.markdown(f'''
-                    <div class="brand-logo-card">
-                        <img src="{logo_url}" alt="{marka}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <span style="display:none; color:#0f172a; font-weight:800; font-size:16px;">{marka}</span>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                else:
-                    st.markdown(f'''
-                    <div class="brand-logo-card">
-                        <span style="color:#0f172a; font-weight:800; font-size:16px;">📁 {marka}</span>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                
-                st.markdown('<div class="brand-open-btn">', unsafe_allow_html=True)
-                btn_title = f"{marka} ({kampanya_sayisi} Kampanya)"
+                st.markdown('<div class="brand-folder-btn">', unsafe_allow_html=True)
+                btn_title = f"📁 {marka}\n({kampanya_sayisi} Kampanya)"
                 if st.button(btn_title, key=f"bfolder_{marka}", use_container_width=True):
                     st.session_state.selected_brand_folder = marka
                     st.rerun()
-                st.markdown('</div><div style="height: 16px;"></div>', unsafe_allow_html=True)
+                st.markdown('</div><div style="height: 14px;"></div>', unsafe_allow_html=True)
 
     # 2. DURUM: SEÇİLEN MARKA KLASÖRÜNÜN İÇİ
     else:
         secilen_marka = st.session_state.selected_brand_folder
-        logo_url = MASTER_BRANDS_LOGOS.get(secilen_marka, "")
 
-        col_back, col_logo, col_title = st.columns([1.5, 1, 4])
+        col_back, col_title = st.columns([1.5, 5])
         with col_back:
             if st.button("⬅️ Tüm Markalara Dön", use_container_width=True):
                 st.session_state.selected_brand_folder = None
                 st.rerun()
-        with col_logo:
-            if logo_url:
-                st.markdown(f'<div style="background:#fff; border-radius:10px; padding:6px 12px; display:flex; align-items:center; justify-content:center; height:50px;"><img src="{logo_url}" style="max-height:38px; max-width:100%; object-fit:contain;"></div>', unsafe_allow_html=True)
         with col_title:
-            st.markdown(f"<h3 style='color: #38bdf8; margin: 6px 0 0 0; font-weight: 800;'>📁 {secilen_marka} Kampanya Geçmişi</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #38bdf8; margin: 4px 0 0 0; font-weight: 800;'>📁 {secilen_marka} Kampanya Klasörü</h3>", unsafe_allow_html=True)
 
         if not df_arsiv_all.empty and secilen_marka in df_arsiv_all["Marka"].values:
             df_marka = df_arsiv_all[df_arsiv_all["Marka"] == secilen_marka]

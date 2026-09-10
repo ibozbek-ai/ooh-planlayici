@@ -153,13 +153,36 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    .sheet-card {
-        background: linear-gradient(145deg, #13203d 0%, #0d172e 100%);
+    /* NETWORK İNDİRME KARTI */
+    .network-download-card {
+        background: linear-gradient(145deg, #13203d 0%, #0c152b 100%);
         border: 1.5px solid rgba(56, 189, 248, 0.25);
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        margin-bottom: 25px;
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    }
+    .network-download-card h4 {
+        color: #38bdf8;
+        margin: 0 0 6px 0;
+        font-size: 17px;
+        font-weight: 700;
+    }
+    .network-download-card p {
+        color: #94a3b8;
+        font-size: 13.5px;
+        margin: 0 0 14px 0;
+    }
+
+    button[kind="secondary"], div[data-testid="stPopover"]>button {
+        background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
+        color: #e2e8f0 !important;
+        border: 1.5px solid #334155 !important;
+    }
+    button[kind="secondary"]:hover, div[data-testid="stPopover"]>button:hover {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25) !important;
+        color: #ffffff !important;
     }
 
     div[data-testid="stMetric"] {
@@ -287,10 +310,9 @@ MASTER_BRANDS = [
     "Pozitif", "Gloria Jean's", "Karnaval", "Bosch", "De'Longhi", "Braun", "Humm", "Evolvia"
 ]
 
-# --- 3. GOOGLE SHEETS İÇİN SABİTLER ---
+# --- 3. GOOGLE SHEETS ENTEGRASYONU ---
 GSHEET_ID = "19XUBd2QxMj9ObOkqhJp9Ie-hjCDk-A2RarpoxdDP5y0"
 GSHEET_XLSX_URL = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/export?format=xlsx"
-GSHEET_CSV_URL = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/export?format=csv"
 
 # --- 4. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
 def tr_tam_sayi(val):
@@ -764,7 +786,57 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 </body>
 </html>"""
 
-# --- 9. ÜST MENÜ & BAŞLIK ---
+# --- 9. GOOGLE SHEETS SAYFALARINI / NETWORKLERİNİ ÇEKME MOTORU ---
+@st.cache_data(ttl=300)
+def fetch_all_gsheet_networks():
+    try:
+        req = urllib.request.Request(GSHEET_XLSX_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as resp:
+            xlsx_bytes = resp.read()
+            excel_file = pd.ExcelFile(io.BytesIO(xlsx_bytes))
+            
+            network_dict = {}
+            for sheet_name in excel_file.sheet_names:
+                df = pd.read_excel(excel_file, sheet_name=sheet_name)
+                network_dict[sheet_name] = df
+            return network_dict, xlsx_bytes
+    except Exception as e:
+        return {}, None
+
+def generate_network_excel(df_net, net_title):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_net.to_excel(writer, sheet_name=str(net_title)[:31], index=False)
+        wb = writer.book
+        ws = wb.active
+        
+        header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+        header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
+        thin_border = Border(
+            left=Side(style='thin', color='CBD5E1'),
+            right=Side(style='thin', color='CBD5E1'),
+            top=Side(style='thin', color='CBD5E1'),
+            bottom=Side(style='thin', color='CBD5E1')
+        )
+        
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+                
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+            
+    return output.getvalue()
+
+# --- 10. ÜST MENÜ & BAŞLIK ---
 st.markdown("""
 <div class="app-header">
     <h1>⚡ OOH PLANLAMA & SİMÜLASYON MERKEZİ</h1>
@@ -800,7 +872,7 @@ with col_btn3:
 with col_btn4:
     btn4_class = "tab-btn-active" if st.session_state.active_tab == "ornekler" else "tab-btn-inactive"
     st.markdown(f'<div class="{btn4_class}">', unsafe_allow_html=True)
-    if st.button("📑 Örnek Listeler & İndir", key="tab_ornek_btn", use_container_width=True):
+    if st.button("📑 Örnek Listeler", key="tab_ornek_btn", use_container_width=True):
         st.session_state.active_tab = "ornekler"
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1178,7 +1250,7 @@ elif st.session_state.active_tab == "arsiv":
             kapsanan_il_a, maks_erisim_a = hesapla_net_kapsama_metrikleri(df_arsiv, nufus_dict, TR_TOTAL_NUFUS)
 
             ak1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos_a))
-            ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp, 2))
+            ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp_a, 2))
             ak3.metric("🌐 Maks. TR Erişimi", f"%{tr_ondalik(maks_erisim_a, 1)}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
@@ -1336,76 +1408,82 @@ elif st.session_state.active_tab == "markalar":
             st.warning(f"📌 {secilen_marka} markasına ait henüz arşivlenmiş bir kampanya kaydı bulunamadı. 'Kampanya Yönetimi & Arşiv' sekmesinden bu markayı seçerek kampanya ekleyebilirsiniz.")
 
 # ==========================================
-# 4. SEKME: ÖRNEK LİSTELER & İNDİRME MERKEZİ
+# 4. SEKME: ÖRNEK LİSTELER (NETWORK BAZLI İNDİRME)
 # ==========================================
 elif st.session_state.active_tab == "ornekler":
-    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>📑 KURUMSAL ÖRNEK LİSTELER & EN Brewster HAVUZU</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 8px;'>📑 ÖRNEK LİSTELER & NETWORK ENVANTERİ</h4>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #cbd5e1; font-size: 14.5px; margin-bottom: 24px;'>Aşağıdaki network listelerinden dilediğinizi doğrudan özel biçimlendirilmiş <strong>Excel (.xlsx)</strong> veya <strong>CSV</strong> formatında tek tıkla indirebilirsiniz:</p>", unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class="sheet-card">
-        <h3 style="color: #38bdf8; margin-top: 0; font-weight: 800; font-size: 20px;">📊 Master Medya Planlama & Envanter Tablosu</h3>
-        <p style="color: #cbd5e1; font-size: 14.5px; line-height: 1.6;">
-            Bu alanda Google Sheets üzerinde tutulan canlı envanter ve örnek planlama listeleri yer almaktadır. 
-            İhtiyacınıza uygun formatı seçerek tek tıkla doğrudan bilgisayarınıza indirebilirsiniz.
-        </p>
-        <div style="margin-top: 15px; display: flex; gap: 12px; align-items: center;">
-            <span style="color: #4ade80; font-weight: 700;">🟢 Canlı Senkronizasyon:</span>
-            <a href="https://docs.google.com/spreadsheets/d/19XUBd2QxMj9ObOkqhJp9Ie-hjCDk-A2RarpoxdDP5y0/edit?usp=sharing" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: 600;">🔗 E-Tabloyu Yeni Sekmede Aç</a>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    networks_dict, full_xlsx_bytes = fetch_all_gsheet_networks()
 
-    @st.cache_data(ttl=300)
-    def fetch_gsheet_bytes(url):
-        try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req) as resp:
-                return resp.read()
-        except Exception as e:
-            return None
-
-    col_dl1, col_dl2 = st.columns(2)
-
-    with col_dl1:
-        st.markdown("##### 📥 Orijinal Excel (.XLSX) Formatında İndir")
-        st.caption("Formülleri, sekmeleri ve kurumsal sayfa düzenini eksiksiz içerir.")
-        xlsx_data = fetch_gsheet_bytes(GSHEET_XLSX_URL)
-        if xlsx_data:
+    if not networks_dict:
+        st.warning("⚠️ E-Tablo verisi şu anda doğrudan okunamadı. Aşağıdaki butonla tüm dosyayı indirebilirsiniz:")
+        if full_xlsx_bytes:
             st.download_button(
-                label="📊 Excel Listesini İndir (.xlsx)",
-                data=xlsx_data,
-                file_name="OOH_Ornek_Medya_Planlari.xlsx",
+                label="📊 Tüm Örnek Listeleri İndir (.xlsx)",
+                data=full_xlsx_bytes,
+                file_name="OOH_Master_Ornek_Listeler.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                type="primary",
-                use_container_width=True
+                type="primary"
             )
         else:
-            st.link_button("🌐 Google Sheets Üzerinden İndir (.xlsx)", GSHEET_XLSX_URL, use_container_width=True)
+            st.link_button("🌐 Google Sheets Üzerinden Aç ve İndir", GSHEET_XLSX_URL, use_container_width=True)
+    else:
+        # Üstte tüm çalışma kitabını tek seferde indirme opsiyonu
+        col_top1, col_top2 = st.columns([3, 1])
+        with col_top1:
+            st.markdown(f"<span style='color:#38bdf8; font-weight:700; font-size:16px;'>⚡ Toplam {len(networks_dict)} Farklı Network / Sayfa Mevcut</span>", unsafe_allow_html=True)
+        with col_top2:
+            if full_xlsx_bytes:
+                st.download_button(
+                    label="📦 Tüm Kitabı İndir (.xlsx)",
+                    data=full_xlsx_bytes,
+                    file_name="OOH_Tum_Network_Listeleri.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
 
-    with col_dl2:
-        st.markdown("##### 📥 Ham Veri (.CSV) Formatında İndir")
-        st.caption("Python, SQL ve veri işleme yazılımlarına doğrudan aktarım için uygundur.")
-        csv_data = fetch_gsheet_bytes(GSHEET_CSV_URL)
-        if csv_data:
-            st.download_button(
-                label="📄 CSV Formatında İndir (.csv)",
-                data=csv_data,
-                file_name="OOH_Ornek_Medya_Planlari.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        else:
-            st.link_button("🌐 Google Sheets Üzerinden İndir (.csv)", GSHEET_CSV_URL, use_container_width=True)
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
-    st.markdown("##### 👁️ Canlı E-Tablo Önizleme Paneli")
-    
-    # E-Tablonun canlı görünümünü iFrame ile göm
-    embed_url = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/preview"
-    st.components.v1.html(
-        f'<iframe src="{embed_url}" width="100%" height="560" frameborder="0" style="border: 1.5px solid rgba(56, 189, 248, 0.25); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
-        height=580
-    )
+        # Networkleri 2'li sütun kartları halinde diz
+        net_cols = st.columns(2)
+        for idx, (sheet_name, df_sheet) in enumerate(networks_dict.items()):
+            col = net_cols[idx % 2]
+            satir_sayisi = len(df_sheet)
+            kolon_sayisi = len(df_sheet.columns)
+            
+            with col:
+                st.markdown(f"""
+                <div class="network-download-card">
+                    <h4>📡 {sheet_name}</h4>
+                    <p>Toplam <strong>{satir_sayisi} Satır Envanter</strong> • {kolon_sayisi} Sütun Veri</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # İndirme Butonları (Excel & CSV)
+                btn_c1, btn_c2 = st.columns(2)
+                
+                with btn_c1:
+                    excel_bytes = generate_network_excel(df_sheet, sheet_name)
+                    st.download_button(
+                        label=f"📊 Excel İndir (.xlsx)",
+                        data=excel_bytes,
+                        file_name=f"{sheet_name}_Envanter_Listesi.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key=f"dl_xlsx_{sheet_name}",
+                        use_container_width=True
+                    )
+                with btn_c2:
+                    csv_bytes = df_sheet.to_csv(index=False).encode('utf-8-sig')
+                    st.download_button(
+                        label=f"📄 CSV İndir (.csv)",
+                        data=csv_bytes,
+                        file_name=f"{sheet_name}_Envanter_Listesi.csv",
+                        mime="text/csv",
+                        key=f"dl_csv_{sheet_name}",
+                        use_container_width=True
+                    )
+                st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-# --- 10. KURUMSAL DİPNOT (FOOTER) ---
+# --- 11. KURUMSAL DİPNOT (FOOTER) ---
 st.markdown("<div class='corporate-footer'>📌 CAFAS verileri dikkate alınarak geliştirilmiştir.</div>", unsafe_allow_html=True)

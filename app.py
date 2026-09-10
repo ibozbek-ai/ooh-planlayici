@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 import json
+import urllib.request
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
@@ -82,9 +83,9 @@ st.markdown("""
     .stButton>button, div[data-testid="stPopover"]>button {
         border-radius: 10px !important;
         font-weight: 700 !important;
-        font-size: 15.5px !important;
+        font-size: 15px !important;
         height: 50px !important;
-        padding: 0 24px !important;
+        padding: 0 20px !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         white-space: nowrap !important;
     }
@@ -129,7 +130,6 @@ st.markdown("""
         border-color: #6ee7b7 !important;
     }
 
-    /* MARKA KLASÖR BUTONU TASARIMI */
     .brand-folder-btn > button {
         background: linear-gradient(145deg, #13203d 0%, #0c1426 100%) !important;
         color: #38bdf8 !important;
@@ -153,15 +153,13 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    button[kind="secondary"], div[data-testid="stPopover"]>button {
-        background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
-        color: #e2e8f0 !important;
-        border: 1.5px solid #334155 !important;
-    }
-    button[kind="secondary"]:hover, div[data-testid="stPopover"]>button:hover {
-        border-color: #38bdf8 !important;
-        box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25) !important;
-        color: #ffffff !important;
+    .sheet-card {
+        background: linear-gradient(145deg, #13203d 0%, #0d172e 100%);
+        border: 1.5px solid rgba(56, 189, 248, 0.25);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        margin-bottom: 25px;
     }
 
     div[data-testid="stMetric"] {
@@ -279,7 +277,7 @@ if not st.session_state.logged_in:
     login_form()
     st.stop()
 
-# --- 2. 44 MÜŞTERİ MARKASI LİSTESİ (HD HOLDING AYRILMIŞ, SADE KLASÖR İSİMLERİ) ---
+# --- 2. 44 MÜŞTERİ MARKASI LİSTESİ ---
 MASTER_BRANDS = [
     "BİM", "Casper", "Hayat", "Kumtel", "Muratbey", "Namet", "Maret", "Kale",
     "File Market", "Kervan", "Kastamonu Entegre", "Biota", "Daikin", "Brita", "Doğanlar Holding",
@@ -289,7 +287,12 @@ MASTER_BRANDS = [
     "Pozitif", "Gloria Jean's", "Karnaval", "Bosch", "De'Longhi", "Braun", "Humm", "Evolvia"
 ]
 
-# --- 3. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
+# --- 3. GOOGLE SHEETS İÇİN SABİTLER ---
+GSHEET_ID = "19XUBd2QxMj9ObOkqhJp9Ie-hjCDk-A2RarpoxdDP5y0"
+GSHEET_XLSX_URL = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/export?format=xlsx"
+GSHEET_CSV_URL = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/export?format=csv"
+
+# --- 4. SAYI BİÇİMLENDİRME VE ÖZEL İL SAYIMI YARDIMCILARI ---
 def tr_tam_sayi(val):
     try:
         n = int(round(float(val)))
@@ -417,7 +420,7 @@ def hesapla_net_kapsama_metrikleri(df, nufus_dict, tr_total_nufus):
     maks_erisim_pct = min(100.0, round((net_nufus / tr_total_nufus) * 100, 1))
     return toplam_il_sayisi, maks_erisim_pct
 
-# --- 4. EXCEL VERİ MOTORU ---
+# --- 5. EXCEL VERİ MOTORU ---
 @st.cache_data
 def yerel_exceli_yukle():
     try:
@@ -505,7 +508,7 @@ def yerel_exceli_yukle():
 
 df_gost, nufus_dict, sure_dict, TR_TOTAL_NUFUS = yerel_exceli_yukle()
 
-# --- 5. SESSION STATE ---
+# --- 6. SESSION STATE ---
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "simulasyon"
 
@@ -528,7 +531,7 @@ if "ars_per" not in st.session_state:
 if "ars_sure" not in st.session_state:
     st.session_state.ars_sure = 7
 
-# --- 6. YAN PANEL (SIDEBAR) ---
+# --- 7. YAN PANEL (SIDEBAR) ---
 st.sidebar.markdown(f"**👤 Giriş Yapan:** `{st.session_state.username}`")
 if st.sidebar.button("🚪 Çıkış Yap"):
     st.session_state.logged_in = False
@@ -550,7 +553,7 @@ looker_url = st.sidebar.text_input(
 st.sidebar.markdown("---")
 st.sidebar.caption("⚡ **Geliştirici:** İbrahim Özbek Arslan")
 
-# --- 7. RAPOR OLUŞTURMA YARDIMCILARI (EXCEL & HTML) ---
+# --- 8. RAPOR OLUŞTURMA YARDIMCILARI (EXCEL & HTML) ---
 def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=False):
     output = io.BytesIO()
     df_excel = df_to_export.copy()
@@ -761,14 +764,15 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 </body>
 </html>"""
 
-# --- 8. ÜST MENÜ & BAŞLIK ---
+# --- 9. ÜST MENÜ & BAŞLIK ---
 st.markdown("""
 <div class="app-header">
     <h1>⚡ OOH PLANLAMA & SİMÜLASYON MERKEZİ</h1>
 </div>
 """, unsafe_allow_html=True)
 
-col_btn1, col_btn2, col_btn3 = st.columns(3)
+# 4 SEKMELİ YENİ NAVİGASYON
+col_btn1, col_btn2, col_btn3, col_btn4 = st.columns(4)
 with col_btn1:
     btn1_class = "tab-btn-active" if st.session_state.active_tab == "simulasyon" else "tab-btn-inactive"
     st.markdown(f'<div class="{btn1_class}">', unsafe_allow_html=True)
@@ -780,7 +784,7 @@ with col_btn1:
 with col_btn2:
     btn2_class = "tab-btn-active" if st.session_state.active_tab == "arsiv" else "tab-btn-inactive"
     st.markdown(f'<div class="{btn2_class}">', unsafe_allow_html=True)
-    if st.button("📁 Kampanya Yönetimi & Yıllık Arşiv", key="tab_ars_btn", use_container_width=True):
+    if st.button("📁 Kampanya Yönetimi & Arşiv", key="tab_ars_btn", use_container_width=True):
         st.session_state.active_tab = "arsiv"
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -788,8 +792,16 @@ with col_btn2:
 with col_btn3:
     btn3_class = "tab-btn-active" if st.session_state.active_tab == "markalar" else "tab-btn-inactive"
     st.markdown(f'<div class="{btn3_class}">', unsafe_allow_html=True)
-    if st.button("🏢 Markalarımız & Kampanya Portföyü", key="tab_marka_btn", use_container_width=True):
+    if st.button("🏢 Markalarımız & Portföy", key="tab_marka_btn", use_container_width=True):
         st.session_state.active_tab = "markalar"
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with col_btn4:
+    btn4_class = "tab-btn-active" if st.session_state.active_tab == "ornekler" else "tab-btn-inactive"
+    st.markdown(f'<div class="{btn4_class}">', unsafe_allow_html=True)
+    if st.button("📑 Örnek Listeler & İndir", key="tab_ornek_btn", use_container_width=True):
+        st.session_state.active_tab = "ornekler"
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1166,7 +1178,7 @@ elif st.session_state.active_tab == "arsiv":
             kapsanan_il_a, maks_erisim_a = hesapla_net_kapsama_metrikleri(df_arsiv, nufus_dict, TR_TOTAL_NUFUS)
 
             ak1.metric("📊 Toplam Gösterim", tr_tam_sayi(toplam_gos_a))
-            ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp_a, 2))
+            ak2.metric("🇹🇷 Toplam TR GRP", tr_ondalik(toplam_grp, 2))
             ak3.metric("🌐 Maks. TR Erişimi", f"%{tr_ondalik(maks_erisim_a, 1)}")
             ak4.metric("📍 Kapsanan İl", f"{kapsanan_il_a} İl")
 
@@ -1236,9 +1248,7 @@ elif st.session_state.active_tab == "markalar":
 
     df_arsiv_all = pd.DataFrame(st.session_state.arsiv_rows) if st.session_state.arsiv_rows else pd.DataFrame()
 
-    # 1. DURUM: TÜM MARKA KLASÖRLERİ (GRID LİSTESİ)
     if st.session_state.selected_brand_folder is None:
-        
         search_query = st.text_input("🔍 Müşteri / Marka Ara:", placeholder="Marka adı arayın... (örn: KFC, Pidem, BİM, Brita, Yataş)", key="brand_search_box")
         
         kayitli_arsiv_markalari = set(df_arsiv_all["Marka"].dropna().astype(str).tolist()) if not df_arsiv_all.empty else set()
@@ -1262,7 +1272,6 @@ elif st.session_state.active_tab == "markalar":
                     st.rerun()
                 st.markdown('</div><div style="height: 14px;"></div>', unsafe_allow_html=True)
 
-    # 2. DURUM: SEÇİLEN MARKA KLASÖRÜNÜN İÇİ
     else:
         secilen_marka = st.session_state.selected_brand_folder
 
@@ -1324,7 +1333,79 @@ elif st.session_state.active_tab == "markalar":
                     use_container_width=True
                 )
         else:
-            st.warning(f"📌 {secilen_marka} markasına ait henüz arşivlenmiş bir kampanya kaydı bulunamadı. 'Kampanya Yönetimi & Yıllık Arşiv' sekmesinden bu markayı seçerek kampanya ekleyebilirsiniz.")
+            st.warning(f"📌 {secilen_marka} markasına ait henüz arşivlenmiş bir kampanya kaydı bulunamadı. 'Kampanya Yönetimi & Arşiv' sekmesinden bu markayı seçerek kampanya ekleyebilirsiniz.")
 
-# --- 9. KURUMSAL DİPNOT (FOOTER) ---
+# ==========================================
+# 4. SEKME: ÖRNEK LİSTELER & İNDİRME MERKEZİ
+# ==========================================
+elif st.session_state.active_tab == "ornekler":
+    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>📑 KURUMSAL ÖRNEK LİSTELER & EN Brewster HAVUZU</h4>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="sheet-card">
+        <h3 style="color: #38bdf8; margin-top: 0; font-weight: 800; font-size: 20px;">📊 Master Medya Planlama & Envanter Tablosu</h3>
+        <p style="color: #cbd5e1; font-size: 14.5px; line-height: 1.6;">
+            Bu alanda Google Sheets üzerinde tutulan canlı envanter ve örnek planlama listeleri yer almaktadır. 
+            İhtiyacınıza uygun formatı seçerek tek tıkla doğrudan bilgisayarınıza indirebilirsiniz.
+        </p>
+        <div style="margin-top: 15px; display: flex; gap: 12px; align-items: center;">
+            <span style="color: #4ade80; font-weight: 700;">🟢 Canlı Senkronizasyon:</span>
+            <a href="https://docs.google.com/spreadsheets/d/19XUBd2QxMj9ObOkqhJp9Ie-hjCDk-A2RarpoxdDP5y0/edit?usp=sharing" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: 600;">🔗 E-Tabloyu Yeni Sekmede Aç</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    @st.cache_data(ttl=300)
+    def fetch_gsheet_bytes(url):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as resp:
+                return resp.read()
+        except Exception as e:
+            return None
+
+    col_dl1, col_dl2 = st.columns(2)
+
+    with col_dl1:
+        st.markdown("##### 📥 Orijinal Excel (.XLSX) Formatında İndir")
+        st.caption("Formülleri, sekmeleri ve kurumsal sayfa düzenini eksiksiz içerir.")
+        xlsx_data = fetch_gsheet_bytes(GSHEET_XLSX_URL)
+        if xlsx_data:
+            st.download_button(
+                label="📊 Excel Listesini İndir (.xlsx)",
+                data=xlsx_data,
+                file_name="OOH_Ornek_Medya_Planlari.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                type="primary",
+                use_container_width=True
+            )
+        else:
+            st.link_button("🌐 Google Sheets Üzerinden İndir (.xlsx)", GSHEET_XLSX_URL, use_container_width=True)
+
+    with col_dl2:
+        st.markdown("##### 📥 Ham Veri (.CSV) Formatında İndir")
+        st.caption("Python, SQL ve veri işleme yazılımlarına doğrudan aktarım için uygundur.")
+        csv_data = fetch_gsheet_bytes(GSHEET_CSV_URL)
+        if csv_data:
+            st.download_button(
+                label="📄 CSV Formatında İndir (.csv)",
+                data=csv_data,
+                file_name="OOH_Ornek_Medya_Planlari.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        else:
+            st.link_button("🌐 Google Sheets Üzerinden İndir (.csv)", GSHEET_CSV_URL, use_container_width=True)
+
+    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+    st.markdown("##### 👁️ Canlı E-Tablo Önizleme Paneli")
+    
+    # E-Tablonun canlı görünümünü iFrame ile göm
+    embed_url = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/preview"
+    st.components.v1.html(
+        f'<iframe src="{embed_url}" width="100%" height="560" frameborder="0" style="border: 1.5px solid rgba(56, 189, 248, 0.25); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
+        height=580
+    )
+
+# --- 10. KURUMSAL DİPNOT (FOOTER) ---
 st.markdown("<div class='corporate-footer'>📌 CAFAS verileri dikkate alınarak geliştirilmiştir.</div>", unsafe_allow_html=True)

@@ -153,6 +153,15 @@ st.markdown("""
         color: #ffffff !important;
     }
 
+    .save-box {
+        background: linear-gradient(145deg, #13203d 0%, #0d172e 100%);
+        border: 1.5px solid rgba(56, 189, 248, 0.3);
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
     button[kind="secondary"], div[data-testid="stPopover"]>button {
         background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
         color: #e2e8f0 !important;
@@ -1109,11 +1118,60 @@ if st.session_state.active_tab == "simulasyon":
                                 "Erişim (Kişi)": int(row["Erişim (Kişi)"]),
                                 "İl Nüfusu": int(row["İl Nüfusu"]),
                                 "TR Nüfusu": int(row["TR Nüfusu"]),
-                                "TR Erişim %": float(row["TR Erişim %"]),
-                                "TR GRP": float(row["TR GRP"])
+                                "TR Erişim %": float(round(row["TR Erişim %"]),
+                                "TR GRP": float(round(row["TR GRP"], 2))
                             })
                         st.success(f"{len(st.session_state.sim_rows)} satır kendi mecralarıyla arşive aktarıldı!")
                         st.rerun()
+
+            # --- SİMÜLASYON PLANINI DOĞRUDAN MARKA KLASÖRÜNE KAYDETME ALANI ---
+            st.markdown("""
+            <div class="save-box">
+                <h3 style="color: #38bdf8; margin-top: 0; font-size: 18px; font-weight: 800;">📁 Bu Planı Doğrudan Marka Klasörüne Kaydet</h3>
+                <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 14px;">Simülasyonda oluşturduğun bu medya planını doğrudan yukarıdaki sekmede yer alan marka klasörüne kaydedebilirsin:</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            with st.form("sim_direct_save_form"):
+                ds_col1, ds_col2, ds_col3, ds_col4, ds_col5 = st.columns([2, 2, 1, 1.2, 1.5])
+                with ds_col1:
+                    ds_marka = st.selectbox("Marka Seç:", MASTER_BRANDS, key="ds_marka_box")
+                with ds_col2:
+                    ds_kampanya = st.text_input("Kampanya Adı:", placeholder="Örn: Lansman", key="ds_kampanya_box")
+                with ds_col3:
+                    ds_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ds_yil_box")
+                with ds_col4:
+                    ds_donem = st.selectbox("Dönem:", aylar, index=0, key="ds_donem_box")
+                with ds_col5:
+                    st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                    ds_submit = st.form_submit_button("💾 Klasöre Kaydet", use_container_width=True, type="primary")
+
+                if ds_submit:
+                    k_adi = ds_kampanya.strip() if ds_kampanya.strip() else "Genel Kampanya"
+                    for row in st.session_state.sim_rows:
+                        c_adi = tahmin_mecra(row["Ünite"], row["İl"])
+                        st.session_state.arsiv_rows.append({
+                            "Yıl": int(ds_yil),
+                            "Dönem (Ay)": ds_donem,
+                            "Marka": ds_marka,
+                            "Kampanya Adı": k_adi,
+                            "Mecra Adı": c_adi,
+                            "Ünite": row["Ünite"],
+                            "İl": row["İl"],
+                            "Süre (Gün)": row["Süre (Gün)"],
+                            "Periyod": row["Periyod"],
+                            "Adet": int(row["Adet"]),
+                            "Toplam Gösterim": int(row["Toplam Gösterim"]),
+                            "Frekans": float(row["Frekans"]),
+                            "Erişim (Kişi)": int(row["Erişim (Kişi)"]),
+                            "İl Nüfusu": int(row["İl Nüfusu"]),
+                            "TR Nüfusu": int(row["TR Nüfusu"]),
+                            "TR Erişim %": float(row["TR Erişim %"]),
+                            "TR GRP": float(row["TR GRP"])
+                        })
+                    st.session_state.sim_rows = []
+                    st.success(f"Başarıyla '{ds_marka}' klasörüne kaydedildi! 'Markalarımız & Portföy' sekmesinden inceleyebilirsin.")
+                    st.rerun()
 
 # ==========================================
 # 2. SEKME: KAMPANYA YÖNETİMİ & YILLIK ARŞİV

@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ULTRA-PREMIUM EXECUTIVE DYNAMIC CSS ---
+# --- CANLI & ULTRA-PREMIUM DYNAMIC CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -28,14 +28,14 @@ st.markdown("""
     }
 
     .stApp {
-        background: radial-gradient(circle at 50% -10%, #1a294d 0%, #0d1629 50%, #070b14 100%) !important;
+        background: radial-gradient(circle at 50% -10%, #1e3a8a 0%, #0f172a 50%, #030712 100%) !important;
         color: #f8fafc !important;
         font-size: 15px !important;
     }
 
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #101c38 0%, #090e1c 100%) !important;
-        border-right: 1px solid rgba(56, 189, 248, 0.15) !important;
+        background: linear-gradient(180deg, #172554 0%, #090d16 100%) !important;
+        border-right: 1.5px solid rgba(56, 189, 248, 0.3) !important;
     }
 
     .app-header {
@@ -44,213 +44,188 @@ st.markdown("""
         gap: 14px;
         margin-bottom: 24px;
         padding-bottom: 18px;
-        border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+        border-bottom: 2px solid rgba(56, 189, 248, 0.35);
     }
     .app-header h1 {
-        font-size: 30px !important;
+        font-size: 32px !important;
         font-weight: 800 !important;
         letter-spacing: -0.5px;
-        background: linear-gradient(135deg, #38bdf8 0%, #a5b4fc 50%, #60a5fa 100%);
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
     }
 
     div[data-testid="stWidgetLabel"] p {
-        font-size: 14.5px !important;
-        font-weight: 600 !important;
-        color: #cbd5e1 !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #38bdf8 !important;
         margin-bottom: 6px !important;
     }
 
     div[data-baseweb="input"], div[data-baseweb="select"] {
-        border-radius: 10px !important;
-        background-color: #131f3b !important;
-        border: 1.5px solid #24355c !important;
-        min-height: 48px !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+        border-radius: 12px !important;
+        background-color: #172554 !important;
+        border: 2px solid #3b82f6 !important;
+        min-height: 52px !important;
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25) !important;
     }
     div[data-baseweb="input"]:focus-within, div[data-baseweb="select"]:focus-within {
         border-color: #38bdf8 !important;
-        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3) !important;
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.4) !important;
     }
     div[data-baseweb="input"] input {
-        font-size: 15px !important;
-        font-weight: 500 !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
         color: #ffffff !important;
     }
 
     .stButton>button, div[data-testid="stPopover"]>button {
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         font-weight: 700 !important;
-        font-size: 15px !important;
-        height: 50px !important;
-        padding: 0 20px !important;
+        font-size: 16px !important;
+        height: 52px !important;
+        padding: 0 24px !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         white-space: nowrap !important;
     }
 
     .stButton>button:hover, div[data-testid="stPopover"]>button:hover {
-        transform: translateY(-3px) scale(1.01) !important;
+        transform: translateY(-3px) scale(1.02) !important;
         cursor: pointer !important;
     }
 
     .tab-btn-active > button {
-        background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
+        background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
         color: #ffffff !important;
-        border: 1.5px solid #38bdf8 !important;
-        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
-    }
-    .tab-btn-active > button:hover {
-        box-shadow: 0 8px 25px rgba(56, 189, 248, 0.6) !important;
+        border: 2px solid #38bdf8 !important;
+        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.5) !important;
     }
 
     .tab-btn-inactive > button {
-        background: linear-gradient(135deg, #111a2e 0%, #16223d 100%) !important;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
         color: #94a3b8 !important;
-        border: 1.5px solid #233354 !important;
+        border: 2px solid #334155 !important;
     }
     .tab-btn-inactive > button:hover {
-        background: linear-gradient(135deg, #1e2c4d 0%, #24355a 100%) !important;
-        color: #f8fafc !important;
+        background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+        color: #ffffff !important;
         border-color: #38bdf8 !important;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
     }
 
     .action-add-btn > button {
-        background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+        background: linear-gradient(135deg, #059669 0%, #34d399 100%) !important;
         color: #ffffff !important;
-        border: 1.5px solid #34d399 !important;
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
-        font-size: 16px !important;
-    }
-    .action-add-btn > button:hover {
-        background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
-        box-shadow: 0 8px 25px rgba(52, 211, 153, 0.6) !important;
-        border-color: #6ee7b7 !important;
+        border: 2px solid #6ee7b7 !important;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5) !important;
+        font-size: 17px !important;
     }
 
     .brand-folder-btn > button {
-        background: linear-gradient(145deg, #13203d 0%, #0c1426 100%) !important;
+        background: linear-gradient(145deg, #1e3a8a 0%, #0f172a 100%) !important;
         color: #38bdf8 !important;
-        border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 14px !important;
-        height: 78px !important;
-        font-size: 15px !important;
+        border: 2px solid rgba(56, 189, 248, 0.4) !important;
+        border-radius: 16px !important;
+        height: 84px !important;
+        font-size: 16px !important;
         font-weight: 700 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.35) !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4) !important;
         white-space: pre-line !important;
-        line-height: 1.35 !important;
+        line-height: 1.4 !important;
     }
     .brand-folder-btn > button:hover {
-        background: linear-gradient(145deg, #1c2e56 0%, #101c36 100%) !important;
+        background: linear-gradient(145deg, #2563eb 0%, #172554 100%) !important;
         border-color: #38bdf8 !important;
-        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35) !important;
-        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 30px rgba(56, 189, 248, 0.5) !important;
+        transform: translateY(-4px) !important;
         color: #ffffff !important;
     }
 
     .save-box {
-        background: linear-gradient(145deg, #13203d 0%, #0d172e 100%);
-        border: 1.5px solid rgba(56, 189, 248, 0.3);
-        border-radius: 16px;
-        padding: 24px;
+        background: linear-gradient(145deg, #1e3a8a 0%, #0f172a 100%);
+        border: 2px solid rgba(56, 189, 248, 0.4);
+        border-radius: 18px;
+        padding: 28px;
         margin-top: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-
-    button[kind="secondary"], div[data-testid="stPopover"]>button {
-        background: linear-gradient(135deg, #1e293b 0%, #131d33 100%) !important;
-        color: #e2e8f0 !important;
-        border: 1.5px solid #334155 !important;
-    }
-    button[kind="secondary"]:hover, div[data-testid="stPopover"]>button:hover {
-        border-color: #38bdf8 !important;
-        box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25) !important;
-        color: #ffffff !important;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.5);
     }
 
     div[data-testid="stMetric"] {
-        background: linear-gradient(145deg, rgba(26, 38, 68, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%) !important;
-        border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 14px !important;
-        padding: 18px 22px !important;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
-        backdrop-filter: blur(14px) !important;
+        background: linear-gradient(145deg, #1e3a8a 0%, #0f172a 100%) !important;
+        border: 2px solid rgba(56, 189, 248, 0.4) !important;
+        border-radius: 16px !important;
+        padding: 20px 24px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
     }
     div[data-testid="stMetricLabel"] {
-        font-size: 13px !important;
+        font-size: 14px !important;
         font-weight: 700 !important;
-        text-transform: uppercase;
-        letter-spacing: 0.9px;
-        color: #94a3b8 !important;
+        color: #38bdf8 !important;
     }
     div[data-testid="stMetricValue"] {
-        font-size: 30px !important;
+        font-size: 32px !important;
         font-weight: 800 !important;
-        color: #38bdf8 !important;
-        letter-spacing: -0.5px;
+        color: #4ade80 !important;
     }
 
     div[data-testid="stForm"] {
         max-width: 100% !important;
         margin: 0 !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
+        background: linear-gradient(145deg, #172554 0%, #0f172a 100%) !important;
+        border: 2px solid rgba(56, 189, 248, 0.3) !important;
+        border-radius: 18px !important;
+        padding: 25px !important;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
     }
 
     .table-responsive-box {
         width: 100%;
         overflow-x: auto;
         margin: 22px 0 32px 0;
-        border: 1.5px solid rgba(56, 189, 248, 0.2);
-        border-radius: 14px;
-        background-color: #0d1529;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+        border: 2px solid rgba(56, 189, 248, 0.3);
+        border-radius: 16px;
+        background-color: #0f172a;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.5);
     }
     .custom-ooh-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 14.5px;
+        font-size: 15px;
     }
     .custom-ooh-table th {
-        background: linear-gradient(180deg, #1a2747 0%, #141f38 100%);
+        background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
         color: #38bdf8;
-        padding: 16px 14px;
+        padding: 18px 16px;
         text-align: center !important;
         vertical-align: middle;
         font-weight: 700;
-        font-size: 13.5px;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #24355a;
+        font-size: 14.5px;
+        border-bottom: 2px solid #3b82f6;
         white-space: nowrap;
     }
     .custom-ooh-table td {
-        padding: 14px 14px;
+        padding: 15px 16px;
         text-align: center !important;
         vertical-align: middle;
         color: #f1f5f9;
-        border-bottom: 1px solid #1a2747;
+        border-bottom: 1px solid #1e3a8a;
         white-space: nowrap;
     }
     .custom-ooh-table tbody tr:hover {
-        background-color: rgba(56, 189, 248, 0.08);
+        background-color: rgba(56, 189, 248, 0.12);
     }
 
     .corporate-footer {
         text-align: center;
-        color: #64748b;
-        font-size: 13.5px;
-        font-weight: 500;
+        color: #94a3b8;
+        font-size: 14px;
+        font-weight: 600;
         margin-top: 55px;
         padding-top: 22px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        letter-spacing: 0.5px;
+        border-top: 2px solid rgba(56, 189, 248, 0.2);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -265,14 +240,14 @@ if "logged_in" not in st.session_state:
 
 def login_form():
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; font-weight: 800; font-size: 32px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px;'>OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 15px; margin-bottom: 26px; font-weight: 500;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; font-weight: 800; font-size: 34px; color: #38bdf8; margin-bottom: 6px;'>OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 16px; margin-bottom: 26px; font-weight: 600;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
     
     with st.form("login_box_form"):
         user = st.text_input("Kullanıcı Adı:", placeholder="Kullanıcı adınızı giriniz")
         pwd = st.text_input("Şifre:", type="password", placeholder="••••••••")
         st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
-        submit = st.form_submit_button("Guvenli Giris Yap", use_container_width=True, type="primary")
+        submit = st.form_submit_button("Güvenli Giriş Yap", use_container_width=True, type="primary")
         if submit:
             if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
                 st.session_state.logged_in = True
@@ -598,13 +573,13 @@ def generate_excel_report(df_to_export, report_title, looker_link="", is_arsiv=F
         
         wb = writer.book
 
-        header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+        header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
         header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
 
-        total_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+        total_fill = PatternFill(start_color="172554", end_color="172554", fill_type="solid")
         total_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
 
-        alt_row_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+        alt_row_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
         regular_font = Font(name="Segoe UI", size=10, color="0F172A")
 
         center_align = Alignment(horizontal="center", vertical="center")
@@ -739,7 +714,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 
     looker_section = ""
     if include_looker and looker_url:
-        looker_section = f"""<div style="margin-top: 30px; background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px;"><h3 style="color: #38bdf8; margin-bottom: 15px;">Kampanya Harita ve Lokasyon Paneli</h3><iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe></div>"""
+        looker_section = f"""<div style="margin-top: 30px; background: #172554; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 20px;"><h3 style="color: #38bdf8; margin-bottom: 15px;">Kampanya Harita ve Lokasyon Paneli</h3><iframe src="{looker_url}" width="100%" height="560" frameborder="0" style="border:0; border-radius: 8px;" allowfullscreen></iframe></div>"""
 
     return f"""<!DOCTYPE html>
 <html lang="tr">
@@ -747,24 +722,24 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
     <meta charset="UTF-8">
     <title>{report_title}</title>
     <style>
-        body {{ background-color: #090d16; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 30px; line-height: 1.5; }}
+        body {{ background-color: #030712; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 30px; line-height: 1.5; }}
         .kpi-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }}
-        .kpi-card {{ background: #131b2e; border: 1px solid #1f293d; border-radius: 10px; padding: 20px; text-align: center; }}
+        .kpi-card {{ background: #172554; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 20px; text-align: center; }}
         table {{ width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; margin-top: 20px; }}
-        th {{ background: #1e293b; color: #38bdf8; padding: 12px; border: 1px solid #1f293d; text-align: center; }}
-        td {{ padding: 10px; border: 1px solid #1f293d; color: #cbd5e1; text-align: center; }}
-        tr:nth-child(even) {{ background: rgba(255,255,255,0.02); }}
-        tfoot td {{ background: #152238; color: #38bdf8; font-weight: bold; border-top: 2px solid #38bdf8; }}
-        .footer-note {{ text-align: center; color: #94a3b8; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
+        th {{ background: #1e3a8a; color: #38bdf8; padding: 12px; border: 1px solid #3b82f6; text-align: center; }}
+        td {{ padding: 10px; border: 1px solid #1e3a8a; color: #cbd5e1; text-align: center; }}
+        tr:nth-child(even) {{ background: rgba(56, 189, 248, 0.03); }}
+        tfoot td {{ background: #172554; color: #38bdf8; font-weight: bold; border-top: 2px solid #38bdf8; }}
+        .footer-note {{ text-align: center; color: #94a3b8; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e3a8a; }}
     </style>
 </head>
 <body>
     <h1 style="color: #f1f5f9;">{report_title}</h1>
     <div class="kpi-grid">
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{tr_tam_sayi(toplam_gos)}</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{tr_ondalik(toplam_grp, 2)}</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">KAPSASANAN İL</div><div style="font-size: 24px; font-weight: bold; color: #c084fc;">{kapsanan_il} İl</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{tr_ondalik(maks_erisim, 1)}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{tr_tam_sayi(toplam_gos)}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{tr_ondalik(toplam_grp, 2)}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">KAPSASANAN İL</div><div style="font-size: 24px; font-weight: bold; color: #c084fc;">{kapsanan_il} İl</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{tr_ondalik(maks_erisim, 1)}</div></div>
     </div>
     <table>
         <thead><tr>{table_headers}</tr></thead>
@@ -831,7 +806,7 @@ def generate_custom_multi_network_excel(selected_networks_dict):
             wb = writer.book
             ws = wb[valid_sheet_title]
             
-            header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+            header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
             header_font = Font(name="Segoe UI", size=11, bold=True, color="38BDF8")
             thin_border = Border(
                 left=Side(style='thin', color='CBD5E1'),
@@ -904,7 +879,7 @@ st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 # ==========================================
 if st.session_state.active_tab == "simulasyon":
     if df_gost is not None and not df_gost.empty:
-        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>YENİ KAMPANYA SİMÜLASYONU</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 17px; margin-bottom: 14px;'>YENİ KAMPANYA SİMÜLASYONU</h4>", unsafe_allow_html=True)
 
         col_il, col_unite, col_per, col_sure, col_adet = st.columns([2.2, 2.2, 1.2, 1.2, 1.2])
         
@@ -1079,8 +1054,8 @@ if st.session_state.active_tab == "simulasyon":
             # --- SİMÜLASYON PLANINI DOĞRUDAN MARKA KLASÖRÜNE KAYDETME & BÜTÇE GİRİŞİ ---
             st.markdown("""
             <div class="save-box">
-                <h3 style="color: #38bdf8; margin-top: 0; font-size: 18px; font-weight: 800;">Bu Planı ve Bütçeyi Doğrudan Marka Klasörüne Kaydet</h3>
-                <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 14px;">Oluşturduğun bu kampanyaya harcanan bütçeyi girerek doğrudan ilgili markanın portföy klasörüne kaydedebilirsin:</p>
+                <h3 style="color: #38bdf8; margin-top: 0; font-size: 20px; font-weight: 800;">Bu Planı ve Bütçeyi Doğrudan Marka Klasörüne Kaydet</h3>
+                <p style="color: #94a3b8; font-size: 14.5px; margin-bottom: 16px;">Oluşturduğun bu kampanyaya harcanan bütçeyi girerek doğrudan ilgili markanın portföy klasörüne kaydedebilirsin:</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1132,45 +1107,50 @@ if st.session_state.active_tab == "simulasyon":
                     st.rerun()
 
 # ==========================================
-# 2. SEKME: KAMPANYA YÖNETİMİ & ARŞİVE GÖNDER BUTONLU
+# 2. SEKME: KAMPANYA YÖNETİMİ (GÜÇLENDİRİLMİŞ GENİŞ FORM ALANLARI)
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
-    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>YENİ KAMPANYA SATIRI OLUŞTUR & ARŞİVE GÖNDER</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 14px;'>YENİ KAMPANYA OLUŞTUR & ARŞİVE GÖNDER</h4>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8; font-size: 14.5px; margin-bottom: 20px;'>Aşağıdaki genişletilmiş alanları doldurarak kampanyanı bütçesiyle birlikte doğrudan ilgili marka klasörüne kaydedebilirsin:</p>", unsafe_allow_html=True)
     
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        with st.form("arsiv_ekle_ve_gonder_form"):
-            k1, k2, k3, k4, k5 = st.columns([1.2, 1.3, 2.5, 2.5, 2.5])
-            with k1:
+        with st.form("arsiv_ekle_ve_gonder_form_genis"):
+            # 1. Satır: Yıl, Dönem, Marka, Kampanya Adı, Mecra
+            ak_c1, ak_c2, ak_c3, ak_c4, ak_c5 = st.columns([1.2, 1.8, 2.5, 3, 2.5])
+            with ak_c1:
                 a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
-            with k2:
+            with ak_c2:
                 aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
                 a_donem = st.selectbox("Dönem:", aylar, index=0, key="ars_donem")
-            with k3:
-                a_marka = st.selectbox("Marka:", MASTER_BRANDS, key="ars_marka_select")
-            with k4:
+            with ak_c3:
+                a_marka = st.selectbox("Marka Seçin:", MASTER_BRANDS, key="ars_marka_select")
+            with ak_c4:
                 a_kampanya_in = st.text_input("Kampanya Adı:", placeholder="Örn: Kırtasiye / Lansman", key="ars_kampanya")
-            with k5:
+            with ak_c5:
                 a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon / Donanım Medya", key="ars_mecra")
 
-            k6, k7, k8, k9, k10, k11 = st.columns([2.2, 2.5, 1.2, 1.2, 1.5, 1.8])
-            with k6:
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe
+            bk_c1, bk_c2, bk_c3, bk_c4, bk_c5, bk_c6 = st.columns([2.5, 3, 1.5, 1.5, 1.5, 2.2])
+            with bk_c1:
                 a_il = st.selectbox("İl Seçin:", il_listesi, key="ars_il_select")
-            with k7:
+            with bk_c2:
                 a_uniteler = sorted(list(set(df_gost[df_gost['İl'] == a_il]['Ünite'].tolist())))
                 a_unite = st.selectbox("Ünite Seçin:", a_uniteler, key="ars_unite_select")
-            with k8:
+            with bk_c3:
                 a_periyod = st.number_input("Periyod:", min_value=0.1, max_value=20.0, value=1.0, step=0.1, key="ars_per")
-            with k9:
+            with bk_c4:
                 a_sure = st.number_input("Süre (Gün):", min_value=1, value=7, step=1, key="ars_sure")
-            with k10:
+            with bk_c5:
                 a_adet = st.number_input("Adet:", min_value=1, value=50, step=1, key="ars_adet")
-            with k11:
-                a_butce = st.number_input("Bütçe (₺):", min_value=0.0, value=50000.0, step=5000.0, key="ars_butce")
+            with bk_c6:
+                a_butce = st.number_input("Toplam Bütçe (₺):", min_value=0.0, value=50000.0, step=5000.0, key="ars_butce")
 
-            st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            arsiv_gonder_btn = st.form_submit_button("🚀 Arşive ve Marka Klasörüne Gönder", use_container_width=True, type="primary")
+            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+            arsiv_gonder_btn = st.form_submit_button("🚀 Kampanyayı Arşive ve Marka Klasörüne Gönder", use_container_width=True, type="primary")
 
             if arsiv_gonder_btn:
                 m_isim = a_marka.strip() if a_marka.strip() else "BİM"
@@ -1218,8 +1198,8 @@ elif st.session_state.active_tab == "arsiv":
                 st.rerun()
 
         if st.session_state.arsiv_rows:
-            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
-            st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>📋 Kayıtlı Arşiv Havuzu</h4>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 17px; margin-bottom: 12px;'>📋 Kayıtlı Arşiv Havuzu</h4>", unsafe_allow_html=True)
             
             df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
             
@@ -1277,7 +1257,7 @@ elif st.session_state.active_tab == "arsiv":
                 )
 
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>GERÇEKLEŞEN KAMPANYA LOKASYONLARI & HARİTA PANELİ</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 12px;'>GERÇEKLEŞEN KAMPANYA LOKASYONLARI & HARİTA PANELİ</h4>", unsafe_allow_html=True)
         if looker_url:
             st.components.v1.html(
                 f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
@@ -1290,7 +1270,7 @@ elif st.session_state.active_tab == "arsiv":
 # 3. SEKME: MARKALARIMIZ & KAMPANYA KLASÖRLERİ Hiyerarşisi
 # ==========================================
 elif st.session_state.active_tab == "markalar":
-    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>MÜŞTERİ PORTFÖYÜ & KAMPANYA KLASÖRLERİ</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 16px;'>MÜŞTERİ PORTFÖYÜ & KAMPANYA KLASÖRLERİ</h4>", unsafe_allow_html=True)
 
     df_arsiv_all = pd.DataFrame(st.session_state.arsiv_rows) if st.session_state.arsiv_rows else pd.DataFrame()
 
@@ -1304,7 +1284,7 @@ elif st.session_state.active_tab == "markalar":
         if search_query:
             tum_markalar_listesi = [m for m in tum_markalar_listesi if search_query.lower() in m.lower()]
 
-        st.markdown(f"<p style='color: #94a3b8; font-size: 14px; margin-bottom: 22px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kurumsal müşteri listeleniyor. Kampanya klasörlerini görmek istediğiniz markaya tıklayın:</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #94a3b8; font-size: 14.5px; margin-bottom: 22px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kurumsal müşteri listeleniyor. Kampanya klasörlerini görmek istediğiniz markaya tıklayın:</p>", unsafe_allow_html=True)
 
         cols = st.columns(4)
         for idx, marka in enumerate(tum_markalar_listesi):
@@ -1336,7 +1316,7 @@ elif st.session_state.active_tab == "markalar":
             df_marka = df_arsiv_all[df_arsiv_all["Marka"] == secilen_marka]
             kampanya_listesi = sorted(list(set(df_marka["Kampanya Adı"].dropna().astype(str).tolist())))
 
-            st.markdown(f"<p style='color: #94a3b8; font-size: 14.5px; margin: 15px 0;'><strong>{secilen_marka}</strong> markasına ait toplam <strong>{len(kampanya_listesi)}</strong> kampanya klasörü bulundu. İncelemek istediğiniz kampanyaya tıklayın:</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color: #94a3b8; font-size: 15px; margin: 15px 0;'><strong>{secilen_marka}</strong> markasına ait toplam <strong>{len(kampanya_listesi)}</strong> kampanya klasörü bulundu. İncelemek istediğiniz kampanyaya tıklayın:</p>", unsafe_allow_html=True)
 
             camp_cols = st.columns(3)
             for idx, k_adi in enumerate(kampanya_listesi):
@@ -1347,10 +1327,10 @@ elif st.session_state.active_tab == "markalar":
                 
                 with ccol:
                     st.markdown(f"""
-                    <div style="background: linear-gradient(145deg, #13203d 0%, #0c1426 100%); border: 1.5px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">
-                        <h4 style="color: #38bdf8; margin: 0 0 8px 0; font-size: 18px; font-weight: 700;">📂 {k_adi}</h4>
-                        <p style="color: #cbd5e1; font-size: 13.5px; margin: 0 0 4px 0;">💰 Harcama: <strong>{tr_ondalik(c_butce, 2)} ₺</strong></p>
-                        <p style="color: #94a3b8; font-size: 13px; margin: 0;">📊 Gösterim: {tr_tam_sayi(c_gos)}</p>
+                    <div style="background: linear-gradient(145deg, #172554 0%, #0f172a 100%); border: 2px solid rgba(56, 189, 248, 0.4); border-radius: 16px; padding: 22px; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+                        <h4 style="color: #38bdf8; margin: 0 0 10px 0; font-size: 19px; font-weight: 700;">📂 {k_adi}</h4>
+                        <p style="color: #4ade80; font-size: 14.5px; font-weight: 700; margin: 0 0 6px 0;">💰 Harcama: {tr_ondalik(c_butce, 2)} ₺</p>
+                        <p style="color: #94a3b8; font-size: 13.5px; margin: 0;">📊 Gösterim: {tr_tam_sayi(c_gos)}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -1387,8 +1367,8 @@ elif st.session_state.active_tab == "markalar":
             dkpi3.metric("Toplam TR GRP", tr_ondalik(d_grp, 2))
             dkpi4.metric("Kapsanan İl", f"{d_il} İl")
 
-            st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            st.markdown("<h5 style='color: #38bdf8; font-weight: 700; margin-bottom: 8px;'>📍 Bu Kampanyaya Ait Medya Planı Satırları</h5>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            st.markdown("<h5 style='color: #38bdf8; font-weight: 700; margin-bottom: 10px;'>📍 Bu Kampanyaya Ait Medya Planı Satırları</h5>", unsafe_allow_html=True)
 
             rows_detay_html = "".join([
                 f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td><td style='color:#4ade80; font-weight:700;'>{tr_ondalik(r.get('Bütçe (TL)', 0), 2)} ₺</td></tr>"

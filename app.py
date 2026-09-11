@@ -1118,7 +1118,7 @@ if st.session_state.active_tab == "simulasyon":
                                 "Erişim (Kişi)": int(row["Erişim (Kişi)"]),
                                 "İl Nüfusu": int(row["İl Nüfusu"]),
                                 "TR Nüfusu": int(row["TR Nüfusu"]),
-                                "TR Erişim %": float(round(row["TR Erişim %"]),
+                                "TR Erişim %": float(round(row["TR Erişim %"], 2)),
                                 "TR GRP": float(round(row["TR GRP"], 2))
                             })
                         st.success(f"{len(st.session_state.sim_rows)} satır kendi mecralarıyla arşive aktarıldı!")
@@ -1127,7 +1127,7 @@ if st.session_state.active_tab == "simulasyon":
             # --- SİMÜLASYON PLANINI DOĞRUDAN MARKA KLASÖRÜNE KAYDETME ALANI ---
             st.markdown("""
             <div class="save-box">
-                <h3 style="color: #38bdf8; margin-top: 0; font-size: 18px; font-weight: 800;">📁 Bu Planı Doğrudan Marka Klasörüne Kaydet</h3>
+                <h3 style="color: #38bdf8; margin-top: 0; font-size: 18px; font-weight: 800;">Bu Planı Doğrudan Marka Klasörüne Kaydet</h3>
                 <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 14px;">Simülasyonda oluşturduğun bu medya planını doğrudan yukarıdaki sekmede yer alan marka klasörüne kaydedebilirsin:</p>
             </div>
             """, unsafe_allow_html=True)
@@ -1144,7 +1144,7 @@ if st.session_state.active_tab == "simulasyon":
                     ds_donem = st.selectbox("Dönem:", aylar, index=0, key="ds_donem_box")
                 with ds_col5:
                     st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-                    ds_submit = st.form_submit_button("💾 Klasöre Kaydet", use_container_width=True, type="primary")
+                    ds_submit = st.form_submit_button("Klasöre Kaydet", use_container_width=True, type="primary")
 
                 if ds_submit:
                     k_adi = ds_kampanya.strip() if ds_kampanya.strip() else "Genel Kampanya"
@@ -1166,8 +1166,8 @@ if st.session_state.active_tab == "simulasyon":
                             "Erişim (Kişi)": int(row["Erişim (Kişi)"]),
                             "İl Nüfusu": int(row["İl Nüfusu"]),
                             "TR Nüfusu": int(row["TR Nüfusu"]),
-                            "TR Erişim %": float(row["TR Erişim %"]),
-                            "TR GRP": float(row["TR GRP"])
+                            "TR Erişim %": float(round(row["TR Erişim %"], 2)),
+                            "TR GRP": float(round(row["TR GRP"], 2))
                         })
                     st.session_state.sim_rows = []
                     st.success(f"Başarıyla '{ds_marka}' klasörüne kaydedildi! 'Markalarımız & Portföy' sekmesinden inceleyebilirsin.")
@@ -1276,7 +1276,7 @@ elif st.session_state.active_tab == "arsiv":
             endeks = float(m_gost['Endeks'].values[0]) if not m_gost.empty else 1.0
 
             if network_adedi > 0 and a_adet > 0 and a_periyod > 0:
-                dinamik_frekans = baz_frekans * ((a_adet / network_adedi) ** 0.55) * endeks * (a_periyod ** 0.80)
+                dinamik_frekans = baz_frekans * ((a_adet / network_adedi) ** 0.55) * endeks * (periyod_val ** 0.80)
             else:
                 dinamik_frekans = 0.0
 

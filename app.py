@@ -196,13 +196,12 @@ st.markdown("""
     }
 
     div[data-testid="stForm"] {
-        max-width: 480px !important;
-        margin: 50px auto 0 auto !important;
-        background: linear-gradient(180deg, #15213d 0%, #0e172a 100%) !important;
-        border: 1.5px solid rgba(56, 189, 248, 0.3) !important;
-        border-radius: 20px !important;
-        padding: 38px 32px !important;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.15) !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
     }
 
     .table-responsive-box {
@@ -269,7 +268,7 @@ def login_form():
     st.markdown("<h2 style='text-align: center; font-weight: 800; font-size: 32px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px;'>OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 15px; margin-bottom: 26px; font-weight: 500;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
     
-    with st.form("login_box"):
+    with st.form("login_box_form"):
         user = st.text_input("Kullanıcı Adı:", placeholder="Kullanıcı adınızı giriniz")
         pwd = st.text_input("Şifre:", type="password", placeholder="••••••••")
         st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
@@ -1119,21 +1118,22 @@ if st.session_state.active_tab == "simulasyon":
                                 "İl Nüfusu": int(row["İl Nüfusu"]),
                                 "TR Nüfusu": int(TR_TOTAL_NUFUS),
                                 "TR Erişim %": float(round(row["TR Erişim %"], 2)),
-                                "TR GRP": float(round(row["TR GRP"], 2))
+                                "TR GRP": float(round(row["TR GRP"], 2)),
+                                "Bütçe (TL)": float(row.get("Bütçe (TL)", 0.0))
                             })
-                        st.success(f"{len(st.session_state.sim_rows)} satır kendi mecralarıyla arşive aktarıldı!")
+                        st.success(f"{len(st.session_state.sim_rows)} satır arşive aktarıldı!")
                         st.rerun()
 
-            # --- SİMÜLASYON PLANINI DOĞRUDAN MARKA KLASÖRÜNE KAYDETME ALANI ---
+            # --- SİMÜLASYON PLANINI DOĞRUDAN MARKA KLASÖRÜNE KAYDETME & BÜTÇE GİRİŞİ ---
             st.markdown("""
             <div class="save-box">
-                <h3 style="color: #38bdf8; margin-top: 0; font-size: 18px; font-weight: 800;">Bu Planı Doğrudan Marka Klasörüne Kaydet</h3>
-                <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 14px;">Simülasyonda oluşturduğun bu medya planını doğrudan yukarıdaki sekmede yer alan marka klasörüne kaydedebilirsin:</p>
+                <h3 style="color: #38bdf8; margin-top: 0; font-size: 18px; font-weight: 800;">Bu Planı ve Bütçeyi Doğrudan Marka Klasörüne Kaydet</h3>
+                <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 14px;">Oluşturduğun bu kampanyaya harcanan bütçeyi girerek doğrudan ilgili markanın portföy klasörüne kaydedebilirsin:</p>
             </div>
             """, unsafe_allow_html=True)
 
             with st.form("sim_direct_save_form"):
-                ds_col1, ds_col2, ds_col3, ds_col4, ds_col5 = st.columns([2, 2, 1, 1.2, 1.5])
+                ds_col1, ds_col2, ds_col3, ds_col4, ds_col5, ds_col6 = st.columns([2, 2, 1, 1.2, 1.5, 1.5])
                 with ds_col1:
                     ds_marka = st.selectbox("Marka Seç:", MASTER_BRANDS, key="ds_marka_box")
                 with ds_col2:
@@ -1143,11 +1143,16 @@ if st.session_state.active_tab == "simulasyon":
                 with ds_col4:
                     ds_donem = st.selectbox("Dönem:", aylar, index=0, key="ds_donem_box")
                 with ds_col5:
+                    ds_butce = st.number_input("Toplam Bütçe (₺):", min_value=0.0, value=150000.0, step=10000.0, key="ds_butce_box")
+                with ds_col6:
                     st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
                     ds_submit = st.form_submit_button("Klasöre Kaydet", use_container_width=True, type="primary")
 
                 if ds_submit:
                     k_adi = ds_kampanya.strip() if ds_kampanya.strip() else "Genel Kampanya"
+                    satir_sayisi = len(st.session_state.sim_rows)
+                    butce_payi = ds_butce / satir_sayisi if satir_sayisi > 0 else 0.0
+
                     for row in st.session_state.sim_rows:
                         c_adi = tahmin_mecra(row["Ünite"], row["İl"])
                         st.session_state.arsiv_rows.append({
@@ -1167,10 +1172,11 @@ if st.session_state.active_tab == "simulasyon":
                             "İl Nüfusu": int(row["İl Nüfusu"]),
                             "TR Nüfusu": int(TR_TOTAL_NUFUS),
                             "TR Erişim %": float(round(row["TR Erişim %"], 2)),
-                            "TR GRP": float(round(row["TR GRP"], 2))
+                            "TR GRP": float(round(row["TR GRP"], 2)),
+                            "Bütçe (TL)": float(round(butce_payi, 2))
                         })
                     st.session_state.sim_rows = []
-                    st.success(f"Başarıyla '{ds_marka}' klasörüne kaydedildi! 'Markalarımız & Portföy' sekmesinden inceleyebilirsin.")
+                    st.success(f"Başarıyla '{ds_marka}' klasörüne ve bütçe arşivine kaydedildi! 'Markalarımız & Portföy' sekmesinden harcamalarını inceleyebilirsin.")
                     st.rerun()
 
 # ==========================================
@@ -1303,7 +1309,8 @@ elif st.session_state.active_tab == "arsiv":
                 "İl Nüfusu": int(il_nufus),
                 "TR Nüfusu": int(TR_TOTAL_NUFUS),
                 "TR Erişim %": float(round(erisim_pct_tr, 2)),
-                "TR GRP": float(round(grp_tr, 2))
+                "TR GRP": float(round(grp_tr, 2)),
+                "Bütçe (TL)": 0.0
             })
             st.rerun()
 
@@ -1369,21 +1376,11 @@ elif st.session_state.active_tab == "arsiv":
                     use_container_width=True
                 )
 
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 12px;'>GERÇEKLEŞEN KAMPANYA LOKASYONLARI & HARİTA PANELİ</h4>", unsafe_allow_html=True)
-        if looker_url:
-            st.components.v1.html(
-                f'<iframe src="{looker_url}" width="100%" height="540" frameborder="0" style="border:0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" allowfullscreen></iframe>',
-                height=560
-            )
-        else:
-            st.info("Arşiv haritasını görüntülemek için sol yan menüden Looker Studio Harita Linkini giriniz.")
-
 # ==========================================
-# 3. SEKME: MARKALARIMIZ & KLASÖR GEZGİNİ
+# 3. SEKME: MARKALARIMIZ & KLASÖR GEZGİNİ (BÜTÇE & HARCAMA ÖZETLİ)
 # ==========================================
 elif st.session_state.active_tab == "markalar":
-    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>MÜŞTERİ PORTFÖYÜ & KAMPANYA KLASÖRLERİ</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #94a3b8; font-weight: 700; font-size: 17px; margin-bottom: 16px;'>MÜŞTERİ PORTFÖYÜ & BÜTÇE / HARCAMA TAKİBİ</h4>", unsafe_allow_html=True)
 
     df_arsiv_all = pd.DataFrame(st.session_state.arsiv_rows) if st.session_state.arsiv_rows else pd.DataFrame()
 
@@ -1396,7 +1393,7 @@ elif st.session_state.active_tab == "markalar":
         if search_query:
             tum_markalar_listesi = [m for m in tum_markalar_listesi if search_query.lower() in m.lower()]
 
-        st.markdown(f"<p style='color: #94a3b8; font-size: 14px; margin-bottom: 22px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kurumsal müşteri listeleniyor. Kampanya geçmişini görmek istediğiniz klasöre tıklayın:</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #94a3b8; font-size: 14px; margin-bottom: 22px;'>Toplam <strong>{len(tum_markalar_listesi)}</strong> kurumsal müşteri listeleniyor. Harcama ve kampanya geçmişini görmek istediğiniz klasöre tıklayın:</p>", unsafe_allow_html=True)
 
         cols = st.columns(4)
         for idx, marka in enumerate(tum_markalar_listesi):
@@ -1405,7 +1402,7 @@ elif st.session_state.active_tab == "markalar":
             
             with col:
                 st.markdown('<div class="brand-folder-btn">', unsafe_allow_html=True)
-                btn_title = f"{marka}\n({kampanya_sayisi} Kampanya)"
+                btn_title = f"{marka}\n({kampanya_sayisi} Kayıt)"
                 if st.button(btn_title, key=f"bfolder_{marka}", use_container_width=True):
                     st.session_state.selected_brand_folder = marka
                     st.rerun()
@@ -1420,43 +1417,52 @@ elif st.session_state.active_tab == "markalar":
                 st.session_state.selected_brand_folder = None
                 st.rerun()
         with col_title:
-            st.markdown(f"<h3 style='color: #38bdf8; margin: 4px 0 0 0; font-weight: 800;'>{secilen_marka} Kampanya Klasörü</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #38bdf8; margin: 4px 0 0 0; font-weight: 800;'>{secilen_marka} • Kampanya & Harcama Portföyü</h3>", unsafe_allow_html=True)
 
         if not df_arsiv_all.empty and secilen_marka in df_arsiv_all["Marka"].values:
             df_marka = df_arsiv_all[df_arsiv_all["Marka"] == secilen_marka]
-            kampanyalar = ["Tüm Kampanyalar"] + sorted(list(set(df_marka["Kampanya Adı"].dropna().astype(str).tolist())))
+            
+            # --- YENİ: KAMPANYA BÜTÇE / HARCAMA ÖZET TABLOSU ---
+            st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+            st.markdown("<h5 style='color: #38bdf8; font-weight: 700; margin-bottom: 8px;'>💰 Kampanya Bazlı Harcama & Bütçe Özeti</h5>", unsafe_allow_html=True)
+            
+            if "Bütçe (TL)" in df_marka.columns:
+                kampanya_ozet = df_marka.groupby(["Yıl", "Dönem (Ay)", "Kampanya Adı"]).agg({
+                    "Bütçe (TL)": "sum",
+                    "Toplam Gösterim": "sum",
+                    "TR GRP": "sum"
+                }).reset_index()
+                
+                toplam_harcama = kampanya_ozet["Bütçe (TL)"].sum()
+                
+                # Özet KPI Alanı
+                mkpi1, mkpi2, mkpi3 = st.columns(3)
+                mkpi1.metric("Toplam Marka Harcaması", f"{tr_ondalik(toplam_harcama, 2)} ₺")
+                mkpi2.metric("Toplam Kampanya Sayısı", len(kampanya_ozet))
+                mkpi3.metric("Toplam Gösterim", tr_tam_sayi(kampanya_ozet["Toplam Gösterim"].sum()))
+
+                ozet_rows_html = "".join([
+                    f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td><strong>{r['Kampanya Adı']}</strong></td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td><td style='color:#4ade80; font-weight:700;'>{tr_ondalik(r['Bütçe (TL)'], 2)} ₺</td></tr>"
+                    for _, r in kampanya_ozet.iterrows()
+                ])
+                st.markdown(f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Kampanya Adı</th><th>Toplam Gösterim</th><th>Toplam TR GRP</th><th>Harcanan Bütçe</th></tr></thead><tbody>{ozet_rows_html}</tbody></table></div>""", unsafe_allow_html=True)
 
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            secilen_kampanya = st.selectbox(f"{secilen_marka} Kampanyaları Arasında Filtrele:", kampanyalar, key="folder_kampanya_select")
-
-            if secilen_kampanya != "Tüm Kampanyalar":
-                df_marka = df_marka[df_marka["Kampanya Adı"] == secilen_kampanya]
-
-            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-            m_kpi1, m_kpi2, m_kpi3, m_kpi4 = st.columns(4)
-
-            m_toplam_gos = df_marka["Toplam Gösterim"].sum()
-            m_toplam_grp = round(df_marka["TR GRP"].sum(), 2)
-            m_kapsanan_il, m_maks_erisim = hesapla_net_kapsama_metrikleri(df_marka, nufus_dict, TR_TOTAL_NUFUS)
-
-            m_kpi1.metric("Toplam Gösterim", tr_tam_sayi(m_toplam_gos))
-            m_kpi2.metric("Toplam TR GRP", tr_ondalik(m_toplam_grp, 2))
-            m_kpi3.metric("Maks. TR Erişimi", f"%{tr_ondalik(m_maks_erisim, 1)}")
-            m_kpi4.metric("Kapsanan İl", f"{m_kapsanan_il} İl")
+            st.markdown("<h5 style='color: #38bdf8; font-weight: 700; margin-bottom: 8px;'>📍 Detaylı Medya Planı & Lokasyon Kayıtları</h5>", unsafe_allow_html=True)
 
             rows_marka_html = "".join([
-                f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>"
+                f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td>{r['Marka']}</td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>"
                 for _, r in df_marka.iterrows()
             ])
 
-            table_marka_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Toplam Gösterim</th><th>Frekans</th><th>Erişim (Kişi)</th><th>İl Nüfusu</th><th>TR Nüfusu</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_marka_html}</tbody></table></div>"""
+            table_marka_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre (Gün)</th><th>Periyod</th><th>Adet</th><th>Gösterim</th><th>Frekans</th><th>Erişim</th><th>TR Erişim %</th><th>TR GRP</th></tr></thead><tbody>{rows_marka_html}</tbody></table></div>"""
             st.markdown(table_marka_markup, unsafe_allow_html=True)
 
-            col_md1, col_md2, col_md3 = st.columns([1.5, 1.5, 3])
+            col_md1, col_md2 = st.columns([1.5, 1.5])
             with col_md1:
                 marka_html = generate_html_report(df_marka, f"{secilen_marka} - OOH Kampanya Raporu", include_looker=False, is_arsiv=True)
                 st.download_button(
-                    label=f"{secilen_marka} HTML Raporu",
+                    label=f"{secilen_marka} HTML Raporu Al",
                     data=marka_html,
                     file_name=f"{secilen_marka}_OOH_Raporu.html",
                     mime="text/html",
@@ -1465,14 +1471,14 @@ elif st.session_state.active_tab == "markalar":
             with col_md2:
                 marka_excel = generate_excel_report(df_marka, f"{secilen_marka} - OOH Kampanya Raporu", looker_link=looker_url, is_arsiv=True)
                 st.download_button(
-                    label=f"{secilen_marka} Excel Raporu",
+                    label=f"{secilen_marka} Excel Raporu Al",
                     data=marka_excel,
                     file_name=f"{secilen_marka}_OOH_Raporu.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True
                 )
         else:
-            st.warning(f"📌 {secilen_marka} markasına ait henüz arşivlenmiş bir kampanya kaydı bulunamadı. 'Kampanya Yönetimi & Arşiv' sekmesinden bu markayı seçerek kampanya ekleyebilirsiniz.")
+            st.warning(f"📌 {secilen_marka} markasına ait henüz arşivlenmiş bir kampanya kaydı bulunamadı. Anlık simülatörden bütçeyle birlikte bu klasöre kampanya kaydedebilirsin.")
 
 # ==========================================
 # 4. SEKME: ÖRNEK LİSTELER (KUTUCUKLU TİKLEME & İNDİRME)

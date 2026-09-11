@@ -733,7 +733,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
         for _, r in df_to_export.iterrows():
             rows_list.append(f"<tr><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>{tr_tam_sayi(r['İl Nüfusu'])}</td><td>{tr_tam_sayi(r['TR Nüfusu'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td></tr>")
         table_rows_html = "".join(rows_list)
-        footer_html = f"<tfoot><tr><td colspan='4' style='text-align:right; padding-right:15px;'>GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet)}</td><td>{tr_tam_sayi(toplam_gos)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp, 2)}</td></tr></tfoot>"
+        footer_html = f"<tfoot><tr><td colspan='4' style='text-align:right; padding-right:15px;'>GENEL TOPLAM:</td><td>{tr_tam_sayi(toplam_adet)}</td><td>{tr_tam_sayi(toplam_gos}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{tr_ondalik(toplam_grp, 2)}</td></tr></tfoot>"
 
     looker_section = ""
     if include_looker and looker_url:
@@ -1117,7 +1117,7 @@ if st.session_state.active_tab == "simulasyon":
                                 "Frekans": float(round(row["Frekans"], 1)),
                                 "Erişim (Kişi)": int(row["Erişim (Kişi)"]),
                                 "İl Nüfusu": int(row["İl Nüfusu"]),
-                                "TR Nüfusu": int(row["TR Nüfusu"]),
+                                "TR Nüfusu": int(TR_TOTAL_NUFUS),
                                 "TR Erişim %": float(round(row["TR Erişim %"], 2)),
                                 "TR GRP": float(round(row["TR GRP"], 2))
                             })
@@ -1165,7 +1165,7 @@ if st.session_state.active_tab == "simulasyon":
                             "Frekans": float(row["Frekans"]),
                             "Erişim (Kişi)": int(row["Erişim (Kişi)"]),
                             "İl Nüfusu": int(row["İl Nüfusu"]),
-                            "TR Nüfusu": int(row["TR Nüfusu"]),
+                            "TR Nüfusu": int(TR_TOTAL_NUFUS),
                             "TR Erişim %": float(round(row["TR Erişim %"], 2)),
                             "TR GRP": float(round(row["TR GRP"], 2))
                         })
@@ -1276,7 +1276,7 @@ elif st.session_state.active_tab == "arsiv":
             endeks = float(m_gost['Endeks'].values[0]) if not m_gost.empty else 1.0
 
             if network_adedi > 0 and a_adet > 0 and a_periyod > 0:
-                dinamik_frekans = baz_frekans * ((a_adet / network_adedi) ** 0.55) * endeks * (periyod_val ** 0.80)
+                dinamik_frekans = baz_frekans * ((a_adet / network_adedi) ** 0.55) * endeks * (a_periyod ** 0.80)
             else:
                 dinamik_frekans = 0.0
 

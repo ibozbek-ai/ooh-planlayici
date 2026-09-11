@@ -80,15 +80,16 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* KAMPANYA YÖNETİMİ FORMU ÖZEL GENİŞ & ANLAŞILIR ALANLAR */
-    div[data-testid="stForm"] div[data-baseweb="input"], div[data-testid="stForm"] div[data-baseweb="select"] {
-        background-color: #131f3b !important;
-        border: 2px solid #24355c !important;
-        min-height: 58px !important;
-    }
-    div[data-testid="stForm"] div[data-baseweb="input"] input {
-        font-size: 17px !important;
-        font-weight: 700 !important;
+    /* GİRİŞ EKRANI ÖZEL KOMPAKT KUTU */
+    div[data-testid="stForm"] {
+        max-width: 460px !important;
+        width: 100% !important;
+        margin: 40px auto 0 auto !important;
+        background: linear-gradient(145deg, #131f3b 0%, #0d1529 100%) !important;
+        border: 2px solid rgba(56, 189, 248, 0.35) !important;
+        border-radius: 20px !important;
+        padding: 35px 30px !important;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.6) !important;
     }
 
     .stButton>button, div[data-testid="stPopover"]>button {
@@ -182,16 +183,6 @@ st.markdown("""
         color: #4ade80 !important;
     }
 
-    div[data-testid="stForm"] {
-        max-width: 100% !important;
-        margin: 0 !important;
-        background: linear-gradient(145deg, #131f3b 0%, #0d1529 100%) !important;
-        border: 2px solid rgba(56, 189, 248, 0.35) !important;
-        border-radius: 20px !important;
-        padding: 30px !important;
-        box-shadow: 0 20px 45px rgba(0,0,0,0.6) !important;
-    }
-
     .table-responsive-box {
         width: 100%;
         overflow-x: auto;
@@ -250,14 +241,14 @@ if "logged_in" not in st.session_state:
     st.session_state.username = ""
 
 def login_form():
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; font-weight: 800; font-size: 34px; color: #38bdf8; margin-bottom: 6px;'>OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 16px; margin-bottom: 26px; font-weight: 600;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 16px; margin-bottom: 20px; font-weight: 600;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
     
     with st.form("login_box_form"):
         user = st.text_input("Kullanıcı Adı:", placeholder="Kullanıcı adınızı giriniz")
         pwd = st.text_input("Şifre:", type="password", placeholder="••••••••")
-        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
         submit = st.form_submit_button("Güvenli Giriş Yap", use_container_width=True, type="primary")
         if submit:
             if user == KULLANICI_ADI and pwd == KULLANICI_SIFRE:
@@ -1118,16 +1109,16 @@ if st.session_state.active_tab == "simulasyon":
                     st.rerun()
 
 # ==========================================
-# 2. SEKME: KAMPANYA YÖNETİMİ (GÜÇLENDİRİLMİŞ GENİŞ FORM ALANLARI)
+# 2. SEKME: KAMPANYA YÖNETİMİ (BÜYÜTÜLMÜŞ & ESKİ RENK BÜTÇE KUTULU)
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
-    st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 14px;'>YENİ KAMPANYA OLUŞTUR & ARŞİVE GÖNDER</h4>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #94a3b8; font-size: 14.5px; margin-bottom: 20px;'>Aşağıdaki genişletilmiş alanları doldurarak kampanyanı bütçesiyle birlikte doğrudan ilgili marka klasörüne kaydedebilirsin:</p>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 20px; margin-bottom: 12px;'>YENİ KAMPANYA OLUŞTUR & ARŞİVE GÖNDER</h4>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8; font-size: 15px; margin-bottom: 22px;'>Aşağıdaki genişletilmiş alanları doldurarak kampanyanı bütçesiyle birlikte doğrudan ilgili marka klasörüne kaydedebilirsin:</p>", unsafe_allow_html=True)
     
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        with st.form("arsiv_ekle_ve_gonder_form_genis"):
+        with st.form("arsiv_ekle_ve_gonder_form_genis_v2"):
             # 1. Satır: Yıl, Dönem, Marka, Kampanya Adı, Mecra
             ak_c1, ak_c2, ak_c3, ak_c4, ak_c5 = st.columns([1.2, 1.8, 2.5, 3, 2.5])
             with ak_c1:
@@ -1142,9 +1133,9 @@ elif st.session_state.active_tab == "arsiv":
             with ak_c5:
                 a_mecra_in = st.text_input("Mecra:", placeholder="Örn: Kentvizyon / Donanım Medya", key="ars_mecra")
 
-            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
 
-            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe
+            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe (Eski Kurumsal Koyu Renk Uyumu)
             bk_c1, bk_c2, bk_c3, bk_c4, bk_c5, bk_c6 = st.columns([2.5, 3, 1.5, 1.5, 1.5, 2.2])
             with bk_c1:
                 a_il = st.selectbox("İl Seçin:", il_listesi, key="ars_il_select")
@@ -1158,9 +1149,10 @@ elif st.session_state.active_tab == "arsiv":
             with bk_c5:
                 a_adet = st.number_input("Adet:", min_value=1, value=50, step=1, key="ars_adet")
             with bk_c6:
+                # Eski kurumsal koyu form rengine dönmüş büyük bütçe kutusu
                 a_butce = st.number_input("Toplam Bütçe (₺):", min_value=0.0, value=50000.0, step=5000.0, key="ars_butce")
 
-            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
             arsiv_gonder_btn = st.form_submit_button("🚀 Kampanyayı Arşive ve Marka Klasörüne Gönder", use_container_width=True, type="primary")
 
             if arsiv_gonder_btn:

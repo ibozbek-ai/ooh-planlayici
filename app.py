@@ -80,6 +80,17 @@ st.markdown("""
         color: #ffffff !important;
     }
 
+    /* KAMPANYA YÖNETİMİ FORMU ÖZEL GENİŞ & ANLAŞILIR ALANLAR */
+    div[data-testid="stForm"] div[data-baseweb="input"], div[data-testid="stForm"] div[data-baseweb="select"] {
+        background-color: #131f3b !important;
+        border: 2px solid #24355c !important;
+        min-height: 58px !important;
+    }
+    div[data-testid="stForm"] div[data-baseweb="input"] input {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+    }
+
     .stButton>button, div[data-testid="stPopover"]>button {
         border-radius: 12px !important;
         font-weight: 700 !important;
@@ -174,11 +185,11 @@ st.markdown("""
     div[data-testid="stForm"] {
         max-width: 100% !important;
         margin: 0 !important;
-        background: linear-gradient(145deg, #172554 0%, #0f172a 100%) !important;
-        border: 2px solid rgba(56, 189, 248, 0.3) !important;
-        border-radius: 18px !important;
-        padding: 25px !important;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
+        background: linear-gradient(145deg, #131f3b 0%, #0d1529 100%) !important;
+        border: 2px solid rgba(56, 189, 248, 0.35) !important;
+        border-radius: 20px !important;
+        padding: 30px !important;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.6) !important;
     }
 
     .table-responsive-box {
@@ -736,10 +747,10 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 <body>
     <h1 style="color: #f1f5f9;">{report_title}</h1>
     <div class="kpi-grid">
-        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{tr_tam_sayi(toplam_gos)}</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{tr_ondalik(toplam_grp, 2)}</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">KAPSASANAN İL</div><div style="font-size: 24px; font-weight: bold; color: #c084fc;">{kapsanan_il} İl</div></div>
-        <div class="kpi-card"><div style="font-size: 12px; color: #38bdf8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{tr_ondalik(maks_erisim, 1)}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM GÖSTERİM</div><div style="font-size: 24px; font-weight: bold; color: #4ade80;">{tr_tam_sayi(toplam_gos)}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">TOPLAM TR GRP</div><div style="font-size: 24px; font-weight: bold; color: #38bdf8;">{tr_ondalik(toplam_grp, 2)}</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">KAPSASANAN İL</div><div style="font-size: 24px; font-weight: bold; color: #c084fc;">{kapsanan_il} İl</div></div>
+        <div class="kpi-card"><div style="font-size: 12px; color: #94a3b8;">MAKS. TR ERİŞİMİ</div><div style="font-size: 24px; font-weight: bold; color: #facc15;">%{tr_ondalik(maks_erisim, 1)}</div></div>
     </div>
     <table>
         <thead><tr>{table_headers}</tr></thead>

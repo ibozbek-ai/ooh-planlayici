@@ -97,9 +97,16 @@ st.markdown("""
         border: 2px solid #3b82f6 !important;
         min-height: 54px !important;
     }
-    div[data-testid="stForm"] div[data-baseweb="input"] input {
-        font-size: 16px !important;
-        font-weight: 600 !important;
+
+    /* ÖZEL: KAMPANYA EKLEME FORMUNDAKI BÜTÇE KUTUSU FARKLI RENK (ZÜMRÜT YEŞİLİ) */
+    div[data-testid="stForm"] div:nth-last-of-type(2) div[data-baseweb="input"] {
+        background: linear-gradient(145deg, #064e3b 0%, #022c22 100%) !important;
+        border: 2px solid #34d399 !important;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+    }
+    div[data-testid="stForm"] div:nth-last-of-type(2) div[data-baseweb="input"] input {
+        color: #34d399 !important;
+        font-weight: 800 !important;
     }
 
     .stButton>button, div[data-testid="stPopover"]>button {
@@ -1111,7 +1118,7 @@ if st.session_state.active_tab == "simulasyon":
                     st.rerun()
 
 # ==========================================
-# 2. SEKME: KAMPANYA YÖNETİMİ (GÜÇLENDİRİLMİŞ GENİŞ FORMLAR & ESKİ RENK BÜTÇE KUTUSU)
+# 2. SEKME: KAMPANYA YÖNETİMİ (FARKLI RENKTE BÜTÇE KUTUSU)
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
     st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 12px;'>YENİ KAMPANYA OLUŞTUR & ARŞİVE GÖNDER</h4>", unsafe_allow_html=True)
@@ -1120,7 +1127,7 @@ elif st.session_state.active_tab == "arsiv":
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        with st.form("arsiv_ekle_ve_gonder_form_genis_v3"):
+        with st.form("arsiv_ekle_ve_gonder_form_genis_v4"):
             # 1. Satır: Yıl, Dönem, Marka, Kampanya Adı, Mecra
             ak_c1, ak_c2, ak_c3, ak_c4, ak_c5 = st.columns([1.2, 1.8, 2.5, 3, 2.5])
             with ak_c1:
@@ -1137,7 +1144,7 @@ elif st.session_state.active_tab == "arsiv":
 
             st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe
+            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe (Bütçe kutusu zümrüt yeşili/farklı renkte)
             bk_c1, bk_c2, bk_c3, bk_c4, bk_c5, bk_c6 = st.columns([2.5, 3, 1.5, 1.5, 1.5, 2.2])
             with bk_c1:
                 a_il = st.selectbox("İl Seçin:", il_listesi, key="ars_il_select")

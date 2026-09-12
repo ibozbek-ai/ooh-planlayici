@@ -80,8 +80,20 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* KAMPANYA YÖNETİMİ FORMU: TAM GENİŞLİK VE FERAH ALANLAR */
-    div[data-testid="stForm"] {
+    /* --- GİRİŞ EKRANI (LOGIN) İÇİN SABİT ORTALANMIŞ KOMPAKT KUTU --- */
+    div.stForm:has(input[aria-label*="Şifre"]) {
+        max-width: 440px !important;
+        width: 100% !important;
+        margin: 50px auto !important;
+        background: linear-gradient(145deg, #131f3b 0%, #0d1529 100%) !important;
+        border: 2px solid rgba(56, 189, 248, 0.4) !important;
+        border-radius: 20px !important;
+        padding: 35px 30px !important;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.7) !important;
+    }
+
+    /* --- KAMPANYA YÖNETİMİ FORMU (GENİŞ VE FERAH) --- */
+    div.stForm:not(:has(input[aria-label*="Şifre"])) {
         max-width: 100% !important;
         width: 100% !important;
         margin: 20px 0 30px 0 !important;
@@ -92,21 +104,23 @@ st.markdown("""
         box-shadow: 0 20px 45px rgba(0,0,0,0.6) !important;
     }
 
-    div[data-testid="stForm"] div[data-baseweb="input"], div[data-testid="stForm"] div[data-baseweb="select"] {
+    div.stForm:not(:has(input[aria-label*="Şifre"])) div[data-baseweb="input"], 
+    div.stForm:not(:has(input[aria-label*="Şifre"])) div[data-baseweb="select"] {
         background-color: #172554 !important;
         border: 2px solid #3b82f6 !important;
         min-height: 54px !important;
     }
 
-    /* ÖZEL: KAMPANYA EKLEME FORMUNDAKI BÜTÇE KUTUSU FARKLI RENK (ZÜMRÜT YEŞİLİ) */
-    div[data-testid="stForm"] div:nth-last-of-type(2) div[data-baseweb="input"] {
+    /* --- KAMPANYA FORSU BÜTÇE KUTUSU ÖZEL ZÜMRÜT YEŞİLİ --- */
+    div.stForm:not(:has(input[aria-label*="Şifre"])) div:nth-last-of-type(2) div[data-baseweb="input"] {
         background: linear-gradient(145deg, #064e3b 0%, #022c22 100%) !important;
-        border: 2px solid #34d399 !important;
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+        border: 2.5px solid #34d399 !important;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
     }
-    div[data-testid="stForm"] div:nth-last-of-type(2) div[data-baseweb="input"] input {
+    div.stForm:not(:has(input[aria-label*="Şifre"])) div:nth-last-of-type(2) div[data-baseweb="input"] input {
         color: #34d399 !important;
         font-weight: 800 !important;
+        font-size: 18px !important;
     }
 
     .stButton>button, div[data-testid="stPopover"]>button {
@@ -252,7 +266,7 @@ if "logged_in" not in st.session_state:
 def login_form():
     st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; font-weight: 800; font-size: 34px; color: #38bdf8; margin-bottom: 6px;'>OOH Planlama Stüdyosu</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 16px; margin-bottom: 20px; font-weight: 600;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 16px; margin-bottom: 15px; font-weight: 600;'>Kurumsal Medya Planlama & Simülasyon Portalı</p>", unsafe_allow_html=True)
     
     with st.form("login_box_form"):
         user = st.text_input("Kullanıcı Adı:", placeholder="Kullanıcı adınızı giriniz")
@@ -1102,7 +1116,7 @@ if st.session_state.active_tab == "simulasyon":
                             "Ünite": row["Ünite"],
                             "İl": row["İl"],
                             "Süre (Gün)": row["Süre (Gün)"],
-                            "Periyod": row["Periyod"],
+                            "Periyod": format_periyod(row["Periyod"]),
                             "Adet": int(row["Adet"]),
                             "Toplam Gösterim": int(row["Toplam Gösterim"]),
                             "Frekans": float(row["Frekans"]),
@@ -1118,7 +1132,7 @@ if st.session_state.active_tab == "simulasyon":
                     st.rerun()
 
 # ==========================================
-# 2. SEKME: KAMPANYA YÖNETİMİ (FARKLI RENKTE BÜTÇE KUTUSU)
+# 2. SEKME: KAMPANYA YÖNETİMİ (ZÜMRÜT YEŞİLİ BÜTÇE KUTULU)
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
     st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 12px;'>YENİ KAMPANYA OLUŞTUR & ARŞİVE GÖNDER</h4>", unsafe_allow_html=True)
@@ -1127,7 +1141,7 @@ elif st.session_state.active_tab == "arsiv":
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        with st.form("arsiv_ekle_ve_gonder_form_genis_v4"):
+        with st.form("arsiv_ekle_ve_gonder_form_genis_v5"):
             # 1. Satır: Yıl, Dönem, Marka, Kampanya Adı, Mecra
             ak_c1, ak_c2, ak_c3, ak_c4, ak_c5 = st.columns([1.2, 1.8, 2.5, 3, 2.5])
             with ak_c1:
@@ -1144,7 +1158,7 @@ elif st.session_state.active_tab == "arsiv":
 
             st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe (Bütçe kutusu zümrüt yeşili/farklı renkte)
+            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe (Zümrüt Yeşili Vurgulu Bütçe Kutusu)
             bk_c1, bk_c2, bk_c3, bk_c4, bk_c5, bk_c6 = st.columns([2.5, 3, 1.5, 1.5, 1.5, 2.2])
             with bk_c1:
                 a_il = st.selectbox("İl Seçin:", il_listesi, key="ars_il_select")

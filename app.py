@@ -508,7 +508,6 @@ if "sim_rows" not in st.session_state:
 if "arsiv_rows" not in st.session_state:
     st.session_state.arsiv_rows = []
 
-# Yeni: Kampanya Yönetimi için geçici toplanan satırlar listesi
 if "temp_campaign_rows" not in st.session_state:
     st.session_state.temp_campaign_rows = []
 
@@ -803,7 +802,6 @@ def fetch_and_split_networks():
                 
             return networks_dict, target_col
     except Exception as e:
-        # Bağlantı hatası durumunda boş dönüp hata vermesini önlüyoruz
         return {}, None
 
 def generate_custom_multi_network_excel(selected_networks_dict):
@@ -1122,12 +1120,12 @@ if st.session_state.active_tab == "simulasyon":
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
     st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 12px;'>KAMPANYA YÖNETİMİ & MEDYA PLANI OLUŞTURMA</h4>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #94a3b8; font-size: 14.5px; margin-bottom: 20px;'>Önce <strong>'Plana Satır Ekle'</strong> diyerek kampanya satırlarını biriktir, en sonda <strong>'Arşive ve Marka Klasörüne Gönder'</strong> ile tek seferde kaydet:</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8; font-size: 14.5px; margin-bottom: 20px;'>Önce <strong>'Plana Bu Satırı Ekle'</strong> diyerek kampanya satırlarını biriktir, en sonda <strong>'Bu Kampanyayı Arşive ve Marka Klasörüne Gönder'</strong> ile tek seferde kaydet:</p>", unsafe_allow_html=True)
     
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        with st.form("kampanya_yonetim_form_v6"):
+        with st.form("kampanya_yonetim_form_v7"):
             ak_c1, ak_c2, ak_c3, ak_c4, ak_c5 = st.columns([1.2, 1.8, 2.5, 3, 2.5])
             with ak_c1:
                 a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
@@ -1156,18 +1154,16 @@ elif st.session_state.active_tab == "arsiv":
             with bk_c5:
                 a_adet = st.number_input("Adet:", min_value=1, value=50, step=1, key="ars_adet")
             with bk_c6:
-                # Bütçe Kutusu: Zümrüt Yeşili Vurgulu ve Farklı Renk
+                # Bütçe Kutusu Zümrüt Yeşili Vurgulu
                 st.markdown("""
-                <div style="background: linear-gradient(145deg, #064e3b 0%, #022c22 100%); border: 2px solid #34d399; border-radius: 12px; padding: 6px 12px; margin-top: 2px;">
+                <div style="background: linear-gradient(145deg, #064e3b 0%, #022c22 100%); border: 2px solid #34d399; border-radius: 10px; padding: 6px 10px; margin-bottom: 2px;">
                     <span style="color: #34d399; font-size: 13px; font-weight: 700;">Toplam Bütçe (₺)</span>
                 </div>
                 """, unsafe_allow_html=True)
                 a_butce = st.number_input("", min_value=0.0, value=50000.0, step=5000.0, key="ars_butce_ozel_input", label_visibility="collapsed")
 
             st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-            
-            # Form İçindeki Normal Ekle Butonu
-            normal_ekle_btn = st.form_submit_button("➕ Plana Bu Satırı Ekle", use_container_width=True)
+            normal_ekle_btn = st.form_submit_button("➕ Plana Bu Satırı Ekle", use_container_width=True, type="primary")
 
             if normal_ekle_btn:
                 m_gost = df_gost[(df_gost['İl'] == a_il) & (df_gost['Ünite'] == a_unite)]
@@ -1240,7 +1236,8 @@ elif st.session_state.active_tab == "arsiv":
 
         if st.session_state.arsiv_rows:
             st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
-            st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 17px; margin-bottom: 12px;'>📁 Kayıtlı Tüm Arşiv Havuzu</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 17px; margin-bottom: 12px;'>📁 Kayıtlı Arşiv Havuzu</h4>", unsafe_allow_html=True)
+            st.caption("Arşive gönderilen kayıtlar kalıcı olarak marka klasörlerinde saklanır. İhtiyacınız olursa aşağıdaki butonlarla bu listeyi temizleyebilir veya yönetebilirsiniz:")
             
             df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
             
@@ -1264,18 +1261,18 @@ elif st.session_state.active_tab == "arsiv":
 
             col_a1, col_a2, col_a3, col_a4 = st.columns([1.2, 1.2, 1.5, 1.5])
             with col_a1:
-                if st.button("🧹 Arşivi Temizle", key="ars_clear_all", use_container_width=True):
+                if st.button("🧹 Arşiv Havuzunu Temizle", key="ars_clear_all", use_container_width=True):
                     st.session_state.arsiv_rows = []
                     st.rerun()
             with col_a2:
-                with st.popover("🗑️ Satır Sil", use_container_width=True):
+                with st.popover("🗑️ Seçili Satırı Sil", use_container_width=True):
                     silinecek_idx = st.selectbox(
                         "Silinecek Satır No:",
                         range(len(st.session_state.arsiv_rows)),
                         key="ars_del_select",
                         format_func=lambda i: f"Satır {i+1}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Kampanya Adı']} ({st.session_state.arsiv_rows[i]['Ünite']})"
                     )
-                    if st.button("❌ Sil", key="ars_del_btn", type="primary", use_container_width=True):
+                    if st.button("❌ Bu Satırı Sil", key="ars_del_btn", type="primary", use_container_width=True):
                         st.session_state.arsiv_rows.pop(silinecek_idx)
                         st.rerun()
             with col_a3:
@@ -1392,7 +1389,7 @@ elif st.session_state.active_tab == "markalar":
                 st.session_state.selected_campaign_folder = None
                 st.rerun()
         with col_title2:
-            st.markdown(f"<h3 style='color: #38bdf8; margin: 4px 0 0 0; font-weight: 800;'>📂 {secilen_marka} / {secilen_kampanya} Kampanya Detayı</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #38bdf8; margin: 4px 0 0 0; font-weight: 800;'>📁 {secilen_marka} / {secilen_kampanya} Kampanya Detayı</h3>", unsafe_allow_html=True)
 
         df_detay = df_arsiv_all[(df_arsiv_all["Marka"] == secilen_marka) & (df_arsiv_all["Kampanya Adı"] == secilen_kampanya)]
 
@@ -1441,9 +1438,7 @@ elif st.session_state.active_tab == "markalar":
         else:
             st.warning("Bu kampanyaya ait detay bulunamadı.")
 
-# ==========================================
-# 4. SEKME: ÖRNEK LİSTELER (KUTUCUKLU TİKLEME & İNDİRME)
-# ==========================================
+# --- 4. SEKME: ÖRNEK LİSTELER (KUTUCUKLU TİKLEME & İNDİRME) ---
 elif st.session_state.active_tab == "ornekler":
     st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 8px;'>ÖRNEK LİSTELER & NETWORK ENVANTERİ</h4>", unsafe_allow_html=True)
     st.markdown("<p style='color: #cbd5e1; font-size: 14.5px; margin-bottom: 20px;'>İndirmek istediğiniz Network'lerin solundaki kutucukları işaretleyip tek tıkla Excel formatında indirebilirsiniz:</p>", unsafe_allow_html=True)

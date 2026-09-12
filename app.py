@@ -80,7 +80,7 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* --- GİRİŞ EKRANI (LOGIN) İÇİN SABİT ORTALANMIŞ KOMPAKT KUTU --- */
+    /* GİRİŞ EKRANI KUTUSU */
     div.stForm:has(input[aria-label*="Şifre"]) {
         max-width: 440px !important;
         width: 100% !important;
@@ -92,7 +92,7 @@ st.markdown("""
         box-shadow: 0 25px 50px rgba(0,0,0,0.7) !important;
     }
 
-    /* --- KAMPANYA YÖNETİMİ FORMU (GENİŞ VE FERAH) --- */
+    /* KAMPANYA YÖNETİMİ FORMU */
     div.stForm:not(:has(input[aria-label*="Şifre"])) {
         max-width: 100% !important;
         width: 100% !important;
@@ -102,25 +102,6 @@ st.markdown("""
         border-radius: 20px !important;
         padding: 30px !important;
         box-shadow: 0 20px 45px rgba(0,0,0,0.6) !important;
-    }
-
-    div.stForm:not(:has(input[aria-label*="Şifre"])) div[data-baseweb="input"], 
-    div.stForm:not(:has(input[aria-label*="Şifre"])) div[data-baseweb="select"] {
-        background-color: #172554 !important;
-        border: 2px solid #3b82f6 !important;
-        min-height: 54px !important;
-    }
-
-    /* --- KAMPANYA FORSU BÜTÇE KUTUSU ÖZEL ZÜMRÜT YEŞİLİ --- */
-    div.stForm:not(:has(input[aria-label*="Şifre"])) div:nth-last-of-type(2) div[data-baseweb="input"] {
-        background: linear-gradient(145deg, #064e3b 0%, #022c22 100%) !important;
-        border: 2.5px solid #34d399 !important;
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
-    }
-    div.stForm:not(:has(input[aria-label*="Şifre"])) div:nth-last-of-type(2) div[data-baseweb="input"] input {
-        color: #34d399 !important;
-        font-weight: 800 !important;
-        font-size: 18px !important;
     }
 
     .stButton>button, div[data-testid="stPopover"]>button {
@@ -527,6 +508,10 @@ if "sim_rows" not in st.session_state:
 if "arsiv_rows" not in st.session_state:
     st.session_state.arsiv_rows = []
 
+# Yeni: Kampanya Yönetimi için geçici toplanan satırlar listesi
+if "temp_campaign_rows" not in st.session_state:
+    st.session_state.temp_campaign_rows = []
+
 if "selected_brand_folder" not in st.session_state:
     st.session_state.selected_brand_folder = None
 
@@ -776,7 +761,7 @@ def generate_html_report(df_to_export, report_title, include_looker=False, is_ar
 </body>
 </html>"""
 
-# --- 9. GOOGLE SHEETS SÜTUN TABANLI NETWORK AYRIŞTIRMA MOTORU ---
+# --- 9. GOOGLE SHEETS SÜTUN TABANLI NETWORK AYRIŞTIRMA MOTORU (GÜVENLİ) ---
 @st.cache_data(ttl=300)
 def fetch_and_split_networks():
     try:
@@ -818,6 +803,7 @@ def fetch_and_split_networks():
                 
             return networks_dict, target_col
     except Exception as e:
+        # Bağlantı hatası durumunda boş dönüp hata vermesini önlüyoruz
         return {}, None
 
 def generate_custom_multi_network_excel(selected_networks_dict):
@@ -1132,17 +1118,16 @@ if st.session_state.active_tab == "simulasyon":
                     st.rerun()
 
 # ==========================================
-# 2. SEKME: KAMPANYA YÖNETİMİ (ZÜMRÜT YEŞİLİ BÜTÇE KUTULU)
+# 2. SEKME: KAMPANYA YÖNETİMİ (NORMAL EKLE & EN SON ARŞİVE GÖNDER)
 # ==========================================
 elif st.session_state.active_tab == "arsiv":
-    st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 12px;'>YENİ KAMPANYA OLUŞTUR & ARŞİVE GÖNDER</h4>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #94a3b8; font-size: 14.5px; margin-bottom: 20px;'>Aşağıdaki genişletilmiş alanları doldurarak kampanyanı bütçesiyle birlikte doğrudan ilgili marka klasörüne kaydedebilirsin:</p>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 12px;'>KAMPANYA YÖNETİMİ & MEDYA PLANI OLUŞTURMA</h4>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8; font-size: 14.5px; margin-bottom: 20px;'>Önce <strong>'Plana Satır Ekle'</strong> diyerek kampanya satırlarını biriktir, en sonda <strong>'Arşive ve Marka Klasörüne Gönder'</strong> ile tek seferde kaydet:</p>", unsafe_allow_html=True)
     
     if df_gost is not None and not df_gost.empty:
         il_listesi = sorted(list(set(df_gost['İl'].tolist())))
 
-        with st.form("arsiv_ekle_ve_gonder_form_genis_v5"):
-            # 1. Satır: Yıl, Dönem, Marka, Kampanya Adı, Mecra
+        with st.form("kampanya_yonetim_form_v6"):
             ak_c1, ak_c2, ak_c3, ak_c4, ak_c5 = st.columns([1.2, 1.8, 2.5, 3, 2.5])
             with ak_c1:
                 a_yil = st.number_input("Yıl:", min_value=2020, max_value=2035, value=2026, step=1, key="ars_yil")
@@ -1158,7 +1143,6 @@ elif st.session_state.active_tab == "arsiv":
 
             st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-            # 2. Satır: İl, Ünite, Periyod, Süre, Adet, Bütçe (Zümrüt Yeşili Vurgulu Bütçe Kutusu)
             bk_c1, bk_c2, bk_c3, bk_c4, bk_c5, bk_c6 = st.columns([2.5, 3, 1.5, 1.5, 1.5, 2.2])
             with bk_c1:
                 a_il = st.selectbox("İl Seçin:", il_listesi, key="ars_il_select")
@@ -1172,16 +1156,20 @@ elif st.session_state.active_tab == "arsiv":
             with bk_c5:
                 a_adet = st.number_input("Adet:", min_value=1, value=50, step=1, key="ars_adet")
             with bk_c6:
-                a_butce = st.number_input("Toplam Bütçe (₺):", min_value=0.0, value=50000.0, step=5000.0, key="ars_butce")
+                # Bütçe Kutusu: Zümrüt Yeşili Vurgulu ve Farklı Renk
+                st.markdown("""
+                <div style="background: linear-gradient(145deg, #064e3b 0%, #022c22 100%); border: 2px solid #34d399; border-radius: 12px; padding: 6px 12px; margin-top: 2px;">
+                    <span style="color: #34d399; font-size: 13px; font-weight: 700;">Toplam Bütçe (₺)</span>
+                </div>
+                """, unsafe_allow_html=True)
+                a_butce = st.number_input("", min_value=0.0, value=50000.0, step=5000.0, key="ars_butce_ozel_input", label_visibility="collapsed")
 
             st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-            arsiv_gonder_btn = st.form_submit_button("🚀 Kampanyayı Arşive ve Marka Klasörüne Gönder", use_container_width=True, type="primary")
+            
+            # Form İçindeki Normal Ekle Butonu
+            normal_ekle_btn = st.form_submit_button("➕ Plana Bu Satırı Ekle", use_container_width=True)
 
-            if arsiv_gonder_btn:
-                m_isim = a_marka.strip() if a_marka.strip() else "BİM"
-                k_isim = a_kampanya_in.strip() if a_kampanya_in.strip() else "Genel Kampanya"
-                c_isim = a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon"
-
+            if normal_ekle_btn:
                 m_gost = df_gost[(df_gost['İl'] == a_il) & (df_gost['Ünite'] == a_unite)]
                 gunluk_gost = float(m_gost['Günlük Gösterim'].values[0]) if not m_gost.empty else 0.0
                 baz_frekans = float(m_gost['Frekans'].values[0]) if not m_gost.empty else 1.0
@@ -1199,12 +1187,12 @@ elif st.session_state.active_tab == "arsiv":
                 erisim_pct_tr = (erisim_kisi / TR_TOTAL_NUFUS) * 100
                 grp_tr = (toplam_gosterim / TR_TOTAL_NUFUS) * 100
 
-                st.session_state.arsiv_rows.append({
+                st.session_state.temp_campaign_rows.append({
                     "Yıl": int(a_yil),
                     "Dönem (Ay)": a_donem,
-                    "Marka": m_isim,
-                    "Kampanya Adı": k_isim,
-                    "Mecra Adı": c_isim,
+                    "Marka": a_marka.strip() if a_marka.strip() else "BİM",
+                    "Kampanya Adı": a_kampanya_in.strip() if a_kampanya_in.strip() else "Genel Kampanya",
+                    "Mecra Adı": a_mecra_in.strip() if a_mecra_in.strip() else "Kentvizyon",
                     "Ünite": a_unite,
                     "İl": a_il,
                     "Süre (Gün)": int(a_sure),
@@ -1219,12 +1207,40 @@ elif st.session_state.active_tab == "arsiv":
                     "TR GRP": float(round(grp_tr, 2)),
                     "Bütçe (TL)": float(round(a_butce, 2))
                 })
-                st.success(f"✅ '{m_isim}' markasının '{k_isim}' kampanyası arşive ve klasörüne başarıyla gönderildi!")
+                st.success(" Satır geçici plana eklendi! Yeni satırlar ekleyebilir veya en alttan arşive gönderebilirsin.")
                 st.rerun()
 
+        # Geçici Toplanan Kampanya Satırları Listesi ve En Alttaki Arşive Gönder Butonu
+        if st.session_state.temp_campaign_rows:
+            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 17px; margin-bottom: 10px;'>📋 Hazırlanan Kampanya Satırları</h4>", unsafe_allow_html=True)
+            
+            df_temp = pd.DataFrame(st.session_state.temp_campaign_rows)
+            
+            rows_temp_html = "".join([
+                f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td><strong>{r['Marka']}</strong></td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td><td style='color:#4ade80; font-weight:700;'>{tr_ondalik(r.get('Bütçe (TL)', 0), 2)} ₺</td></tr>"
+                for _, r in df_temp.iterrows()
+            ])
+            
+            table_temp_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Gösterim</th><th>Frekans</th><th>TR Erişim %</th><th>TR GRP</th><th>Bütçe</th></tr></thead><tbody>{rows_temp_html}</tbody></table></div>"""
+            st.markdown(table_temp_markup, unsafe_allow_html=True)
+
+            col_t1, col_t2 = st.columns([1, 2.5])
+            with col_t1:
+                if st.button("🗑️ Listeyi Temizle", use_container_width=True):
+                    st.session_state.temp_campaign_rows = []
+                    st.rerun()
+            with col_t2:
+                if st.button("🚀 EN SON: Bu Kampanyayı Arşive ve Marka Klasörüne Gönder", use_container_width=True, type="primary"):
+                    for r in st.session_state.temp_campaign_rows:
+                        st.session_state.arsiv_rows.append(r)
+                    st.session_state.temp_campaign_rows = []
+                    st.success("🎉 Kampanya başarıyla arşive ve ilgili marka klasörüne kaydedildi! 'Markalarımız & Portföy' sekmesinden inceleyebilirsin.")
+                    st.rerun()
+
         if st.session_state.arsiv_rows:
-            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-            st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 17px; margin-bottom: 12px;'>📋 Kayıtlı Arşiv Havuzu</h4>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 17px; margin-bottom: 12px;'>📁 Kayıtlı Tüm Arşiv Havuzu</h4>", unsafe_allow_html=True)
             
             df_arsiv = pd.DataFrame(st.session_state.arsiv_rows)
             
@@ -1239,27 +1255,27 @@ elif st.session_state.active_tab == "arsiv":
             ak4.metric("Kapsanan İl", f"{kapsanan_il_a} İl")
 
             rows_arsiv_html = "".join([
-                f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td><strong>{r['Marka']}</strong></td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>{tr_tam_sayi(r['Erişim (Kişi)'])}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td><td style='color:#4ade80; font-weight:700;'>{tr_ondalik(r.get('Bütçe (TL)', 0), 2)} ₺</td></tr>"
+                f"<tr><td>{r['Yıl']}</td><td>{r['Dönem (Ay)']}</td><td><strong>{r['Marka']}</strong></td><td>{r['Kampanya Adı']}</td><td>{r['Mecra Adı']}</td><td>{r['Ünite']}</td><td>{r['İl']}</td><td>{r['Süre (Gün)']}</td><td>{r['Periyod']}</td><td>{tr_tam_sayi(r['Adet'])}</td><td>{tr_tam_sayi(r['Toplam Gösterim'])}</td><td>{tr_ondalik(r['Frekans'], 1)}</td><td>%{tr_ondalik(r['TR Erişim %'], 2)}</td><td>{tr_ondalik(r['TR GRP'], 2)}</td><td style='color:#4ade80; font-weight:700;'>{tr_ondalik(r.get('Bütçe (TL)', 0), 2)} ₺</td></tr>"
                 for _, r in df_arsiv.iterrows()
             ])
             
-            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Gösterim</th><th>Frekans</th><th>Erişim</th><th>TR Erişim %</th><th>TR GRP</th><th>Bütçe</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
+            table_arsiv_markup = f"""<div class="table-responsive-box"><table class="custom-ooh-table"><thead><tr><th>Yıl</th><th>Dönem</th><th>Marka</th><th>Kampanya</th><th>Mecra</th><th>Ünite</th><th>İl</th><th>Süre</th><th>Periyod</th><th>Adet</th><th>Gösterim</th><th>Frekans</th><th>TR Erişim %</th><th>TR GRP</th><th>Bütçe</th></tr></thead><tbody>{rows_arsiv_html}</tbody></table></div>"""
             st.markdown(table_arsiv_markup, unsafe_allow_html=True)
 
             col_a1, col_a2, col_a3, col_a4 = st.columns([1.2, 1.2, 1.5, 1.5])
             with col_a1:
-                if st.button("🧹 Tüm Arşivi Temizle", key="ars_clear_all", use_container_width=True):
+                if st.button("🧹 Arşivi Temizle", key="ars_clear_all", use_container_width=True):
                     st.session_state.arsiv_rows = []
                     st.rerun()
             with col_a2:
-                with st.popover("🗑️ Seçili Satırı Sil", use_container_width=True):
+                with st.popover("🗑️ Satır Sil", use_container_width=True):
                     silinecek_idx = st.selectbox(
                         "Silinecek Satır No:",
                         range(len(st.session_state.arsiv_rows)),
                         key="ars_del_select",
                         format_func=lambda i: f"Satır {i+1}: {st.session_state.arsiv_rows[i]['Marka']} - {st.session_state.arsiv_rows[i]['Kampanya Adı']} ({st.session_state.arsiv_rows[i]['Ünite']})"
                     )
-                    if st.button("❌ Bu Satırı Sil", key="ars_del_btn", type="primary", use_container_width=True):
+                    if st.button("❌ Sil", key="ars_del_btn", type="primary", use_container_width=True):
                         st.session_state.arsiv_rows.pop(silinecek_idx)
                         st.rerun()
             with col_a3:
@@ -1424,6 +1440,88 @@ elif st.session_state.active_tab == "markalar":
                 )
         else:
             st.warning("Bu kampanyaya ait detay bulunamadı.")
+
+# ==========================================
+# 4. SEKME: ÖRNEK LİSTELER (KUTUCUKLU TİKLEME & İNDİRME)
+# ==========================================
+elif st.session_state.active_tab == "ornekler":
+    st.markdown("<h4 style='color: #38bdf8; font-weight: 700; font-size: 18px; margin-bottom: 8px;'>ÖRNEK LİSTELER & NETWORK ENVANTERİ</h4>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #cbd5e1; font-size: 14.5px; margin-bottom: 20px;'>İndirmek istediğiniz Network'lerin solundaki kutucukları işaretleyip tek tıkla Excel formatında indirebilirsiniz:</p>", unsafe_allow_html=True)
+
+    networks_dict, network_col_name = fetch_and_split_networks()
+
+    if not networks_dict:
+        st.warning("E-Tablo verisi şu anda doğrudan okunamadı veya bağlantı kurulamadı. Aşağıdaki linkten doğrudan Google Sheets üzerinden erişebilirsiniz:")
+        st.link_button("Google Sheets Üzerinden Aç ve İndir", GSHEET_XLSX_URL, use_container_width=True)
+    else:
+        col_act1, col_act2, col_act3 = st.columns([1.5, 1.5, 3])
+        with col_act1:
+            if st.button("Tümünü Seç", use_container_width=True):
+                for k in networks_dict.keys():
+                    st.session_state[f"chk_{k}"] = True
+                st.rerun()
+        with col_act2:
+            if st.button("Seçimleri Temizle", use_container_width=True):
+                for k in networks_dict.keys():
+                    st.session_state[f"chk_{k}"] = False
+                st.rerun()
+
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+        secilen_networkler = {}
+        
+        for net_name, df_net in networks_dict.items():
+            chk_key = f"chk_{net_name}"
+            if chk_key not in st.session_state:
+                st.session_state[chk_key] = False
+
+            row_c1, row_c2 = st.columns([4, 1.5])
+            
+            with row_c1:
+                is_checked = st.checkbox(
+                    f"**{net_name}**  *( {len(df_net)} Satır Envanter • {len(df_net.columns)} Sütun )*",
+                    key=chk_key,
+                    value=st.session_state[chk_key]
+                )
+                if is_checked:
+                    secilen_networkler[net_name] = df_net
+
+            with row_c2:
+                single_excel = generate_custom_multi_network_excel({net_name: df_net})
+                st.download_button(
+                    label="Tek İndir",
+                    data=single_excel,
+                    file_name=f"{net_name}_Envanter_Listesi.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key=f"dl_single_{net_name}",
+                    use_container_width=True
+                )
+
+        st.markdown("---")
+        
+        col_down1, col_down2 = st.columns([3, 2])
+        with col_down1:
+            st.markdown(f"##### Seçilen Network Sayısı: `{len(secilen_networkler)}` / `{len(networks_dict)}`")
+            if not secilen_networkler:
+                st.caption("İndirmek istediğiniz networklerin solundaki kutucukları işaretleyiniz.")
+            else:
+                secili_adlar = ", ".join(list(secilen_networkler.keys())[:4])
+                if len(secilen_networkler) > 4:
+                    secili_adlar += f" ve {len(secilen_networkler)-4} diğer..."
+                st.caption(f"Hazırlanan Sayfalar: **{secili_adlar}**")
+
+        with col_down2:
+            if secilen_networkler:
+                multi_excel_bytes = generate_custom_multi_network_excel(secilen_networkler)
+                dosya_adi = "Secilen_Networkler_Medya_Plani.xlsx" if len(secilen_networkler) > 1 else f"{list(secilen_networkler.keys())[0]}_Listesi.xlsx"
+                st.download_button(
+                    label="Seçilenleri Excel (.xlsx) İndir",
+                    data=multi_excel_bytes,
+                    file_name=dosya_adi,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True
+                )
 
 # --- 11. KURUMSAL DİPNOT (FOOTER) ---
 st.markdown("<div class='corporate-footer'>CAFAS verileri dikkate alınarak geliştirilmiştir.</div>", unsafe_allow_html=True)
